@@ -48,9 +48,17 @@ export default async function DashboardPage() {
           </div>
           <p style={{ fontSize:'12px', color:'#8a8a84' }}>Gestione magazzino, CMD, cassette, reperti notevoli</p>
         </div>
-        <div style={{ background:'#fff', border:'0.5px solid #e0dfd8', borderLeft:
-cat > src/app/reports/layout.tsx << 'EOF'
-import AppShell from '@/components/layout/AppShell'
-export default function ReportsLayout({ children }: { children: React.ReactNode }) {
-  return <AppShell>{children}</AppShell>
+        <div style={{ background:'#fff', border:'0.5px solid #e0dfd8', borderLeft:'3px solid #e0dfd8', borderRadius:'10px', padding:'14px', opacity:0.5 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'8px' }}>
+            <span style={{ fontSize:'24px' }}>🗺️</span>
+            <div>
+              <div style={{ fontSize:'14px', fontWeight:'500', color:'#555550' }}>ArchaeoSurvey</div>
+              <span style={{ fontSize:'10px', background:'#f0efe9', color:'#8a8a84', padding:'2px 7px', borderRadius:'10px' }}>Prossimamente</span>
+            </div>
+          </div>
+          <p style={{ fontSize:'12px', color:'#8a8a84' }}>Ricognizioni sistematiche, raccolta dati sul campo</p>
+        </div>
+      </div>
+    </div>
+  )
 }

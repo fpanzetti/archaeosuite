@@ -23,24 +23,22 @@ type US = USBase & {
 const STEP_LABELS = ['Identificazione', 'Descrizione fisica', 'Rapporti strat.', 'Documentazione', 'Interpretazione']
 const INCLUSI_OPTIONS = ['Ceramica', 'Osso', 'Carbone', 'Malta', 'Pietra', 'Metallo', 'Laterizio', 'Vetro', 'Conchiglia', 'Altro']
 
-const RAPPORTI_CONFIG = [
-  { categoria: 'posteriorita', label: 'Posteriorità', sublabel: 'US più recenti — sopra', colore: '#185FA5', bg: '#e8f0f8', rapporti: [
-    { key: 'copre', label: 'Copre', inverso: 'coperto_da' },
-    { key: 'taglia', label: 'Taglia', inverso: 'tagliato_da' },
-    { key: 'si_appoggia_a', label: 'Si appoggia a', inverso: 'appoggiato_da' },
-    { key: 'riempie', label: 'Riempie', inverso: 'riempito_da' },
-  ]},
-  { categoria: 'contemporaneita', label: 'Contemporaneità', sublabel: 'Relazioni orizzontali', colore: '#3B6D11', bg: '#eaf3de', rapporti: [
-    { key: 'si_lega_a', label: 'Si lega a', inverso: 'si_lega_a' },
-    { key: 'uguale_a', label: 'Uguale a', inverso: 'uguale_a' },
-  ]},
-  { categoria: 'anteriorita', label: 'Anteriorità', sublabel: 'US più antiche — sotto', colore: '#BA7517', bg: '#faeeda', rapporti: [
-    { key: 'coperto_da', label: 'È coperta da', inverso: 'copre' },
-    { key: 'tagliato_da', label: 'È tagliata da', inverso: 'taglia' },
-    { key: 'appoggiato_da', label: 'È appoggiata da', inverso: 'si_appoggia_a' },
-    { key: 'riempito_da', label: 'È riempita da', inverso: 'riempie' },
-  ]},
+const COLONNE = [
+  { key: 'copre_taglia', post: 'copre', post_label: 'Copre', ant: 'coperto_da', ant_label: 'Coperta da', cont: null },
+  { key: 'taglia_tagliato', post: 'taglia', post_label: 'Taglia', ant: 'tagliato_da', ant_label: 'Tagliata da', cont: null },
+  { key: 'appoggia', post: 'si_appoggia_a', post_label: 'Si appoggia a', ant: 'appoggiato_da', ant_label: 'Appoggiata da', cont: null },
+  { key: 'riempie', post: 'riempie', post_label: 'Riempie', ant: 'riempito_da', ant_label: 'Riempita da', cont: null },
+  { key: 'lega', post: null, post_label: null, ant: null, ant_label: null, cont: 'si_lega_a', cont_label: 'Si lega a' },
+  { key: 'uguale', post: null, post_label: null, ant: null, ant_label: null, cont: 'uguale_a', cont_label: 'Uguale a' },
 ]
+
+const INVERSO: Record<string, string> = {
+  copre: 'coperto_da', coperto_da: 'copre',
+  taglia: 'tagliato_da', tagliato_da: 'taglia',
+  si_appoggia_a: 'appoggiato_da', appoggiato_da: 'si_appoggia_a',
+  riempie: 'riempito_da', riempito_da: 'riempie',
+  si_lega_a: 'si_lega_a', uguale_a: 'uguale_a',
+}
 
 export default function SchedaUSPage() {
   const params = useParams()
@@ -61,7 +59,9 @@ export default function SchedaUSPage() {
     si_appoggia_a: [], appoggiato_da: [], riempie: [], riempito_da: [],
     si_lega_a: [], uguale_a: [],
   })
-  const [nuovaUSInput, setNuovaUSInput] = useState<Record<string, string>>({})
+  const [inputAttivo, setInputAttivo] = useState<string | null>(null)
+  const [inputValore, setInputValore] = useState('')
+  const [usCreate, setUsCreate] = useState<Set<number>>(new Set())
   const [toast, setToast] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -69,8 +69,7 @@ export default function SchedaUSPage() {
   const supabase = createClient()
 
   const reloadUS = useCallback(async () => {
-    const { data } = await supabase
-      .from('us').select('id, numero_us, tipo, descrizione')
+    const { data } = await supabase.from('us').select('id, numero_us, tipo, descrizione')
       .eq('scavo_id', scavoId).order('numero_us')
     if (data) setAllUS(data.filter((u: USBase) => u.id !== usId))
   }, [scavoId, usId])
@@ -122,25 +121,24 @@ export default function SchedaUSPage() {
     setTimeout(() => setToast(''), 3000)
   }
 
-  async function aggiungiRapporto(tipoKey: string, tipoInverso: string, numeroInput: string) {
-    const numero = parseInt(numeroInput)
+  async function aggiungiRapporto(tipoKey: string) {
+    const numero = parseInt(inputValore)
     if (!numero || numero < 1) return
-    if (rapporti[tipoKey].includes(numero)) return
+    if (rapporti[tipoKey].includes(numero)) { setInputAttivo(null); setInputValore(''); return }
 
     let usCorrelataId: string | null = null
-    let usEsiste = false
-
     const esistente = allUS.find(u => u.numero_us === numero)
+
     if (esistente) {
       usCorrelataId = esistente.id
-      usEsiste = true
     } else {
       const { data: nuova } = await supabase.from('us').insert({
         scavo_id: scavoId, numero_us: numero, stato: 'aperta',
       }).select().single()
       if (nuova) {
         usCorrelataId = nuova.id
-        showToast(`US ${numero} creata come scheda vuota — aprila per compilarla`)
+        setUsCreate(prev => new Set([...prev, numero]))
+        showToast(`US ${numero} creata come scheda vuota`)
         await reloadUS()
       }
     }
@@ -151,27 +149,19 @@ export default function SchedaUSPage() {
       us_id: usId, tipo: tipoKey,
       us_correlata_id: usCorrelataId, numero_us_correlata: numero,
     })
-
-    if (tipoInverso !== tipoKey) {
-      await supabase.from('rapporto_stratigrafico').upsert({
-        us_id: usCorrelataId, tipo: tipoInverso,
-        us_correlata_id: usId, numero_us_correlata: us?.numero_us ?? 0,
-      })
-    } else {
-      await supabase.from('rapporto_stratigrafico').upsert({
-        us_id: usCorrelataId, tipo: tipoInverso,
-        us_correlata_id: usId, numero_us_correlata: us?.numero_us ?? 0,
-      })
-    }
+    await supabase.from('rapporto_stratigrafico').upsert({
+      us_id: usCorrelataId, tipo: INVERSO[tipoKey],
+      us_correlata_id: usId, numero_us_correlata: us?.numero_us ?? 0,
+    })
 
     setRapporti(prev => ({ ...prev, [tipoKey]: [...prev[tipoKey], numero] }))
-    setNuovaUSInput(prev => ({ ...prev, [tipoKey]: '' }))
-    if (usEsiste) showToast(`Rapporto con US ${numero} aggiunto`)
+    setInputAttivo(null)
+    setInputValore('')
   }
 
   async function rimuoviRapporto(tipoKey: string, numero: number) {
-    await supabase.from('rapporto_stratigrafico')
-      .delete().eq('us_id', usId).eq('tipo', tipoKey).eq('numero_us_correlata', numero)
+    await supabase.from('rapporto_stratigrafico').delete()
+      .eq('us_id', usId).eq('tipo', tipoKey).eq('numero_us_correlata', numero)
     setRapporti(prev => ({ ...prev, [tipoKey]: prev[tipoKey].filter(n => n !== numero) }))
   }
 
@@ -182,8 +172,7 @@ export default function SchedaUSPage() {
       colore: form.colore, consistenza: form.consistenza,
       umidita: form.umidita, inclusi: form.inclusi,
       descrizione_estesa: form.descrizione_estesa,
-      osservazioni: form.osservazioni,
-      interpretazione: form.interpretazione,
+      osservazioni: form.osservazioni, interpretazione: form.interpretazione,
       tipo_formazione: form.tipo_formazione,
       cronologia_iniziale: form.cronologia_iniziale,
       cronologia_finale: form.cronologia_finale,
@@ -201,18 +190,79 @@ export default function SchedaUSPage() {
 
   const inp: React.CSSProperties = { width:'100%', padding:'7px 10px', border:'0.5px solid #c8c7be', borderRadius:'6px', background:'#f8f7f4', color:'#1a1a1a', fontSize:'12px', fontFamily:'inherit' }
   const lbl: React.CSSProperties = { display:'block', fontSize:'11px', color:'#8a8a84', marginBottom:'4px', fontWeight:'500' }
-  const req: React.CSSProperties = { display:'block', fontSize:'11px', color:'#1a4a7a', marginBottom:'4px', fontWeight:'500' }
   const grid2: React.CSSProperties = { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'12px' }
   const grid3: React.CSSProperties = { display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'10px', marginBottom:'12px' }
+
+  function CellaRapporto({ tipoKey, label, riga }: { tipoKey: string; label: string; riga: 'post' | 'ant' | 'cont' }) {
+    const numeri = rapporti[tipoKey] ?? []
+    const coloreRiga = riga === 'post' ? '#1a4a7a' : riga === 'ant' ? '#8a5c0a' : '#1a6b4a'
+    const bgRiga = riga === 'post' ? '#e8f0f8' : riga === 'ant' ? '#fdf3e0' : '#e8f4ef'
+    const isAttivo = inputAttivo === tipoKey
+
+    return (
+      <div style={{ border:`0.5px solid ${coloreRiga}30`, borderRadius:'6px', padding:'8px', background: bgRiga, minHeight:'80px' }}>
+        <div style={{ fontSize:'10px', color: coloreRiga, fontWeight:'500', marginBottom:'6px', textAlign:'center' }}>{label}</div>
+
+        {/* US collegate */}
+        <div style={{ display:'flex', flexWrap:'wrap', gap:'4px', marginBottom:'6px' }}>
+          {numeri.map(num => {
+            const usCorr = allUS.find(u => u.numero_us === num)
+            const vuota = usCreate.has(num) || (usCorr ? (!usCorr.tipo && !usCorr.descrizione) : false)
+            return (
+              <div key={num} style={{
+                display:'flex', alignItems:'center', gap:'3px',
+                padding:'2px 6px', borderRadius:'4px', fontSize:'11px', fontWeight:'500',
+                background: vuota ? '#fff3cd' : '#cfe2ff',
+                border: `1px solid ${vuota ? '#f0a500' : '#185FA5'}`,
+                color: vuota ? '#8a5c0a' : '#185FA5',
+              }}>
+                {num}
+                {vuota && <span style={{ fontSize:'9px' }}>⚠</span>}
+                <span onClick={() => rimuoviRapporto(tipoKey, num)}
+                  style={{ cursor:'pointer', color:'#aaa', marginLeft:'2px', fontSize:'13px', lineHeight:'1' }}>×</span>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Input o pulsante + */}
+        {isAttivo ? (
+          <div style={{ display:'flex', gap:'4px' }}>
+            <input
+              autoFocus
+              type="number" min="1"
+              value={inputValore}
+              onChange={e => setInputValore(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') aggiungiRapporto(tipoKey); if (e.key === 'Escape') { setInputAttivo(null); setInputValore('') } }}
+              style={{ width:'60px', padding:'3px 6px', border:`1px solid ${coloreRiga}`, borderRadius:'4px', background:'#fff', fontSize:'11px' }}
+              placeholder="US n."
+            />
+            <button onClick={() => aggiungiRapporto(tipoKey)}
+              style={{ padding:'3px 7px', background: coloreRiga, color:'#fff', border:'none', borderRadius:'4px', fontSize:'11px', cursor:'pointer' }}>
+              ✓
+            </button>
+            <button onClick={() => { setInputAttivo(null); setInputValore('') }}
+              style={{ padding:'3px 6px', background:'#f0efe9', color:'#888', border:'none', borderRadius:'4px', fontSize:'11px', cursor:'pointer' }}>
+              ✗
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => { setInputAttivo(tipoKey); setInputValore('') }}
+            style={{ display:'flex', alignItems:'center', gap:'4px', padding:'3px 8px', background:'#fff', border:`1px dashed ${coloreRiga}80`, borderRadius:'4px', fontSize:'11px', color: coloreRiga, cursor:'pointer', width:'100%', justifyContent:'center' }}>
+            <span style={{ fontSize:'14px', lineHeight:'1' }}>+</span> aggiungi US
+          </button>
+        )}
+      </div>
+    )
+  }
 
   if (!us) return <div style={{ padding:'24px', color:'#8a8a84', fontSize:'12px' }}>Caricamento...</div>
 
   return (
-    <div style={{ padding:'24px', maxWidth:'760px' }}>
+    <div style={{ padding:'24px', maxWidth:'900px' }}>
 
-      {/* Toast */}
       {toast && (
-        <div style={{ position:'fixed', top:'20px', left:'50%', transform:'translateX(-50%)', background:'#1a1a1a', color:'#fff', padding:'10px 20px', borderRadius:'8px', fontSize:'12px', zIndex:1000, boxShadow:'0 4px 12px rgba(0,0,0,0.2)' }}>
+        <div style={{ position:'fixed', top:'20px', left:'50%', transform:'translateX(-50%)', background:'#1a1a1a', color:'#fff', padding:'10px 20px', borderRadius:'8px', fontSize:'12px', zIndex:1000 }}>
           {toast}
         </div>
       )}
@@ -253,7 +303,7 @@ export default function SchedaUSPage() {
       {step === 0 && (
         <div style={{ background:'#fff', border:'0.5px solid #e0dfd8', borderRadius:'10px', padding:'20px' }}>
           <div style={grid2}>
-            <div><label style={req}>Tipo US *</label>
+            <div><label style={{ ...lbl, color:'#1a4a7a' }}>Tipo US *</label>
               <SearchableSelect options={tipiUS} value={form.tipo ?? ''} onChange={v => set('tipo', v)} placeholder="Seleziona tipo..." /></div>
             <div><label style={lbl}>Anno</label>
               <input style={inp} type="number" value={form.anno ?? ''} onChange={e => set('anno', e.target.value ? parseInt(e.target.value) : null)} placeholder={new Date().getFullYear().toString()} /></div>
@@ -310,64 +360,101 @@ export default function SchedaUSPage() {
 
       {/* STEP 2 — RAPPORTI STRATIGRAFICI */}
       {step === 2 && (
-        <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
-          {RAPPORTI_CONFIG.map(cat => (
-            <div key={cat.categoria} style={{ background:'#fff', border:`0.5px solid ${cat.colore}40`, borderRadius:'10px', overflow:'hidden' }}>
-              {/* Header categoria */}
-              <div style={{ background: cat.bg, padding:'10px 16px', borderBottom:`0.5px solid ${cat.colore}30` }}>
-                <div style={{ fontSize:'12px', fontWeight:'500', color: cat.colore }}>{cat.label}</div>
-                <div style={{ fontSize:'10px', color: cat.colore, opacity:0.7 }}>{cat.sublabel}</div>
-              </div>
+        <div style={{ background:'#fff', border:'0.5px solid #e0dfd8', borderRadius:'10px', padding:'20px' }}>
 
-              {/* Rapporti */}
-              <div style={{ padding:'12px 16px' }}>
-                {cat.rapporti.map(rap => (
-                  <div key={rap.key} style={{ marginBottom:'10px' }}>
-                    <div style={{ fontSize:'11px', color:'#8a8a84', marginBottom:'6px', fontWeight:'500' }}>{rap.label}</div>
-
-                    {/* US già collegate */}
-                    <div style={{ display:'flex', flexWrap:'wrap', gap:'6px', marginBottom:'6px' }}>
-                      {rapporti[rap.key].map(num => {
-                        const usCorr = allUS.find(u => u.numero_us === num)
-                        const vuota = usCorr ? (!usCorr.tipo && !usCorr.descrizione) : true
-                        return (
-                          <div key={num} style={{ display:'flex', alignItems:'center', gap:'4px', padding:'3px 8px 3px 10px',
-                            background: vuota ? '#fff8f0' : '#e8f0f8',
-                            border: `1px solid ${vuota ? '#EF9F27' : cat.colore}`,
-                            borderRadius:'6px', fontSize:'12px' }}>
-                            <span style={{ color: vuota ? '#BA7517' : cat.colore, fontWeight:'500' }}>US {num}</span>
-                            {vuota && <span style={{ fontSize:'10px', color:'#EF9F27', marginLeft:'2px' }}>⚠</span>}
-                            <button onClick={() => rimuoviRapporto(rap.key, num)}
-                              style={{ marginLeft:'4px', background:'none', border:'none', cursor:'pointer', color:'#c8c7be', fontSize:'14px', lineHeight:'1', padding:'0' }}>×</button>
-                          </div>
-                        )
-                      })}
-                    </div>
-
-                    {/* Input aggiungi */}
-                    <div style={{ display:'flex', gap:'6px', alignItems:'center' }}>
-                      <input
-                        style={{ ...inp, width:'80px', padding:'5px 8px' }}
-                        type="number" min="1"
-                        placeholder="US n."
-                        value={nuovaUSInput[rap.key] ?? ''}
-                        onChange={e => setNuovaUSInput(prev => ({ ...prev, [rap.key]: e.target.value }))}
-                        onKeyDown={e => { if (e.key === 'Enter') aggiungiRapporto(rap.key, rap.inverso, nuovaUSInput[rap.key] ?? '') }}
-                      />
-                      <button
-                        onClick={() => aggiungiRapporto(rap.key, rap.inverso, nuovaUSInput[rap.key] ?? '')}
-                        disabled={!nuovaUSInput[rap.key]}
-                        style={{ padding:'5px 10px', background: nuovaUSInput[rap.key] ? cat.colore : '#f0efe9',
-                          color: nuovaUSInput[rap.key] ? '#fff' : '#8a8a84',
-                          border:'none', borderRadius:'6px', fontSize:'11px', cursor: nuovaUSInput[rap.key] ? 'pointer' : 'default' }}>
-                        + Aggiungi
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {/* Legenda */}
+          <div style={{ display:'flex', gap:'12px', marginBottom:'16px', padding:'8px 12px', background:'#f8f7f4', borderRadius:'6px', flexWrap:'wrap' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'11px', color:'#555550' }}>
+              <div style={{ width:'14px', height:'14px', borderRadius:'3px', background:'#e8f0f8', border:'0.5px solid #185FA5' }}/>
+              posteriorità
             </div>
-          ))}
+            <div style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'11px', color:'#555550' }}>
+              <div style={{ width:'14px', height:'14px', borderRadius:'3px', background:'#e8f4ef', border:'0.5px solid #1a6b4a' }}/>
+              contemporaneità
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'11px', color:'#555550' }}>
+              <div style={{ width:'14px', height:'14px', borderRadius:'3px', background:'#fdf3e0', border:'0.5px solid #8a5c0a' }}/>
+              anteriorità
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'11px', color:'#555550' }}>
+              <div style={{ width:'14px', height:'14px', borderRadius:'3px', background:'#cfe2ff', border:'1px solid #185FA5' }}/>
+              US documentata
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'11px', color:'#555550' }}>
+              <div style={{ width:'14px', height:'14px', borderRadius:'3px', background:'#fff3cd', border:'1px solid #f0a500' }}/>
+              US vuota ⚠
+            </div>
+          </div>
+
+          {/* US corrente — evidenziata al centro */}
+          <div style={{ textAlign:'center', marginBottom:'16px' }}>
+            <div style={{ display:'inline-block', padding:'8px 24px', background:'#fef9e7', border:'2px solid #f0a500', borderRadius:'8px', fontSize:'14px', fontWeight:'500', color:'#8a5c0a' }}>
+              US {us.numero_us} {us.tipo ? `— ${us.tipo}` : ''}
+            </div>
+          </div>
+
+          {/* GRIGLIA RAPPORTI */}
+          <div style={{ overflowX:'auto' }}>
+            <table style={{ width:'100%', borderCollapse:'separate', borderSpacing:'4px' }}>
+              <thead>
+                <tr>
+                  <th style={{ width:'80px', fontSize:'10px', color:'#8a8a84', fontWeight:'500', textAlign:'left', padding:'4px 8px' }}>Categoria</th>
+                  {COLONNE.map(col => (
+                    <th key={col.key} style={{ fontSize:'10px', color:'#8a8a84', fontWeight:'500', textAlign:'center', padding:'4px 4px' }}>
+                      {col.post_label ?? col.cont_label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {/* Riga posteriorità */}
+                <tr>
+                  <td style={{ fontSize:'10px', fontWeight:'500', color:'#1a4a7a', padding:'4px 8px', verticalAlign:'middle' }}>
+                    <div style={{ writingMode:'vertical-rl', transform:'rotate(180deg)', fontSize:'10px' }}>Posteriorità ↑</div>
+                  </td>
+                  {COLONNE.map(col => (
+                    <td key={col.key} style={{ padding:'2px', verticalAlign:'top' }}>
+                      {col.post ? (
+                        <CellaRapporto tipoKey={col.post} label={col.post_label!} riga="post" />
+                      ) : (
+                        <div style={{ height:'80px', background:'#f8f7f4', borderRadius:'6px', border:'0.5px solid #e0dfd8' }} />
+                      )}
+                    </td>
+                  ))}
+                </tr>
+                {/* Riga contemporaneità */}
+                <tr>
+                  <td style={{ fontSize:'10px', fontWeight:'500', color:'#1a6b4a', padding:'4px 8px', verticalAlign:'middle' }}>
+                    <div style={{ writingMode:'vertical-rl', transform:'rotate(180deg)', fontSize:'10px' }}>Contemporan. →</div>
+                  </td>
+                  {COLONNE.map(col => (
+                    <td key={col.key} style={{ padding:'2px', verticalAlign:'top' }}>
+                      {col.cont ? (
+                        <CellaRapporto tipoKey={col.cont} label={col.cont_label!} riga="cont" />
+                      ) : (
+                        <div style={{ height:'80px', background:'#f8f7f4', borderRadius:'6px', border:'0.5px solid #e0dfd8' }} />
+                      )}
+                    </td>
+                  ))}
+                </tr>
+                {/* Riga anteriorità */}
+                <tr>
+                  <td style={{ fontSize:'10px', fontWeight:'500', color:'#8a5c0a', padding:'4px 8px', verticalAlign:'middle' }}>
+                    <div style={{ writingMode:'vertical-rl', transform:'rotate(180deg)', fontSize:'10px' }}>Anteriorità ↓</div>
+                  </td>
+                  {COLONNE.map(col => (
+                    <td key={col.key} style={{ padding:'2px', verticalAlign:'top' }}>
+                      {col.ant ? (
+                        <CellaRapporto tipoKey={col.ant} label={col.ant_label!} riga="ant" />
+                      ) : (
+                        <div style={{ height:'80px', background:'#f8f7f4', borderRadius:'6px', border:'0.5px solid #e0dfd8' }} />
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

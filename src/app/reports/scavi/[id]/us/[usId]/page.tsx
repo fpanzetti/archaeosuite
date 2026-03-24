@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import SearchableSelect from '@/components/ui/SearchableSelect'
+import LineeRapporti from '@/components/ui/LineeRapporti'
 
 type Opt = { value: string; label: string }
 type USBase = { id: string; numero_us: number; tipo: string | null; descrizione: string | null }
@@ -387,7 +388,8 @@ export default function SchedaUSPage() {
           </div>
 
           {/* GRIGLIA RAPPORTI con US corrente al centro */}
-          <div style={{ overflowX:'auto' }}>
+          <div style={{ overflowX:'auto', position:'relative' }}>
+            <LineeRapporti rapporti={rapporti} colonne={COLONNE} />
             <table style={{ width:'100%', borderCollapse:'separate', borderSpacing:'4px' }}>
               <thead>
                 <tr>
@@ -420,7 +422,7 @@ export default function SchedaUSPage() {
                   <td style={{ padding:'4px 8px', verticalAlign:'middle' }} />
                   <td colSpan={COLONNE.length} style={{ padding:'6px 2px' }}>
                     <div style={{ display:'flex', justifyContent:'center' }}>
-                      <div style={{ padding:'8px 32px', background:'#fef9e7', border:'2px solid #f0a500', borderRadius:'8px', fontSize:'13px', fontWeight:'500', color:'#8a5c0a', textAlign:'center' }}>
+                      <div id="us-corrente-center" style={{ padding:'8px 32px', background:'#fef9e7', border:'2px solid #f0a500', borderRadius:'8px', fontSize:'13px', fontWeight:'500', color:'#8a5c0a', textAlign:'center' }}>
                         US {us.numero_us}{us.tipo ? ` — ${us.tipo}` : ''}
                       </div>
                     </div>

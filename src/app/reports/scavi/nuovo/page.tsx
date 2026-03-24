@@ -4,8 +4,9 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 
-type Thesaurus = { value: string; label: string }
+type Opt = { value: string; label: string }
 type Sabap = { id: string; nome: string; regione: string }
+type Provincia = { sigla: string; nome: string; regione: string }
 
 export default function NuovoScavoPage() {
   const [form, setForm] = useState({
@@ -17,10 +18,12 @@ export default function NuovoScavoPage() {
     tipologia_intervento: '', tipo_contesto: '',
     datazione_contesto: '', data_inizio: '', note: '',
   })
-  const [regioni, setRegioni] = useState<Thesaurus[]>([])
+  const [regioni, setRegioni] = useState<Opt[]>([])
+  const [province, setProvince] = useState<Provincia[]>([])
+  const [provinceFiltrate, setProvinceFiltrate] = useState<Opt[]>([])
   const [sabapList, setSabapList] = useState<Sabap[]>([])
-  const [sabapFiltrate, setSabapFiltrate] = useState<Thesaurus[]>([])
-  const [tipiContesto, setTipiContesto] = useState<Thesaurus[]>([])
+  const [sabapFiltrate, setSabapFiltrate] = useState<Opt[]>([])
+  const [tipiContesto, setTipiContesto] = useState<Opt[]>([])
   const [loading, setLoading] = useState(false)
   const [gpsLoading, setGpsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -29,30 +32,35 @@ export default function NuovoScavoPage() {
 
   useEffect(() => {
     async function loadData() {
-      const [{ data: th }, { data: sb }] = await Promise.all([
+      const [{ data: th }, { data: sb }, { data: pv }] = await Promise.all([
         supabase.from('thesaurus').select('*').order('ordine'),
         supabase.from('sabap').select('*').order('nome'),
+        supabase.from('provincia').select('*').order('nome'),
       ])
       if (th) {
         setRegioni(th.filter(t => t.tipo === 'regione').map(t => ({ value: t.valore, label: t.valore })))
         setTipiContesto(th.filter(t => t.tipo === 'tipo_contesto').map(t => ({ value: t.valore, label: t.valore })))
       }
       if (sb) setSabapList(sb)
+      if (pv) setProvince(pv)
     }
     loadData()
   }, [])
 
   useEffect(() => {
     if (form.regione) {
-      const filtrate = sabapList
-        .filter(s => s.regione === form.regione)
+      const pv = province.filter(p => p.regione === form.regione)
+        .map(p => ({ value: p.sigla, label: `${p.nome} (${p.sigla})` }))
+      setProvinceFiltrate(pv)
+      const sb = sabapList.filter(s => s.regione === form.regione)
         .map(s => ({ value: s.nome, label: s.nome }))
-      setSabapFiltrate(filtrate)
-      setForm(prev => ({ ...prev, soprintendenza: '' }))
+      setSabapFiltrate(sb)
+      setForm(prev => ({ ...prev, provincia: '', soprintendenza: '' }))
     } else {
+      setProvinceFiltrate(province.map(p => ({ value: p.sigla, label: `${p.nome} (${p.sigla})` })))
       setSabapFiltrate(sabapList.map(s => ({ value: s.nome, label: s.nome })))
     }
-  }, [form.regione, sabapList])
+  }, [form.regione, sabapList, province])
 
   function set(field: string, value: string) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -81,10 +89,13 @@ export default function NuovoScavoPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
 
+    const denominazione = [form.comune, form.provincia ? `(${form.provincia})` : '', form.localita]
+      .filter(Boolean).join(' ')
+
     const { data: scavo, error: errScavo } = await supabase
       .from('scavo')
       .insert({
-        denominazione: [form.comune, form.provincia ? `(${form.provincia})` : '', form.localita].filter(Boolean).join(' '),
+        denominazione,
         nazione: form.nazione,
         regione: form.regione || null,
         soprintendenza: form.soprintendenza || null,
@@ -118,13 +129,13 @@ export default function NuovoScavoPage() {
     router.push('/reports')
   }
 
-  const inp = { width:'100%', padding:'7px 10px', border:'0.5px solid #c8c7be', borderRadius:'6px', background:'#f8f7f4', color:'#1a1a1a', fontSize:'12px', fontFamily:'inherit' }
-  const lbl = { display:'block', fontSize:'11px', color:'#8a8a84', marginBottom:'4px', fontWeight:'500' as const }
-  const req = { display:'block', fontSize:'11px', color:'#1a4a7a', marginBottom:'4px', fontWeight:'500' as const }
-  const card = { background:'#fff', border:'0.5px solid #e0dfd8', borderRadius:'10px', padding:'20px', marginBottom:'12px' }
-  const grid2 = { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'12px' }
-  const grid3 = { display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'10px', marginBottom:'12px' }
-  const sect = { fontSize:'11px', fontWeight:'500' as const, color:'#1a4a7a', marginBottom:'14px', paddingBottom:'8px', borderBottom:'0.5px solid #e8f0f8' }
+  const inp: React.CSSProperties = { width:'100%', padding:'7px 10px', border:'0.5px solid #c8c7be', borderRadius:'6px', background:'#f8f7f4', color:'#1a1a1a', fontSize:'12px', fontFamily:'inherit' }
+  const lbl: React.CSSProperties = { display:'block', fontSize:'11px', color:'#8a8a84', marginBottom:'4px', fontWeight:'500' }
+  const req: React.CSSProperties = { display:'block', fontSize:'11px', color:'#1a4a7a', marginBottom:'4px', fontWeight:'500' }
+  const card: React.CSSProperties = { background:'#fff', border:'0.5px solid #e0dfd8', borderRadius:'10px', padding:'20px', marginBottom:'12px' }
+  const grid2: React.CSSProperties = { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'12px' }
+  const grid3: React.CSSProperties = { display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'10px', marginBottom:'12px' }
+  const sect: React.CSSProperties = { fontSize:'11px', fontWeight:'500', color:'#1a4a7a', marginBottom:'14px', paddingBottom:'8px', borderBottom:'0.5px solid #e8f0f8' }
 
   return (
     <div style={{ padding:'24px', maxWidth:'760px' }}>
@@ -141,25 +152,24 @@ export default function NuovoScavoPage() {
         {/* LOCALIZZAZIONE */}
         <div style={card}>
           <div style={sect}>Localizzazione</div>
-          <div style={grid3}>
-            <div>
-              <label style={lbl}>Nazione</label>
-              <input style={inp} value={form.nazione} onChange={e => set('nazione', e.target.value)} />
-            </div>
+          <div style={{ marginBottom:'12px' }}>
+            <label style={lbl}>Nazione</label>
+            <input style={inp} value={form.nazione} onChange={e => set('nazione', e.target.value)} />
+          </div>
+          <div style={grid2}>
             <div>
               <label style={req}>Regione *</label>
-              <SearchableSelect
-                options={regioni}
-                value={form.regione}
-                onChange={v => set('regione', v)}
-                placeholder="Cerca regione..."
-              />
+              <SearchableSelect options={regioni} value={form.regione}
+                onChange={v => set('regione', v)} placeholder="Cerca regione..." />
             </div>
             <div>
               <label style={req}>Provincia *</label>
-              <input style={inp} value={form.provincia}
-                onChange={e => set('provincia', e.target.value.toUpperCase())}
-                placeholder="Es. CB" maxLength={2} required />
+              <SearchableSelect
+                options={provinceFiltrate}
+                value={form.provincia}
+                onChange={v => set('provincia', v)}
+                placeholder={form.regione ? 'Seleziona provincia...' : 'Seleziona prima la regione...'}
+              />
             </div>
           </div>
           <div style={{ marginBottom:'12px' }}>
@@ -178,8 +188,7 @@ export default function NuovoScavoPage() {
             <div>
               <label style={lbl}>Indirizzo</label>
               <input style={inp} value={form.indirizzo}
-                onChange={e => set('indirizzo', e.target.value)}
-                placeholder="Es. Via Roma 12" />
+                onChange={e => set('indirizzo', e.target.value)} />
             </div>
           </div>
           <div>
@@ -207,16 +216,16 @@ export default function NuovoScavoPage() {
               <label style={req}>Latitudine *</label>
               <input style={inp} value={form.lat}
                 onChange={e => set('lat', e.target.value)}
-                placeholder="Es. 41.801300" type="number" step="0.000001" />
+                placeholder="Es. 41.801300" />
             </div>
             <div style={{ flex:1 }}>
               <label style={req}>Longitudine *</label>
               <input style={inp} value={form.lon}
                 onChange={e => set('lon', e.target.value)}
-                placeholder="Es. 14.908700" type="number" step="0.000001" />
+                placeholder="Es. 14.908700" />
             </div>
             <button type="button" onClick={getGPS} disabled={gpsLoading}
-              style={{ padding:'7px 14px', background: gpsLoading ? '#f0efe9' : '#1a4a7a', color: gpsLoading ? '#8a8a84' : '#fff', border:'none', borderRadius:'6px', fontSize:'12px', cursor:'pointer', whiteSpace:'nowrap', marginBottom:'0' }}>
+              style={{ padding:'7px 14px', background: gpsLoading ? '#f0efe9' : '#1a4a7a', color: gpsLoading ? '#8a8a84' : '#fff', border:'none', borderRadius:'6px', fontSize:'12px', cursor:'pointer', whiteSpace:'nowrap' }}>
               {gpsLoading ? '...' : '📍 GPS'}
             </button>
           </div>
@@ -234,18 +243,15 @@ export default function NuovoScavoPage() {
           <div style={grid3}>
             <div>
               <label style={lbl}>Foglio</label>
-              <input style={inp} value={form.foglio_catastale}
-                onChange={e => set('foglio_catastale', e.target.value)} />
+              <input style={inp} value={form.foglio_catastale} onChange={e => set('foglio_catastale', e.target.value)} />
             </div>
             <div>
               <label style={lbl}>Particella</label>
-              <input style={inp} value={form.particella}
-                onChange={e => set('particella', e.target.value)} />
+              <input style={inp} value={form.particella} onChange={e => set('particella', e.target.value)} />
             </div>
             <div>
               <label style={lbl}>Subparticella</label>
-              <input style={inp} value={form.subparticella}
-                onChange={e => set('subparticella', e.target.value)} />
+              <input style={inp} value={form.subparticella} onChange={e => set('subparticella', e.target.value)} />
             </div>
           </div>
         </div>
@@ -276,23 +282,17 @@ export default function NuovoScavoPage() {
           <div style={grid2}>
             <div>
               <label style={req}>Tipologia di intervento *</label>
-              <SearchableSelect
-                options={[]}
-                value={form.tipologia_intervento}
+              <SearchableSelect options={[]} value={form.tipologia_intervento}
                 onChange={v => set('tipologia_intervento', v)}
                 placeholder="Digita la tipologia..."
-                allowFreeText={true}
-              />
+                allowFreeText={true} />
             </div>
             <div>
               <label style={lbl}>Tipo di contesto</label>
-              <SearchableSelect
-                options={tipiContesto}
-                value={form.tipo_contesto}
+              <SearchableSelect options={tipiContesto} value={form.tipo_contesto}
                 onChange={v => set('tipo_contesto', v)}
                 placeholder="Cerca tipo contesto..."
-                allowFreeText={true}
-              />
+                allowFreeText={true} />
             </div>
           </div>
         </div>
@@ -315,7 +315,7 @@ export default function NuovoScavoPage() {
           </div>
           <div>
             <label style={lbl}>Note</label>
-            <textarea style={{ ...inp, height:'72px', resize:'none' }}
+            <textarea style={{ ...inp, height:'72px', resize:'none' } as React.CSSProperties}
               value={form.note} onChange={e => set('note', e.target.value)}
               placeholder="Note aggiuntive..." />
           </div>
@@ -333,7 +333,6 @@ export default function NuovoScavoPage() {
             {loading ? 'Salvataggio...' : 'Crea scavo'}
           </button>
         </div>
-
       </form>
     </div>
   )

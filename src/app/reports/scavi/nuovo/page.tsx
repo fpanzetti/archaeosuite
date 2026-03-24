@@ -1,8 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import SearchableSelect from '@/components/ui/SearchableSelect'
+import { creaScavo } from '../actions'
 
 type Opt = { value: string; label: string }
 type Sabap = { id: string; nome: string; regione: string }
@@ -38,8 +39,8 @@ export default function NuovoScavoPage() {
         supabase.from('provincia').select('*').order('nome'),
       ])
       if (th) {
-        setRegioni(th.filter(t => t.tipo === 'regione').map(t => ({ value: t.valore, label: t.valore })))
-        setTipiContesto(th.filter(t => t.tipo === 'tipo_contesto').map(t => ({ value: t.valore, label: t.valore })))
+        setRegioni(th.filter((t: {tipo: string; valore: string}) => t.tipo === 'regione').map((t: {tipo: string; valore: string}) => ({ value: t.valore, label: t.valore })))
+        setTipiContesto(th.filter((t: {tipo: string; valore: string}) => t.tipo === 'tipo_contesto').map((t: {tipo: string; valore: string}) => ({ value: t.valore, label: t.valore })))
       }
       if (sb) setSabapList(sb)
       if (pv) setProvince(pv)
@@ -49,12 +50,8 @@ export default function NuovoScavoPage() {
 
   useEffect(() => {
     if (form.regione) {
-      const pv = province.filter(p => p.regione === form.regione)
-        .map(p => ({ value: p.sigla, label: `${p.nome} (${p.sigla})` }))
-      setProvinceFiltrate(pv)
-      const sb = sabapList.filter(s => s.regione === form.regione)
-        .map(s => ({ value: s.nome, label: s.nome }))
-      setSabapFiltrate(sb)
+      setProvinceFiltrate(province.filter(p => p.regione === form.regione).map(p => ({ value: p.sigla, label: `${p.nome} (${p.sigla})` })))
+      setSabapFiltrate(sabapList.filter(s => s.regione === form.regione).map(s => ({ value: s.nome, label: s.nome })))
       setForm(prev => ({ ...prev, provincia: '', soprintendenza: '' }))
     } else {
       setProvinceFiltrate(province.map(p => ({ value: p.sigla, label: `${p.nome} (${p.sigla})` })))
@@ -71,62 +68,20 @@ export default function NuovoScavoPage() {
     setGpsLoading(true)
     navigator.geolocation.getCurrentPosition(
       pos => {
-        setForm(prev => ({
-          ...prev,
-          lat: pos.coords.latitude.toFixed(6),
-          lon: pos.coords.longitude.toFixed(6),
-        }))
+        setForm(prev => ({ ...prev, lat: pos.coords.latitude.toFixed(6), lon: pos.coords.longitude.toFixed(6) }))
         setGpsLoading(false)
       },
-      () => { setError('Impossibile ottenere la posizione GPS'); setGpsLoading(false) }
+      () => { setError('GPS non disponibile — inserisci le coordinate manualmente'); setGpsLoading(false) }
     )
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!form.comune) { setError('Il campo Comune è obbligatorio'); return }
     setLoading(true)
     setError('')
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.push('/login'); return }
-
-    const denominazione = [form.comune, form.provincia ? `(${form.provincia})` : '', form.localita]
-      .filter(Boolean).join(' ')
-
-    const { data: scavo, error: errScavo } = await supabase
-      .from('scavo')
-      .insert({
-        denominazione,
-        nazione: form.nazione,
-        regione: form.regione || null,
-        soprintendenza: form.soprintendenza || null,
-        provincia: form.provincia || null,
-        comune: form.comune,
-        localita: form.localita || null,
-        indirizzo: form.indirizzo || null,
-        lat: form.lat ? parseFloat(form.lat) : null,
-        lon: form.lon ? parseFloat(form.lon) : null,
-        riferimento_cartografico: form.riferimento_cartografico || null,
-        foglio_catastale: form.foglio_catastale || null,
-        particella: form.particella || null,
-        subparticella: form.subparticella || null,
-        committente: form.committente || null,
-        direttore_scientifico: form.direttore_scientifico || null,
-        operatore: form.operatore || null,
-        tipologia_intervento: form.tipologia_intervento || null,
-        tipo_contesto: form.tipo_contesto || null,
-        datazione_contesto: form.datazione_contesto || null,
-        data_inizio: form.data_inizio || null,
-        note: form.note || null,
-        responsabile_id: user.id,
-      })
-      .select().single()
-
-    if (errScavo) { setError(errScavo.message); setLoading(false); return }
-
-    await supabase.from('accesso_scavo').insert({
-      account_id: user.id, scavo_id: scavo.id, ruolo: 'editor',
-    })
-    router.push('/reports')
+    const result = await creaScavo(form)
+    if (result?.error) { setError(result.error); setLoading(false) }
   }
 
   const inp: React.CSSProperties = { width:'100%', padding:'7px 10px', border:'0.5px solid #c8c7be', borderRadius:'6px', background:'#f8f7f4', color:'#1a1a1a', fontSize:'12px', fontFamily:'inherit' }
@@ -146,10 +101,7 @@ export default function NuovoScavoPage() {
           I campi in <span style={{ color:'#1a4a7a', fontWeight:'500' }}>blu</span> sono obbligatori
         </p>
       </div>
-
       <form onSubmit={handleSubmit}>
-
-        {/* LOCALIZZAZIONE */}
         <div style={card}>
           <div style={sect}>Localizzazione</div>
           <div style={{ marginBottom:'12px' }}>
@@ -159,70 +111,43 @@ export default function NuovoScavoPage() {
           <div style={grid2}>
             <div>
               <label style={req}>Regione *</label>
-              <SearchableSelect options={regioni} value={form.regione}
-                onChange={v => set('regione', v)} placeholder="Cerca regione..." />
+              <SearchableSelect options={regioni} value={form.regione} onChange={v => set('regione', v)} placeholder="Cerca regione..." />
             </div>
             <div>
               <label style={req}>Provincia *</label>
-              <SearchableSelect
-                options={provinceFiltrate}
-                value={form.provincia}
-                onChange={v => set('provincia', v)}
-                placeholder={form.regione ? 'Seleziona provincia...' : 'Seleziona prima la regione...'}
-              />
+              <SearchableSelect options={provinceFiltrate} value={form.provincia} onChange={v => set('provincia', v)} placeholder={form.regione ? 'Seleziona provincia...' : 'Prima seleziona la regione...'} />
             </div>
           </div>
           <div style={{ marginBottom:'12px' }}>
             <label style={req}>Comune *</label>
-            <input style={inp} value={form.comune}
-              onChange={e => set('comune', e.target.value)}
-              placeholder="Es. Larino" required />
+            <input style={inp} value={form.comune} onChange={e => set('comune', e.target.value)} placeholder="Es. Larino" required />
           </div>
           <div style={grid2}>
             <div>
               <label style={lbl}>Località / Contrada</label>
-              <input style={inp} value={form.localita}
-                onChange={e => set('localita', e.target.value)}
-                placeholder="Es. Casale San Felice" />
+              <input style={inp} value={form.localita} onChange={e => set('localita', e.target.value)} placeholder="Es. Casale San Felice" />
             </div>
             <div>
               <label style={lbl}>Indirizzo</label>
-              <input style={inp} value={form.indirizzo}
-                onChange={e => set('indirizzo', e.target.value)} />
+              <input style={inp} value={form.indirizzo} onChange={e => set('indirizzo', e.target.value)} />
             </div>
           </div>
           <div>
             <label style={req}>Soprintendenza (SABAP) *</label>
-            <SearchableSelect
-              options={sabapFiltrate}
-              value={form.soprintendenza}
-              onChange={v => set('soprintendenza', v)}
-              placeholder={form.regione ? 'Cerca soprintendenza...' : 'Seleziona prima la regione...'}
-              allowFreeText={true}
-            />
-            {!form.regione && (
-              <p style={{ fontSize:'11px', color:'#8a8a84', marginTop:'4px' }}>
-                Seleziona la regione per filtrare le SABAP competenti
-              </p>
-            )}
+            <SearchableSelect options={sabapFiltrate} value={form.soprintendenza} onChange={v => set('soprintendenza', v)} placeholder={form.regione ? 'Cerca soprintendenza...' : 'Prima seleziona la regione...'} allowFreeText={true} />
           </div>
         </div>
 
-        {/* GEOLOCALIZZAZIONE */}
         <div style={card}>
           <div style={sect}>Geolocalizzazione WGS84</div>
           <div style={{ display:'flex', gap:'10px', alignItems:'flex-end' }}>
             <div style={{ flex:1 }}>
               <label style={req}>Latitudine *</label>
-              <input style={inp} value={form.lat}
-                onChange={e => set('lat', e.target.value)}
-                placeholder="Es. 41.801300" />
+              <input style={inp} value={form.lat} onChange={e => set('lat', e.target.value)} placeholder="Es. 41.801300" />
             </div>
             <div style={{ flex:1 }}>
               <label style={req}>Longitudine *</label>
-              <input style={inp} value={form.lon}
-                onChange={e => set('lon', e.target.value)}
-                placeholder="Es. 14.908700" />
+              <input style={inp} value={form.lon} onChange={e => set('lon', e.target.value)} placeholder="Es. 14.908700" />
             </div>
             <button type="button" onClick={getGPS} disabled={gpsLoading}
               style={{ padding:'7px 14px', background: gpsLoading ? '#f0efe9' : '#1a4a7a', color: gpsLoading ? '#8a8a84' : '#fff', border:'none', borderRadius:'6px', fontSize:'12px', cursor:'pointer', whiteSpace:'nowrap' }}>
@@ -231,93 +156,62 @@ export default function NuovoScavoPage() {
           </div>
           <div style={{ marginTop:'10px' }}>
             <label style={lbl}>Riferimento cartografico</label>
-            <input style={inp} value={form.riferimento_cartografico}
-              onChange={e => set('riferimento_cartografico', e.target.value)}
-              placeholder="Es. IGM 1:25000 F.163 I SO" />
+            <input style={inp} value={form.riferimento_cartografico} onChange={e => set('riferimento_cartografico', e.target.value)} placeholder="Es. IGM 1:25000 F.163 I SO" />
           </div>
         </div>
 
-        {/* DATI CATASTALI */}
         <div style={card}>
           <div style={sect}>Dati catastali (opzionali)</div>
           <div style={grid3}>
-            <div>
-              <label style={lbl}>Foglio</label>
-              <input style={inp} value={form.foglio_catastale} onChange={e => set('foglio_catastale', e.target.value)} />
-            </div>
-            <div>
-              <label style={lbl}>Particella</label>
-              <input style={inp} value={form.particella} onChange={e => set('particella', e.target.value)} />
-            </div>
-            <div>
-              <label style={lbl}>Subparticella</label>
-              <input style={inp} value={form.subparticella} onChange={e => set('subparticella', e.target.value)} />
-            </div>
+            <div><label style={lbl}>Foglio</label><input style={inp} value={form.foglio_catastale} onChange={e => set('foglio_catastale', e.target.value)} /></div>
+            <div><label style={lbl}>Particella</label><input style={inp} value={form.particella} onChange={e => set('particella', e.target.value)} /></div>
+            <div><label style={lbl}>Subparticella</label><input style={inp} value={form.subparticella} onChange={e => set('subparticella', e.target.value)} /></div>
           </div>
         </div>
 
-        {/* IDENTIFICATIVI */}
         <div style={card}>
           <div style={sect}>Identificativi</div>
           <div style={grid2}>
             <div>
               <label style={req}>Committente *</label>
-              <input style={inp} value={form.committente}
-                onChange={e => set('committente', e.target.value)}
-                placeholder="Es. ENI S.p.A." required />
+              <input style={inp} value={form.committente} onChange={e => set('committente', e.target.value)} placeholder="Es. ENI S.p.A." required />
             </div>
             <div>
               <label style={req}>Operatore *</label>
-              <input style={inp} value={form.operatore}
-                onChange={e => set('operatore', e.target.value)}
-                placeholder="Es. Studio Archeo s.r.l." required />
+              <input style={inp} value={form.operatore} onChange={e => set('operatore', e.target.value)} placeholder="Es. Studio Archeo s.r.l." required />
             </div>
           </div>
           <div style={{ marginBottom:'12px' }}>
             <label style={lbl}>Direttore scientifico</label>
-            <input style={inp} value={form.direttore_scientifico}
-              onChange={e => set('direttore_scientifico', e.target.value)}
-              placeholder="Nome e cognome" />
+            <input style={inp} value={form.direttore_scientifico} onChange={e => set('direttore_scientifico', e.target.value)} placeholder="Nome e cognome" />
           </div>
           <div style={grid2}>
             <div>
               <label style={req}>Tipologia di intervento *</label>
-              <SearchableSelect options={[]} value={form.tipologia_intervento}
-                onChange={v => set('tipologia_intervento', v)}
-                placeholder="Digita la tipologia..."
-                allowFreeText={true} />
+              <SearchableSelect options={[]} value={form.tipologia_intervento} onChange={v => set('tipologia_intervento', v)} placeholder="Digita la tipologia..." allowFreeText={true} />
             </div>
             <div>
               <label style={lbl}>Tipo di contesto</label>
-              <SearchableSelect options={tipiContesto} value={form.tipo_contesto}
-                onChange={v => set('tipo_contesto', v)}
-                placeholder="Cerca tipo contesto..."
-                allowFreeText={true} />
+              <SearchableSelect options={tipiContesto} value={form.tipo_contesto} onChange={v => set('tipo_contesto', v)} placeholder="Cerca tipo contesto..." allowFreeText={true} />
             </div>
           </div>
         </div>
 
-        {/* ALTRI DATI */}
         <div style={card}>
           <div style={sect}>Altri dati</div>
           <div style={grid2}>
             <div>
               <label style={req}>Data inizio scavo *</label>
-              <input style={inp} type="date" value={form.data_inizio}
-                onChange={e => set('data_inizio', e.target.value)} required />
+              <input style={inp} type="date" value={form.data_inizio} onChange={e => set('data_inizio', e.target.value)} required />
             </div>
             <div>
               <label style={lbl}>Datazione del contesto</label>
-              <input style={inp} value={form.datazione_contesto}
-                onChange={e => set('datazione_contesto', e.target.value)}
-                placeholder="Es. Necropoli sannitica, sec. VI-IV a.C." />
+              <input style={inp} value={form.datazione_contesto} onChange={e => set('datazione_contesto', e.target.value)} placeholder="Es. Necropoli sannitica, sec. VI-IV a.C." />
             </div>
           </div>
           <div>
             <label style={lbl}>Note</label>
-            <textarea style={{ ...inp, height:'72px', resize:'none' } as React.CSSProperties}
-              value={form.note} onChange={e => set('note', e.target.value)}
-              placeholder="Note aggiuntive..." />
+            <textarea style={{ ...inp, height:'72px', resize:'none' } as React.CSSProperties} value={form.note} onChange={e => set('note', e.target.value)} placeholder="Note aggiuntive..." />
           </div>
         </div>
 

@@ -386,14 +386,7 @@ export default function SchedaUSPage() {
             </div>
           </div>
 
-          {/* US corrente — evidenziata al centro */}
-          <div style={{ textAlign:'center', marginBottom:'16px' }}>
-            <div style={{ display:'inline-block', padding:'8px 24px', background:'#fef9e7', border:'2px solid #f0a500', borderRadius:'8px', fontSize:'14px', fontWeight:'500', color:'#8a5c0a' }}>
-              US {us.numero_us} {us.tipo ? `— ${us.tipo}` : ''}
-            </div>
-          </div>
-
-          {/* GRIGLIA RAPPORTI */}
+          {/* GRIGLIA RAPPORTI con US corrente al centro */}
           <div style={{ overflowX:'auto' }}>
             <table style={{ width:'100%', borderCollapse:'separate', borderSpacing:'4px' }}>
               <thead>
@@ -421,6 +414,17 @@ export default function SchedaUSPage() {
                       )}
                     </td>
                   ))}
+                </tr>
+                {/* Riga US corrente — al centro */}
+                <tr>
+                  <td style={{ padding:'4px 8px', verticalAlign:'middle' }} />
+                  <td colSpan={COLONNE.length} style={{ padding:'6px 2px' }}>
+                    <div style={{ display:'flex', justifyContent:'center' }}>
+                      <div style={{ padding:'8px 32px', background:'#fef9e7', border:'2px solid #f0a500', borderRadius:'8px', fontSize:'13px', fontWeight:'500', color:'#8a5c0a', textAlign:'center' }}>
+                        US {us.numero_us}{us.tipo ? ` — ${us.tipo}` : ''}
+                      </div>
+                    </div>
+                  </td>
                 </tr>
                 {/* Riga contemporaneità */}
                 <tr>

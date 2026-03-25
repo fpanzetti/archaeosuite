@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import SearchableSelect from '@/components/ui/SearchableSelect'
+import UploadFoto from '@/components/ui/UploadFoto'
+import GalleriaFoto from '@/components/ui/GalleriaFoto'
 
 type Opt = { value: string; label: string }
 type USBase = { id: string; numero_us: number; tipo: string | null; descrizione: string | null }
@@ -64,6 +66,7 @@ export default function SchedaUSPage() {
   const [usCreate, setUsCreate] = useState<Set<number>>(new Set())
   const [toast, setToast] = useState('')
   const [saving, setSaving] = useState(false)
+  const [aggFoto, setAggFoto] = useState(0)
   const [saved, setSaved] = useState(false)
   const [nomeScavo, setNomeScavo] = useState('')
   const svgRef = useRef<SVGSVGElement>(null)
@@ -552,8 +555,12 @@ export default function SchedaUSPage() {
             <div><label style={lbl}>Larghezza (cm)</label><input style={inp} type="number" value={form.larghezza ?? ''} onChange={e => set('larghezza', e.target.value ? parseFloat(e.target.value) : null)} /></div>
             <div><label style={lbl}>Spessore (cm)</label><input style={inp} type="number" value={form.spessore ?? ''} onChange={e => set('spessore', e.target.value ? parseFloat(e.target.value) : null)} /></div>
           </div>
-          <div style={{ padding:'12px', background:'#f8f7f4', borderRadius:'6px', border:'0.5px dashed #c8c7be', textAlign:'center' }}>
-            <p style={{ fontSize:'12px', color:'#8a8a84' }}>Upload foto — disponibile nella prossima versione</p>
+          <div style={{ marginTop:'12px' }}>
+            <div style={{ fontSize:'11px', fontWeight:'500', color:'#8a8a84', marginBottom:'8px' }}>Foto</div>
+            <GalleriaFoto scavoId={scavoId} usId={usId} aggiornamento={aggFoto} />
+            <div style={{ marginTop:'10px' }}>
+              <UploadFoto scavoId={scavoId} usId={usId} onFotoAggiunta={() => setAggFoto(n => n + 1)} />
+            </div>
           </div>
         </div>
       )}

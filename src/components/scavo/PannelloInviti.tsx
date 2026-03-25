@@ -31,12 +31,28 @@ export default function PannelloInviti({ scavoId }: Props) {
       const { data: { user } } = await supabase.auth.getUser()
       setUtenteCorrente(user?.id ?? null)
 
-      const { data } = await supabase
+      // Prima query: accessi
+      const { data: accessi } = await supabase
         .from('accesso_scavo')
-        .select('account_id, ruolo, account:account_id(nome, cognome, email)')
+        .select('account_id, ruolo')
         .eq('scavo_id', scavoId)
 
-      if (data) setCollaboratori(data as unknown as Collaboratore[])
+      if (!accessi) return
+
+      // Seconda query: dati account
+      const ids = accessi.map(a => a.account_id)
+      const { data: accounts } = await supabase
+        .from('account')
+        .select('id, nome, cognome, email')
+        .in('id', ids)
+
+      const merged = accessi.map(a => ({
+        account_id: a.account_id,
+        ruolo: a.ruolo,
+        account: accounts?.find(ac => ac.id === a.account_id) ?? null,
+      }))
+
+      setCollaboratori(merged)
     }
     carica()
   }, [scavoId])

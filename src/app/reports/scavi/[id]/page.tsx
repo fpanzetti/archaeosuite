@@ -2,8 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import PannelloInviti from '@/components/scavo/PannelloInviti'
-import UploadFoto from '@/components/ui/UploadFoto'
-import GalleriaFoto from '@/components/ui/GalleriaFoto'
 
 export default async function ScavoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -106,15 +104,7 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
             </div>
           </div>
           <PannelloInviti scavoId={id} scavoDenominazione={nome} />
-          <div style={{ background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '10px', padding: '16px', marginTop: '12px' }}>
-            <div style={{ fontSize: '11px', fontWeight: '500', color: '#1a4a7a', marginBottom: '12px', paddingBottom: '8px', borderBottom: '0.5px solid #e8f0f8' }}>
-              Foto scavo
-            </div>
-            <GalleriaFoto scavoId={id} />
-            <div style={{ marginTop: '10px' }}>
-              <UploadFoto scavoId={id} />
-            </div>
-          </div>
+
         </div>
 
         {/* Lista US */}

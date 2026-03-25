@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import PannelloInviti from '@/components/scavo/PannelloInviti'
 
 export default async function ScavoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -102,6 +103,7 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
               {scavo.note && <div style={{ marginTop: '6px', padding: '6px 8px', background: '#f8f7f4', borderRadius: '4px', lineHeight: '1.5' }}><span style={{ color: '#8a8a84' }}>Note: </span>{scavo.note}</div>}
             </div>
           </div>
+          <PannelloInviti scavoId={id} scavoDenominazione={nome} />
         </div>
 
         {/* Lista US */}

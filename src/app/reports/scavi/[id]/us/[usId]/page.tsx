@@ -1,9 +1,8 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import SearchableSelect from '@/components/ui/SearchableSelect'
-import LineeRapporti from '@/components/ui/LineeRapporti'
 
 type Opt = { value: string; label: string }
 type USBase = { id: string; numero_us: number; tipo: string | null; descrizione: string | null }
@@ -66,6 +65,7 @@ export default function SchedaUSPage() {
   const [toast, setToast] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const svgRef = useRef<SVGSVGElement>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -165,6 +165,80 @@ export default function SchedaUSPage() {
       .eq('us_id', usId).eq('tipo', tipoKey).eq('numero_us_correlata', numero)
     setRapporti(prev => ({ ...prev, [tipoKey]: prev[tipoKey].filter(n => n !== numero) }))
   }
+
+  useEffect(() => {
+    if (step !== 2) return
+    const timer = setTimeout(() => {
+      const svg = svgRef.current
+      if (!svg) return
+      const container = svg.parentElement
+      if (!container) return
+      const w = container.offsetWidth
+      const h = container.offsetHeight
+      svg.setAttribute('width', String(w))
+      svg.setAttribute('height', String(h))
+      svg.innerHTML = ''
+
+      const usEl = document.getElementById('us-corrente-center')
+      if (!usEl) return
+      const cRect = container.getBoundingClientRect()
+      const usR = usEl.getBoundingClientRect()
+      const usX = usR.left - cRect.left + usR.width / 2
+      const usY = usR.top - cRect.top + usR.height / 2
+
+      const categorie = [
+        { chiavi: COLONNE.filter(c => c.post).map(c => c.post!), colore: '#185FA5' },
+        { chiavi: COLONNE.filter(c => c.cont).map(c => c.cont!), colore: '#1a6b4a' },
+        { chiavi: COLONNE.filter(c => c.ant).map(c => c.ant!), colore: '#8a5c0a' },
+      ]
+
+      categorie.forEach(({ chiavi, colore }) => {
+        const attive = chiavi.filter(k => (rapporti[k] ?? []).length > 0)
+        if (attive.length === 0) return
+
+        let sumX = 0, sumY = 0, count = 0
+        attive.forEach(k => {
+          const el = document.getElementById('cella-' + k)
+          if (!el) return
+          const r = el.getBoundingClientRect()
+          sumX += r.left - cRect.left + r.width / 2
+          sumY += r.top - cRect.top + r.height / 2
+          count++
+        })
+        if (count === 0) return
+
+        const tx = sumX / count
+        const ty = sumY / count
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+        line.setAttribute('x1', String(usX))
+        line.setAttribute('y1', String(usY))
+        line.setAttribute('x2', String(tx))
+        line.setAttribute('y2', String(ty))
+        line.setAttribute('stroke', colore)
+        line.setAttribute('stroke-width', '2')
+        line.setAttribute('stroke-dasharray', '5 3')
+        line.setAttribute('opacity', '0.75')
+        svg.appendChild(line)
+
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+        dot.setAttribute('cx', String(tx))
+        dot.setAttribute('cy', String(ty))
+        dot.setAttribute('r', '5')
+        dot.setAttribute('fill', colore)
+        svg.appendChild(dot)
+
+        const dotStart = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+        dotStart.setAttribute('cx', String(usX))
+        dotStart.setAttribute('cy', String(usY))
+        dotStart.setAttribute('r', '4')
+        dotStart.setAttribute('fill', colore)
+        dotStart.setAttribute('opacity', '0.5')
+        svg.appendChild(dotStart)
+      })
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [step, rapporti])
 
   async function salva() {
     setSaving(true)
@@ -389,7 +463,7 @@ export default function SchedaUSPage() {
 
           {/* GRIGLIA RAPPORTI con US corrente al centro */}
           <div style={{ overflowX:'auto', position:'relative' }}>
-            <LineeRapporti rapporti={rapporti} colonne={COLONNE} />
+            <svg ref={svgRef} style={{ position:'absolute', top:0, left:0, pointerEvents:'none', zIndex:10 }} />
             <table style={{ width:'100%', borderCollapse:'separate', borderSpacing:'4px' }}>
               <thead>
                 <tr>

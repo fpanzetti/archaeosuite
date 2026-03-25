@@ -163,6 +163,8 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
                         )}
                       </Link>
                       <StatoUS scavoId={id} usId={us.id} statoAttuale={us.stato ?? 'aperta'} />
+                    </div>
+                  </div>
                 ))}
               </div>
             )}

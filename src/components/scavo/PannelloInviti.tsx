@@ -1,16 +1,57 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+
+interface Collaboratore {
+  account_id: string
+  ruolo: string
+  account: {
+    nome: string
+    cognome: string
+    email: string
+  } | null
+}
 
 interface Props {
   scavoId: string
   scavoDenominazione: string
 }
 
-export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
+export default function PannelloInviti({ scavoId }: Props) {
+  const [collaboratori, setCollaboratori] = useState<Collaboratore[]>([])
   const [email, setEmail] = useState('')
   const [ruolo, setRuolo] = useState('collaboratore')
   const [loading, setLoading] = useState(false)
   const [risultato, setRisultato] = useState<{ url?: string; errore?: string } | null>(null)
+  const [utenteCorrente, setUtenteCorrente] = useState<string | null>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function carica() {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUtenteCorrente(user?.id ?? null)
+
+      const { data } = await supabase
+        .from('accesso_scavo')
+        .select('account_id, ruolo, account:account_id(nome, cognome, email)')
+        .eq('scavo_id', scavoId)
+
+      if (data) setCollaboratori(data as unknown as Collaboratore[])
+    }
+    carica()
+  }, [scavoId])
+
+  function iniziali(c: Collaboratore) {
+    const n = c.account?.nome?.[0] ?? ''
+    const cog = c.account?.cognome?.[0] ?? ''
+    return (n + cog).toUpperCase() || '?'
+  }
+
+  function coloreBadge(ruolo: string) {
+    if (ruolo === 'editor') return { bg: '#e8f0f8', color: '#1a4a7a' }
+    if (ruolo === 'collaboratore') return { bg: '#e8f4ef', color: '#1a6b4a' }
+    return { bg: '#f0efe9', color: '#8a8a84' }
+  }
 
   async function invita() {
     if (!email) return
@@ -43,12 +84,49 @@ export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
   return (
     <div style={{ background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '10px', padding: '16px', marginTop: '12px' }}>
       <div style={{ fontSize: '11px', fontWeight: '500', color: '#1a4a7a', marginBottom: '12px', paddingBottom: '8px', borderBottom: '0.5px solid #e8f0f8' }}>
-        Invita collaboratore
+        Accesso e collaboratori
       </div>
 
+      {/* Lista collaboratori */}
+      {collaboratori.length > 0 && (
+        <div style={{ marginBottom: '14px' }}>
+          {collaboratori.map(c => {
+            const badge = coloreBadge(c.ruolo)
+            const sonoIo = c.account_id === utenteCorrente
+            return (
+              <div key={c.account_id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 0', borderBottom: '0.5px solid #f0efe9' }}>
+                {/* Avatar iniziali */}
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: badge.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '500', color: badge.color, flexShrink: 0 }}>
+                  {iniziali(c)}
+                </div>
+                {/* Nome e email */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a' }}>
+                    {c.account ? `${c.account.nome} ${c.account.cognome}` : c.account_id.slice(0, 8)}
+                    {sonoIo && <span style={{ fontSize: '10px', color: '#8a8a84', marginLeft: '6px' }}>tu</span>}
+                  </div>
+                  {c.account?.email && (
+                    <div style={{ fontSize: '11px', color: '#8a8a84', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {c.account.email}
+                    </div>
+                  )}
+                </div>
+                {/* Badge ruolo */}
+                <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '8px', background: badge.bg, color: badge.color, fontWeight: '500', flexShrink: 0 }}>
+                  {c.ruolo}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Form invito */}
+      <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', marginBottom: '8px' }}>
+        Invita un collaboratore
+      </div>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
         <div style={{ flex: 2 }}>
-          <label style={{ display: 'block', fontSize: '11px', color: '#8a8a84', marginBottom: '4px', fontWeight: '500' }}>Email</label>
           <input style={inp} type="email" value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="nome@email.com"
@@ -56,7 +134,6 @@ export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
           />
         </div>
         <div style={{ flex: 1 }}>
-          <label style={{ display: 'block', fontSize: '11px', color: '#8a8a84', marginBottom: '4px', fontWeight: '500' }}>Ruolo</label>
           <select style={inp} value={ruolo} onChange={e => setRuolo(e.target.value)}>
             <option value="editor">Editor</option>
             <option value="collaboratore">Collaboratore</option>
@@ -71,7 +148,8 @@ export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
           background: email ? '#1a4a7a' : '#f0efe9',
           color: email ? '#fff' : '#8a8a84',
           border: 'none', borderRadius: '6px',
-          fontSize: '12px', fontWeight: '500', cursor: email ? 'pointer' : 'default',
+          fontSize: '12px', fontWeight: '500',
+          cursor: email ? 'pointer' : 'default',
         }}>
         {loading ? 'Invio...' : 'Invia invito'}
       </button>

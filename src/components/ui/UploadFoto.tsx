@@ -163,7 +163,7 @@ export default function UploadFoto({ scavoId, usId, onFotoAggiunta }: Props) {
       ) : (
         <div>
           <img src={preview} alt="anteprima"
-            style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', borderRadius: '6px', marginBottom: '10px' }} />
+            style={{ width: '100%', maxHeight: '240px', objectFit: 'contain', background: '#f0efe9', borderRadius: '6px', marginBottom: '10px' }} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '11px', color: '#8a8a84', marginBottom: '4px', fontWeight: '500' }}>Tipo</label>

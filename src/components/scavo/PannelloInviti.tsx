@@ -8,7 +8,6 @@ interface Collaboratore {
   account: {
     nome: string
     cognome: string
-    email: string
   } | null
 }
 
@@ -43,7 +42,7 @@ export default function PannelloInviti({ scavoId }: Props) {
       const ids = accessi.map(a => a.account_id)
       const { data: accounts } = await supabase
         .from('account')
-        .select('id, nome, cognome, email')
+        .select('id, nome, cognome')
         .in('id', ids)
 
       const merged = accessi.map(a => ({
@@ -121,11 +120,7 @@ export default function PannelloInviti({ scavoId }: Props) {
                     {c.account ? `${c.account.nome} ${c.account.cognome}` : c.account_id.slice(0, 8)}
                     {sonoIo && <span style={{ fontSize: '10px', color: '#8a8a84', marginLeft: '6px' }}>tu</span>}
                   </div>
-                  {c.account?.email && (
-                    <div style={{ fontSize: '11px', color: '#8a8a84', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {c.account.email}
-                    </div>
-                  )}
+
                 </div>
                 {/* Badge ruolo */}
                 <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '8px', background: badge.bg, color: badge.color, fontWeight: '500', flexShrink: 0 }}>

@@ -2,6 +2,30 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 
+function StatoUS({ scavoId, usId, statoAttuale }: { scavoId: string; usId: string; statoAttuale: string }) {
+  const stati = [
+    { value: 'aperta', label: 'Aperta', color: '#8a8a84', bg: '#f0efe9' },
+    { value: 'in_lavorazione', label: 'In lav.', color: '#8a5c0a', bg: '#fdf3e0' },
+    { value: 'classificata', label: 'Classif.', color: '#1a6b4a', bg: '#e8f4ef' },
+  ]
+  const stato = stati.find(s => s.value === statoAttuale) ?? stati[0]
+  return (
+    <form method="POST" action={`/api/us-stato`} style={{ flexShrink: 0 }}>
+      <input type="hidden" name="usId" value={usId} />
+      <input type="hidden" name="scavoId" value={scavoId} />
+      <select name="stato" defaultValue={statoAttuale}
+        onChange={(e) => (e.target.form as HTMLFormElement).submit()}
+        style={{
+          fontSize: '11px', padding: '2px 6px', borderRadius: '8px', cursor: 'pointer',
+          background: stato.bg, color: stato.color,
+          border: `0.5px solid ${stato.color}60`, fontWeight: '500',
+        }}>
+        {stati.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+      </select>
+    </form>
+  )
+}
+
 export default async function ScavoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
@@ -116,21 +140,22 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {usList.map(us => (
-                  <Link key={us.id} href={`/reports/scavi/${id}/us/${us.id}`} style={{ textDecoration: 'none' }}>
-                    <div style={{ padding: '8px 10px', background: '#f8f7f4', borderRadius: '6px', border: '0.5px solid #e0dfd8', cursor: 'pointer' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a' }}>US {us.numero_us}</span>
-                        <span style={{ fontSize: '11px', background: '#e8f0f8', color: '#1a4a7a', padding: '1px 6px', borderRadius: '8px' }}>
-                          {us.tipo ?? '—'}
-                        </span>
-                      </div>
-                      {us.descrizione && (
-                        <div style={{ fontSize: '11px', color: '#8a8a84', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {us.descrizione}
+                  <div key={us.id} style={{ padding: '8px 10px', background: '#f8f7f4', borderRadius: '6px', border: '0.5px solid #e0dfd8' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Link href={`/reports/scavi/${id}/us/${us.id}`} style={{ textDecoration: 'none', flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a' }}>US {us.numero_us}</span>
+                          <span style={{ fontSize: '11px', background: '#e8f0f8', color: '#1a4a7a', padding: '1px 6px', borderRadius: '8px' }}>
+                            {us.tipo ?? '—'}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  </Link>
+                        {us.descrizione && (
+                          <div style={{ fontSize: '11px', color: '#8a8a84', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {us.descrizione}
+                          </div>
+                        )}
+                      </Link>
+                      <StatoUS scavoId={id} usId={us.id} statoAttuale={us.stato ?? 'aperta'} />
                 ))}
               </div>
             )}

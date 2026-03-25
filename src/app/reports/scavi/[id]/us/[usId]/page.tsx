@@ -491,17 +491,7 @@ export default function SchedaUSPage() {
                     </td>
                   ))}
                 </tr>
-                {/* Riga US corrente — al centro tra posteriorità e contemporaneità */}
-                <tr>
-                  <td style={{ padding:'4px 8px' }} />
-                  <td colSpan={COLONNE.length} style={{ padding:'8px 2px' }}>
-                    <div style={{ display:'flex', justifyContent:'center' }}>
-                      <div id="us-corrente-center" style={{ padding:'8px 32px', background:'#fef9e7', border:'2px solid #f0a500', borderRadius:'8px', fontSize:'13px', fontWeight:'500', color:'#8a5c0a', textAlign:'center' }}>
-                        US {us.numero_us}{us.tipo ? ` — ${us.tipo}` : ''}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
+
                 {/* Riga contemporaneità */}
                 <tr>
                   <td style={{ fontSize:'10px', fontWeight:'500', color:'#1a6b4a', padding:'4px 8px', verticalAlign:'middle' }}>

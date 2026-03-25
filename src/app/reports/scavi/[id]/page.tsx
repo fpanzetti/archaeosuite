@@ -2,30 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 
-function StatoUS({ scavoId, usId, statoAttuale }: { scavoId: string; usId: string; statoAttuale: string }) {
-  const stati = [
-    { value: 'aperta', label: 'Aperta', color: '#8a8a84', bg: '#f0efe9' },
-    { value: 'in_lavorazione', label: 'In lav.', color: '#8a5c0a', bg: '#fdf3e0' },
-    { value: 'classificata', label: 'Classif.', color: '#1a6b4a', bg: '#e8f4ef' },
-  ]
-  const stato = stati.find(s => s.value === statoAttuale) ?? stati[0]
-  return (
-    <form method="POST" action={`/api/us-stato`} style={{ flexShrink: 0 }}>
-      <input type="hidden" name="usId" value={usId} />
-      <input type="hidden" name="scavoId" value={scavoId} />
-      <select name="stato" defaultValue={statoAttuale}
-        onChange={(e) => (e.target.form as HTMLFormElement).submit()}
-        style={{
-          fontSize: '11px', padding: '2px 6px', borderRadius: '8px', cursor: 'pointer',
-          background: stato.bg, color: stato.color,
-          border: `0.5px solid ${stato.color}60`, fontWeight: '500',
-        }}>
-        {stati.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-      </select>
-    </form>
-  )
-}
-
 export default async function ScavoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
@@ -162,7 +138,13 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
                           </div>
                         )}
                       </Link>
-                      <StatoUS scavoId={id} usId={us.id} statoAttuale={us.stato ?? 'aperta'} />
+                      <span style={{
+                        fontSize: '11px', padding: '2px 8px', borderRadius: '8px', flexShrink: 0,
+                        background: us.stato === 'classificata' ? '#e8f4ef' : us.stato === 'in_lavorazione' ? '#fdf3e0' : '#f0efe9',
+                        color: us.stato === 'classificata' ? '#1a6b4a' : us.stato === 'in_lavorazione' ? '#8a5c0a' : '#8a8a84',
+                      }}>
+                        {us.stato === 'classificata' ? 'Classif.' : us.stato === 'in_lavorazione' ? 'In lav.' : 'Aperta'}
+                      </span>
                     </div>
                   </div>
                 ))}

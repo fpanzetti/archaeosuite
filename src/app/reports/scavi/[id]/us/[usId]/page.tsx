@@ -65,6 +65,7 @@ export default function SchedaUSPage() {
   const [toast, setToast] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [nomeScavo, setNomeScavo] = useState('')
   const svgRef = useRef<SVGSVGElement>(null)
   const router = useRouter()
   const supabase = createClient()
@@ -83,6 +84,10 @@ export default function SchedaUSPage() {
         supabase.from('munsell').select('*').order('nome_italiano'),
         supabase.from('rapporto_stratigrafico').select('*').eq('us_id', usId),
       ])
+      const { data: scavoData } = await supabase.from('scavo').select('comune, provincia, localita').eq('id', scavoId).single()
+      if (scavoData) {
+        setNomeScavo([scavoData.comune, scavoData.provincia ? `(${scavoData.provincia})` : '', scavoData.localita].filter(Boolean).join(' '))
+      }
       if (usData) { setUs(usData); setForm(usData) }
       if (th) {
         setTipiUS(th.filter((t: {tipo: string; valore: string}) => t.tipo === 'tipo_us').map((t: {tipo: string; valore: string}) => ({ value: t.valore, label: t.valore })))
@@ -345,7 +350,7 @@ export default function SchedaUSPage() {
       <div style={{ fontSize:'11px', color:'#8a8a84', marginBottom:'16px' }}>
         <span style={{ color:'#1a4a7a', cursor:'pointer' }} onClick={() => router.push('/reports')}>Scavi</span>
         {' / '}
-        <span style={{ color:'#1a4a7a', cursor:'pointer' }} onClick={() => router.push(`/reports/scavi/${scavoId}`)}>Scavo</span>
+        <span style={{ color:'#1a4a7a', cursor:'pointer' }} onClick={() => router.push(`/reports/scavi/${scavoId}`)}>{nomeScavo || 'Scavo'}</span>
         {' / '}US {us.numero_us}
       </div>
 

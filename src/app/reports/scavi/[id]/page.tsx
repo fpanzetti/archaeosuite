@@ -108,15 +108,22 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
               Localizzazione
             </div>
             <div style={{ fontSize: '12px', lineHeight: '2', color: '#555550' }}>
-              {scavo.nazione && <div><span style={{ color: '#8a8a84' }}>Nazione: </span>{scavo.nazione}</div>}
+              {scavo.nazione && scavo.nazione !== 'Italia' && <div><span style={{ color: '#8a8a84' }}>Nazione: </span>{scavo.nazione}</div>}
               {scavo.regione && <div><span style={{ color: '#8a8a84' }}>Regione: </span>{scavo.regione}</div>}
+              {scavo.provincia && <div><span style={{ color: '#8a8a84' }}>Provincia: </span>{scavo.provincia}</div>}
+              {scavo.localita && <div><span style={{ color: '#8a8a84' }}>Località: </span>{scavo.localita}</div>}
+              {scavo.indirizzo && <div><span style={{ color: '#8a8a84' }}>Indirizzo: </span>{scavo.indirizzo}</div>}
               {scavo.soprintendenza && <div><span style={{ color: '#8a8a84' }}>SABAP: </span>{scavo.soprintendenza}</div>}
               {scavo.committente && <div><span style={{ color: '#8a8a84' }}>Committente: </span>{scavo.committente}</div>}
               {scavo.operatore && <div><span style={{ color: '#8a8a84' }}>Operatore: </span>{scavo.operatore}</div>}
+              {scavo.direttore_scientifico && <div><span style={{ color: '#8a8a84' }}>Direttore: </span>{scavo.direttore_scientifico}</div>}
+              {scavo.tipologia_intervento && <div><span style={{ color: '#8a8a84' }}>Tipologia: </span>{scavo.tipologia_intervento}</div>}
+              {scavo.tipo_contesto && <div><span style={{ color: '#8a8a84' }}>Contesto: </span>{scavo.tipo_contesto}</div>}
               {scavo.data_inizio && <div><span style={{ color: '#8a8a84' }}>Inizio: </span>{new Date(scavo.data_inizio).toLocaleDateString('it-IT')}</div>}
-              {scavo.lat && scavo.lon && (
-                <div><span style={{ color: '#8a8a84' }}>Coordinate: </span>{scavo.lat}, {scavo.lon}</div>
-              )}
+              {scavo.riferimento_cartografico && <div><span style={{ color: '#8a8a84' }}>Cartografia: </span>{scavo.riferimento_cartografico}</div>}
+              {scavo.foglio_catastale && <div><span style={{ color: '#8a8a84' }}>Foglio: </span>{scavo.foglio_catastale}{scavo.particella ? ` / Part. ${scavo.particella}` : ''}{scavo.subparticella ? ` / Sub. ${scavo.subparticella}` : ''}</div>}
+              {scavo.lat && scavo.lon && <div><span style={{ color: '#8a8a84' }}>Coordinate: </span>{scavo.lat}, {scavo.lon}</div>}
+              {scavo.note && <div style={{ marginTop: '6px', padding: '6px 8px', background: '#f8f7f4', borderRadius: '4px', lineHeight: '1.5' }}><span style={{ color: '#8a8a84' }}>Note: </span>{scavo.note}</div>}
             </div>
           </div>
         </div>

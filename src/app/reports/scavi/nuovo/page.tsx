@@ -188,11 +188,11 @@ export default function NuovoScavoPage() {
           <div style={grid2}>
             <div>
               <label style={req}>Tipologia di intervento *</label>
-              <SearchableSelect options={[]} value={form.tipologia_intervento} onChange={v => set('tipologia_intervento', v)} placeholder="Digita la tipologia..." allowFreeText={true} />
+              <SearchableSelect options={[]} value={form.tipologia_intervento} onChange={v => set('tipologia_intervento', v)} placeholder="Digita o scrivi nuova tipologia..." allowFreeText={true} />
             </div>
             <div>
               <label style={lbl}>Tipo di contesto</label>
-              <SearchableSelect options={tipiContesto} value={form.tipo_contesto} onChange={v => set('tipo_contesto', v)} placeholder="Cerca tipo contesto..." allowFreeText={true} />
+              <SearchableSelect options={tipiContesto} value={form.tipo_contesto} onChange={v => set('tipo_contesto', v)} placeholder="Cerca o scrivi nuovo contesto..." allowFreeText={true} />
             </div>
           </div>
         </div>

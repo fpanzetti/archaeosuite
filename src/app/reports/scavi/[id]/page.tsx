@@ -44,10 +44,23 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
           {scavo.datazione_contesto && (
             <p style={{ fontSize: '13px', color: '#555550', marginTop: '4px' }}>{scavo.datazione_contesto}</p>
           )}
-          <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '11px', background: statoBg, color: statoColore, padding: '2px 8px', borderRadius: '10px' }}>
-              {statoLabel}
-            </span>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <form action={async (fd: FormData) => {
+              'use server'
+              const { createClient } = await import('@/lib/supabase/server')
+              const sb = await createClient()
+              await sb.from('scavo').update({ stato: fd.get('stato') as string }).eq('id', id)
+              const { revalidatePath } = await import('next/cache')
+              revalidatePath(`/reports/scavi/${id}`)
+            }}>
+              <select name="stato" defaultValue={scavo.stato ?? 'in_corso'}
+                onChange={(e) => (e.target.form as HTMLFormElement).requestSubmit()}
+                style={{ fontSize: '11px', background: statoBg, color: statoColore, padding: '2px 8px', borderRadius: '10px', border: `0.5px solid ${statoColore}40`, cursor: 'pointer', fontWeight: '500' }}>
+                <option value="in_corso">In corso</option>
+                <option value="in_elaborazione">In elaborazione</option>
+                <option value="archiviato">Archiviato</option>
+              </select>
+            </form>
             {scavo.tipo_contesto && (
               <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '2px 8px', borderRadius: '10px' }}>
                 {scavo.tipo_contesto}

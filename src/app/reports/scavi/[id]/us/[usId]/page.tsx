@@ -491,7 +491,18 @@ export default function SchedaUSPage() {
                     </td>
                   ))}
                 </tr>
-                {/* Riga contemporaneità — con US corrente al posto delle celle vuote */}
+                {/* Riga US corrente — al centro tra posteriorità e contemporaneità */}
+                <tr>
+                  <td style={{ padding:'4px 8px' }} />
+                  <td colSpan={COLONNE.length} style={{ padding:'8px 2px' }}>
+                    <div style={{ display:'flex', justifyContent:'center' }}>
+                      <div id="us-corrente-center" style={{ padding:'8px 32px', background:'#fef9e7', border:'2px solid #f0a500', borderRadius:'8px', fontSize:'13px', fontWeight:'500', color:'#8a5c0a', textAlign:'center' }}>
+                        US {us.numero_us}{us.tipo ? ` — ${us.tipo}` : ''}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {/* Riga contemporaneità */}
                 <tr>
                   <td style={{ fontSize:'10px', fontWeight:'500', color:'#1a6b4a', padding:'4px 8px', verticalAlign:'middle' }}>
                     <div style={{ writingMode:'vertical-rl', transform:'rotate(180deg)', fontSize:'10px' }}>Contemporan. →</div>
@@ -501,15 +512,7 @@ export default function SchedaUSPage() {
                       {col.cont ? (
                         <CellaRapporto tipoKey={col.cont} label={col.cont_label!} riga="cont" />
                       ) : (
-                        <div id={col.key === 'copre_taglia' ? 'us-corrente-center' : undefined}
-                          style={{ height:'80px', display:'flex', alignItems:'center', justifyContent:'center',
-                            background:'#fef9e7', border:'2px solid #f0a500', borderRadius:'6px' }}>
-                          {col.key === 'copre_taglia' && (
-                            <div style={{ fontSize:'12px', fontWeight:'500', color:'#8a5c0a', textAlign:'center', padding:'4px' }}>
-                              US {us.numero_us}{us.tipo ? <><br/><span style={{fontSize:'10px', fontWeight:'400'}}>{us.tipo}</span></> : ''}
-                            </div>
-                          )}
-                        </div>
+                        <div style={{ height:'80px', background:'#f8f7f4', borderRadius:'6px', border:'0.5px solid #e0dfd8' }} />
                       )}
                     </td>
                   ))}

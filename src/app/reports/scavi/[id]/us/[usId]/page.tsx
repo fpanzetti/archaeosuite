@@ -24,7 +24,7 @@ type US = USBase & {
 }
 
 const STEP_LABELS = ['Identificazione', 'Descrizione fisica', 'Rapporti strat.', 'Documentazione', 'Interpretazione']
-const INCLUSI_OPTIONS = ['Ceramica', 'Osso', 'Carbone', 'Malta', 'Pietra', 'Metallo', 'Laterizio', 'Vetro', 'Conchiglia', 'Altro']
+const INCLUSI_OPTIONS = ['Ceramica', 'Osso', 'Carbone', 'Malta', 'Pietra', 'Metallo', 'Laterizio', 'Vetro', 'Conchiglia', 'Altro', 'Nessuno']
 
 const COLONNE = [
   { key: 'copre_taglia', post: 'copre', post_label: 'Copre', ant: 'coperto_da', ant_label: 'Coperta da', cont: null, cont_label: null },
@@ -372,9 +372,23 @@ export default function SchedaUSPage() {
               <input style={inp} type="number" value={form.anno ?? ''} onChange={e => set('anno', e.target.value ? parseInt(e.target.value) : null)} placeholder={new Date().getFullYear().toString()} /></div>
           </div>
           <div style={grid3}>
-            <div><label style={lbl}>Area</label><input style={inp} value={form.area_scavo ?? ''} onChange={e => set('area_scavo', e.target.value)} placeholder="Es. A" /></div>
-            <div><label style={lbl}>Saggio</label><input style={inp} value={form.saggio ?? ''} onChange={e => set('saggio', e.target.value)} placeholder="Es. S1" /></div>
-            <div><label style={lbl}>Settore</label><input style={inp} value={form.settore ?? ''} onChange={e => set('settore', e.target.value)} placeholder="Es. Nord" /></div>
+            <div>
+              <label style={lbl}>Area</label>
+              <input style={inp} value={form.area_scavo ?? ''} onChange={e => set('area_scavo', e.target.value)} placeholder="Es. A" />
+            </div>
+            <div>
+              <label style={lbl}>Saggio</label>
+              <input style={inp} value={form.saggio ?? ''} onChange={e => set('saggio', e.target.value)} placeholder="Es. 1" />
+            </div>
+            <div>
+              <label style={lbl}>Settore</label>
+              <input style={inp} value={form.settore ?? ''} onChange={e => set('settore', e.target.value)} placeholder="Es. Nord" />
+            </div>
+          </div>
+          <p style={{ fontSize:'10px', color:'#8a8a84', marginTop:'-6px', marginBottom:'12px' }}>
+            Se lo scavo non è suddiviso in aree, saggi o settori usa valori convenzionali: A / 1 / —
+          </p>
+          <div style={{ display:'none' }}>
           </div>
           <div style={grid2}>
             <div><label style={lbl}>Data apertura</label><input style={inp} type="date" value={form.data_apertura ?? ''} onChange={e => set('data_apertura', e.target.value)} /></div>

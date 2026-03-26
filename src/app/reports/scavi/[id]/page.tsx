@@ -30,6 +30,23 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
   const statoBg = scavo.stato === 'in_corso' ? '#e8f0f8' : scavo.stato === 'in_elaborazione' ? '#fdf3e0' : '#f0efe9'
   const statoLabel = scavo.stato === 'in_corso' ? 'In corso' : scavo.stato === 'in_elaborazione' ? 'In elaborazione' : 'Archiviato'
 
+  function calcolaCompletamento(us: Record<string, unknown>): number {
+    if (us.completata) return 100
+    const campi = [
+      'tipo', 'descrizione', 'descrizione_estesa',
+      'colore', 'consistenza', 'umidita',
+      'quota_min', 'quota_max', 'osservazioni',
+      'interpretazione', 'cronologia_iniziale', 'tipo_formazione',
+    ]
+    const valorizzati = campi.filter(c => {
+      const v = us[c]
+      if (v === null || v === undefined || v === '') return false
+      if (Array.isArray(v)) return v.length > 0
+      return true
+    }).length
+    return Math.round((valorizzati / campi.length) * 100)
+  }
+
   return (
     <div style={{ padding: '24px' }}>
       {/* Breadcrumb */}
@@ -139,6 +156,20 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
                               ✓ Completata
                             </span>
                           )}
+                        </div>
+                        {!us.completata && (() => {
+                          const perc = calcolaCompletamento(us as Record<string, unknown>)
+                          const colore = perc >= 75 ? '#1a6b4a' : perc >= 40 ? '#8a5c0a' : '#c8c7be'
+                          return (
+                            <div style={{ display:'flex', alignItems:'center', gap:'6px', marginTop:'5px' }}>
+                              <div style={{ flex:1, height:'3px', background:'#e0dfd8', borderRadius:'2px', overflow:'hidden' }}>
+                                <div style={{ width:`${perc}%`, height:'100%', background: colore, borderRadius:'2px' }} />
+                              </div>
+                              <span style={{ fontSize:'10px', color: colore, fontWeight:'500', minWidth:'28px', textAlign:'right' }}>{perc}%</span>
+                            </div>
+                          )
+                        })()}
+
                         </div>
                         {us.descrizione && (
                           <div style={{ fontSize: '11px', color: '#8a8a84', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

@@ -18,6 +18,7 @@ interface Foto {
 interface Props {
   scavoId: string
   usId?: string
+  tipo?: string
   onFotoAggiunta?: (foto: Foto) => void
 }
 
@@ -51,15 +52,25 @@ async function ridimensiona(file: File, maxLato: number): Promise<Blob> {
   })
 }
 
-export default function UploadFoto({ scavoId, usId, onFotoAggiunta }: Props) {
+const LABEL_TIPO: Record<string, string> = {
+  foto: 'foto',
+  pianta: 'pianta',
+  prospetto: 'prospetto',
+  sezione: 'sezione',
+}
+
+export default function UploadFoto({ scavoId, usId, tipo: tipoProp, onFotoAggiunta }: Props) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const [didascalia, setDidascalia] = useState('')
-  const [tipo, setTipo] = useState('generale')
   const [fileSelezionato, setFileSelezionato] = useState<File | null>(null)
   const [errore, setErrore] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
+
+  // Il tipo è determinato dalla prop esterna (tab attiva) — non modificabile dall'utente
+  const tipoEffettivo = tipoProp ?? 'foto'
+  const labelTipo = LABEL_TIPO[tipoEffettivo] ?? tipoEffettivo
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -84,7 +95,7 @@ export default function UploadFoto({ scavoId, usId, onFotoAggiunta }: Props) {
       const { width: w, height: h } = imgOrig
       URL.revokeObjectURL(origUrl)
 
-      // Ridimensiona immagine principale
+      // Ridimensiona immagine principale e thumbnail
       const blobMain = await ridimensiona(fileSelezionato, MAX_LATO)
       const blobThumb = await ridimensiona(fileSelezionato, MAX_THUMB)
 
@@ -93,23 +104,19 @@ export default function UploadFoto({ scavoId, usId, onFotoAggiunta }: Props) {
       const pathMain = `${baseName}.jpg`
       const pathThumb = `${baseName}_thumb.jpg`
 
-      // Upload principale
       const { error: e1 } = await supabase.storage
         .from('foto-scavi')
         .upload(pathMain, blobMain, { contentType: 'image/jpeg', upsert: false })
       if (e1) throw new Error(e1.message)
 
-      // Upload thumbnail
       const { error: e2 } = await supabase.storage
         .from('foto-scavi')
         .upload(pathThumb, blobThumb, { contentType: 'image/jpeg', upsert: false })
       if (e2) throw new Error(e2.message)
 
-      // URL pubblici
       const { data: urlMain } = supabase.storage.from('foto-scavi').getPublicUrl(pathMain)
       const { data: urlThumb } = supabase.storage.from('foto-scavi').getPublicUrl(pathThumb)
 
-      // Salva in DB
       const { data: foto, error: eDb } = await supabase.from('foto').insert({
         scavo_id: scavoId,
         us_id: usId ?? null,
@@ -117,7 +124,7 @@ export default function UploadFoto({ scavoId, usId, onFotoAggiunta }: Props) {
         url_thumb: urlThumb.publicUrl,
         nome_file: fileSelezionato.name,
         didascalia: didascalia || null,
-        tipo: tipo,
+        tipo: tipoEffettivo,
         larghezza: w,
         altezza: h,
         dimensione_kb: Math.round(blobMain.size / 1024),
@@ -145,40 +152,39 @@ export default function UploadFoto({ scavoId, usId, onFotoAggiunta }: Props) {
     fontSize: '12px', fontFamily: 'inherit',
   }
 
+  const labelUpload = tipoEffettivo === 'foto' ? '📷 Aggiungi foto'
+    : tipoEffettivo === 'pianta' ? '📐 Aggiungi pianta'
+    : tipoEffettivo === 'prospetto' ? '🏛 Aggiungi prospetto'
+    : tipoEffettivo === 'sezione' ? '✂️ Aggiungi sezione'
+    : 'Aggiungi allegato'
+
   return (
     <div style={{ background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '10px', padding: '16px' }}>
       <div style={{ fontSize: '11px', fontWeight: '500', color: '#1a4a7a', marginBottom: '12px', paddingBottom: '8px', borderBottom: '0.5px solid #e8f0f8' }}>
-        Aggiungi foto
+        {labelUpload}
       </div>
 
       {!preview ? (
         <div
           onClick={() => inputRef.current?.click()}
           style={{ border: '1.5px dashed #c8c7be', borderRadius: '8px', padding: '24px', textAlign: 'center', cursor: 'pointer', background: '#f8f7f4' }}>
-          <div style={{ fontSize: '24px', marginBottom: '8px' }}>📷</div>
-          <div style={{ fontSize: '12px', color: '#8a8a84' }}>Clicca per selezionare una foto</div>
-          <div style={{ fontSize: '11px', color: '#c8c7be', marginTop: '4px' }}>JPG, PNG, WEBP — max 10MB</div>
-          <input ref={inputRef} type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
+          <div style={{ fontSize: '24px', marginBottom: '8px' }}>
+            {tipoEffettivo === 'foto' ? '📷' : tipoEffettivo === 'pianta' ? '📐' : tipoEffettivo === 'prospetto' ? '🏛' : '✂️'}
+          </div>
+          <div style={{ fontSize: '12px', color: '#8a8a84' }}>Clicca per selezionare {tipoEffettivo === 'foto' ? 'una foto' : `una ${labelTipo}`}</div>
+          <div style={{ fontSize: '11px', color: '#c8c7be', marginTop: '4px' }}>JPG, PNG, WEBP, PDF — max 10MB</div>
+          <input ref={inputRef} type="file" accept="image/*,application/pdf" onChange={onFileChange} style={{ display: 'none' }} />
         </div>
       ) : (
         <div>
           <img src={preview} alt="anteprima"
             style={{ width: '100%', maxHeight: '240px', objectFit: 'contain', background: '#f0efe9', borderRadius: '6px', marginBottom: '10px' }} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', color: '#8a8a84', marginBottom: '4px', fontWeight: '500' }}>Tipo</label>
-              <select style={inp} value={tipo} onChange={e => setTipo(e.target.value)}>
-                <option value="generale">Generale</option>
-                <option value="us">US</option>
-                <option value="reperto">Reperto</option>
-                <option value="dettaglio">Dettaglio</option>
-                <option value="altro">Altro</option>
-              </select>
-            </div>
-          </div>
           <div style={{ marginBottom: '8px' }}>
             <label style={{ display: 'block', fontSize: '11px', color: '#8a8a84', marginBottom: '4px', fontWeight: '500' }}>Didascalia</label>
             <input style={inp} value={didascalia} onChange={e => setDidascalia(e.target.value)} placeholder="Descrizione opzionale..." />
+          </div>
+          <div style={{ marginBottom: '8px', padding: '6px 10px', background: '#f8f7f4', borderRadius: '6px', fontSize: '11px', color: '#8a8a84' }}>
+            Tipo: <strong style={{ color: '#1a4a7a' }}>{labelTipo}</strong>
           </div>
           {errore && <p style={{ fontSize: '11px', color: '#c00', marginBottom: '8px' }}>{errore}</p>}
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -188,7 +194,7 @@ export default function UploadFoto({ scavoId, usId, onFotoAggiunta }: Props) {
             </button>
             <button onClick={upload} disabled={uploading}
               style={{ flex: 2, padding: '8px', background: uploading ? '#f0efe9' : '#1a4a7a', color: uploading ? '#8a8a84' : '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: uploading ? 'default' : 'pointer' }}>
-              {uploading ? 'Caricamento...' : 'Carica foto'}
+              {uploading ? 'Caricamento...' : `Carica ${labelTipo}`}
             </button>
           </div>
         </div>

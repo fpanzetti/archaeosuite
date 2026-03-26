@@ -47,6 +47,12 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
     return Math.round((valorizzati / campi.length) * 100)
   }
 
+  function coloreCompletamento(perc: number, completata: boolean): string {
+    if (completata) return '#1a4a7a'
+    const hue = Math.round(perc * 1.2) // 0→0 (rosso), 50→60 (giallo), 100→120 (verde)
+    return `hsl(${hue}, 75%, 38%)`
+  }
+
   return (
     <div style={{ padding: '24px' }}>
       {/* Breadcrumb */}
@@ -157,15 +163,22 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
                             </span>
                           )}
                         </div>
-                        {!us.completata && (() => {
+                        {(() => {
                           const perc = calcolaCompletamento(us as Record<string, unknown>)
-                          const colore = perc >= 75 ? '#1a6b4a' : perc >= 40 ? '#8a5c0a' : '#c8c7be'
-                          return (
-                            <div style={{ display:'flex', alignItems:'center', gap:'6px', marginTop:'5px' }}>
-                              <div style={{ flex:1, height:'3px', background:'#e0dfd8', borderRadius:'2px', overflow:'hidden' }}>
-                                <div style={{ width:`${perc}%`, height:'100%', background: colore, borderRadius:'2px' }} />
+                          const colore = coloreCompletamento(perc, !!us.completata)
+                          return us.completata ? (
+                            <div style={{ display:'flex', alignItems:'center', gap:'5px', marginTop:'4px' }}>
+                              <div style={{ display:'flex', alignItems:'center', gap:'4px', padding:'2px 8px', background:'#e8f0f8', border:'1px solid #185FA5', borderRadius:'8px' }}>
+                                <span style={{ fontSize:'11px' }}>✓</span>
+                                <span style={{ fontSize:'10px', fontWeight:'500', color:'#185FA5' }}>Completata</span>
                               </div>
-                              <span style={{ fontSize:'10px', color: colore, fontWeight:'500', minWidth:'28px', textAlign:'right' }}>{perc}%</span>
+                            </div>
+                          ) : (
+                            <div style={{ display:'flex', alignItems:'center', gap:'5px', marginTop:'4px' }}>
+                              <div style={{ width:'60px', height:'4px', background:'#e0dfd8', borderRadius:'2px', overflow:'hidden' }}>
+                                <div style={{ width:`${perc}%`, height:'100%', background: colore, borderRadius:'2px', transition:'width 0.3s' }} />
+                              </div>
+                              <span style={{ fontSize:'10px', color: colore, fontWeight:'500', minWidth:'24px' }}>{perc}%</span>
                             </div>
                           )
                         })()}

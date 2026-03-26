@@ -169,8 +169,6 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
                             </div>
                           )
                         })()}
-
-                        </div>
                         {us.descrizione && (
                           <div style={{ fontSize: '11px', color: '#8a8a84', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {us.descrizione}

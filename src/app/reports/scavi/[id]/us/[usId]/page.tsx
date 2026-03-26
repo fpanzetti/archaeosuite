@@ -20,16 +20,17 @@ type US = USBase & {
   anno: number | null; area_scavo: string | null;
   saggio: string | null; settore: string | null;
   data_apertura: string | null; data_chiusura: string | null;
+  completata: boolean;
 }
 
 const STEP_LABELS = ['Identificazione', 'Descrizione fisica', 'Rapporti strat.', 'Documentazione', 'Interpretazione']
 const INCLUSI_OPTIONS = ['Ceramica', 'Osso', 'Carbone', 'Malta', 'Pietra', 'Metallo', 'Laterizio', 'Vetro', 'Conchiglia', 'Altro']
 
 const COLONNE = [
-  { key: 'copre_taglia', post: 'copre', post_label: 'Copre', ant: 'coperto_da', ant_label: 'Coperta da', cont: null },
-  { key: 'taglia_tagliato', post: 'taglia', post_label: 'Taglia', ant: 'tagliato_da', ant_label: 'Tagliata da', cont: null },
-  { key: 'appoggia', post: 'si_appoggia_a', post_label: 'Si appoggia a', ant: 'appoggiato_da', ant_label: 'Appoggiata da', cont: null },
-  { key: 'riempie', post: 'riempie', post_label: 'Riempie', ant: 'riempito_da', ant_label: 'Riempita da', cont: null },
+  { key: 'copre_taglia', post: 'copre', post_label: 'Copre', ant: 'coperto_da', ant_label: 'Coperta da', cont: null, cont_label: null },
+  { key: 'taglia_tagliato', post: 'taglia', post_label: 'Taglia', ant: 'tagliato_da', ant_label: 'Tagliata da', cont: null, cont_label: null },
+  { key: 'appoggia', post: 'si_appoggia_a', post_label: 'Si appoggia a', ant: 'appoggiato_da', ant_label: 'Appoggiata da', cont: null, cont_label: null },
+  { key: 'riempie', post: 'riempie', post_label: 'Riempie', ant: 'riempito_da', ant_label: 'Riempita da', cont: null, cont_label: null },
   { key: 'lega', post: null, post_label: null, ant: null, ant_label: null, cont: 'si_lega_a', cont_label: 'Si lega a' },
   { key: 'uguale', post: null, post_label: null, ant: null, ant_label: null, cont: 'uguale_a', cont_label: 'Uguale a' },
 ]
@@ -48,7 +49,9 @@ export default function SchedaUSPage() {
   const usId = params.usId as string
   const [step, setStep] = useState(0)
   const [us, setUs] = useState<US | null>(null)
+  const [nomeScavo, setNomeScavo] = useState('')
   const [form, setForm] = useState<Partial<US>>({})
+  const [completata, setCompletata] = useState(false)
   const [tipiUS, setTipiUS] = useState<Opt[]>([])
   const [consistenze, setConsistenze] = useState<Opt[]>([])
   const [umidita, setUmidita] = useState<Opt[]>([])
@@ -66,9 +69,8 @@ export default function SchedaUSPage() {
   const [usCreate, setUsCreate] = useState<Set<number>>(new Set())
   const [toast, setToast] = useState('')
   const [saving, setSaving] = useState(false)
-  const [aggFoto, setAggFoto] = useState(0)
   const [saved, setSaved] = useState(false)
-  const [nomeScavo, setNomeScavo] = useState('')
+  const [aggFoto, setAggFoto] = useState(0)
   const svgRef = useRef<SVGSVGElement>(null)
   const router = useRouter()
   const supabase = createClient()
@@ -81,17 +83,21 @@ export default function SchedaUSPage() {
 
   useEffect(() => {
     async function loadAll() {
-      const [{ data: usData }, { data: th }, { data: mn }, { data: rapData }] = await Promise.all([
+      const [{ data: usData }, { data: th }, { data: mn }, { data: rapData }, { data: scavoData }] = await Promise.all([
         supabase.from('us').select('*').eq('id', usId).single(),
         supabase.from('thesaurus').select('*').order('ordine'),
         supabase.from('munsell').select('*').order('nome_italiano'),
         supabase.from('rapporto_stratigrafico').select('*').eq('us_id', usId),
+        supabase.from('scavo').select('comune, provincia, localita').eq('id', scavoId).single(),
       ])
-      const { data: scavoData } = await supabase.from('scavo').select('comune, provincia, localita').eq('id', scavoId).single()
       if (scavoData) {
         setNomeScavo([scavoData.comune, scavoData.provincia ? `(${scavoData.provincia})` : '', scavoData.localita].filter(Boolean).join(' '))
       }
-      if (usData) { setUs(usData); setForm(usData); setCompletata(usData.completata ?? false) }
+      if (usData) {
+        setUs(usData)
+        setForm(usData)
+        setCompletata(usData.completata ?? false)
+      }
       if (th) {
         setTipiUS(th.filter((t: {tipo: string; valore: string}) => t.tipo === 'tipo_us').map((t: {tipo: string; valore: string}) => ({ value: t.valore, label: t.valore })))
         setConsistenze(th.filter((t: {tipo: string; valore: string}) => t.tipo === 'consistenza').map((t: {tipo: string; valore: string}) => ({ value: t.valore, label: t.valore })))
@@ -116,6 +122,59 @@ export default function SchedaUSPage() {
     loadAll()
   }, [usId, scavoId, reloadUS])
 
+  useEffect(() => {
+    if (step !== 2) return
+    const timer = setTimeout(() => {
+      const svg = svgRef.current
+      if (!svg) return
+      const container = svg.parentElement
+      if (!container) return
+      const w = container.offsetWidth
+      const h = container.offsetHeight
+      svg.setAttribute('width', String(w))
+      svg.setAttribute('height', String(h))
+      svg.innerHTML = ''
+      const usEl = document.getElementById('us-corrente-center')
+      if (!usEl) return
+      const cRect = container.getBoundingClientRect()
+      const usR = usEl.getBoundingClientRect()
+      const usX = usR.left - cRect.left + usR.width / 2
+      const usY = usR.top - cRect.top + usR.height / 2
+      const categorie = [
+        { chiavi: COLONNE.filter(c => c.post).map(c => c.post!), colore: '#185FA5' },
+        { chiavi: COLONNE.filter(c => c.cont).map(c => c.cont!), colore: '#1a6b4a' },
+        { chiavi: COLONNE.filter(c => c.ant).map(c => c.ant!), colore: '#8a5c0a' },
+      ]
+      categorie.forEach(({ chiavi, colore }) => {
+        const attive = chiavi.filter(k => (rapporti[k] ?? []).length > 0)
+        if (attive.length === 0) return
+        let sumX = 0, sumY = 0, count = 0
+        attive.forEach(k => {
+          const el = document.getElementById('cella-' + k)
+          if (!el) return
+          const r = el.getBoundingClientRect()
+          sumX += r.left - cRect.left + r.width / 2
+          sumY += r.top - cRect.top + r.height / 2
+          count++
+        })
+        if (count === 0) return
+        const tx = sumX / count
+        const ty = sumY / count
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+        line.setAttribute('x1', String(usX))
+        line.setAttribute('y1', String(usY))
+        line.setAttribute('x2', String(tx))
+        line.setAttribute('y2', String(ty))
+        line.setAttribute('stroke', colore)
+        line.setAttribute('stroke-width', '2')
+        line.setAttribute('stroke-dasharray', '5 3')
+        line.setAttribute('opacity', '0.75')
+        svg.appendChild(line)
+      })
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [step, rapporti])
+
   function set(field: string, value: unknown) {
     setForm(prev => ({ ...prev, [field]: value }))
   }
@@ -130,14 +189,19 @@ export default function SchedaUSPage() {
     setTimeout(() => setToast(''), 3000)
   }
 
+  async function toggleCompletata() {
+    const nuovoValore = !completata
+    setCompletata(nuovoValore)
+    await supabase.from('us').update({ completata: nuovoValore }).eq('id', usId)
+    showToast(nuovoValore ? 'Scheda US segnata come completata' : 'Scheda US segnata come non completata')
+  }
+
   async function aggiungiRapporto(tipoKey: string) {
     const numero = parseInt(inputValore)
     if (!numero || numero < 1) return
     if (rapporti[tipoKey].includes(numero)) { setInputAttivo(null); setInputValore(''); return }
-
     let usCorrelataId: string | null = null
     const esistente = allUS.find(u => u.numero_us === numero)
-
     if (esistente) {
       usCorrelataId = esistente.id
     } else {
@@ -151,9 +215,7 @@ export default function SchedaUSPage() {
         await reloadUS()
       }
     }
-
     if (!usCorrelataId) return
-
     await supabase.from('rapporto_stratigrafico').upsert({
       us_id: usId, tipo: tipoKey,
       us_correlata_id: usCorrelataId, numero_us_correlata: numero,
@@ -162,7 +224,6 @@ export default function SchedaUSPage() {
       us_id: usCorrelataId, tipo: INVERSO[tipoKey],
       us_correlata_id: usId, numero_us_correlata: us?.numero_us ?? 0,
     })
-
     setRapporti(prev => ({ ...prev, [tipoKey]: [...prev[tipoKey], numero] }))
     setInputAttivo(null)
     setInputValore('')
@@ -172,86 +233,6 @@ export default function SchedaUSPage() {
     await supabase.from('rapporto_stratigrafico').delete()
       .eq('us_id', usId).eq('tipo', tipoKey).eq('numero_us_correlata', numero)
     setRapporti(prev => ({ ...prev, [tipoKey]: prev[tipoKey].filter(n => n !== numero) }))
-  }
-
-  useEffect(() => {
-    if (step !== 2) return
-    const timer = setTimeout(() => {
-      const svg = svgRef.current
-      if (!svg) return
-      const container = svg.parentElement
-      if (!container) return
-      const w = container.offsetWidth
-      const h = container.offsetHeight
-      svg.setAttribute('width', String(w))
-      svg.setAttribute('height', String(h))
-      svg.innerHTML = ''
-
-      const usEl = document.getElementById('us-corrente-center')
-      if (!usEl) return
-      const cRect = container.getBoundingClientRect()
-      const usR = usEl.getBoundingClientRect()
-      const usX = usR.left - cRect.left + usR.width / 2
-      const usY = usR.top - cRect.top + usR.height / 2
-
-      const categorie = [
-        { chiavi: COLONNE.filter(c => c.post).map(c => c.post!), colore: '#185FA5' },
-        { chiavi: COLONNE.filter(c => c.cont).map(c => c.cont!), colore: '#1a6b4a' },
-        { chiavi: COLONNE.filter(c => c.ant).map(c => c.ant!), colore: '#8a5c0a' },
-      ]
-
-      categorie.forEach(({ chiavi, colore }) => {
-        const attive = chiavi.filter(k => (rapporti[k] ?? []).length > 0)
-        if (attive.length === 0) return
-
-        let sumX = 0, sumY = 0, count = 0
-        attive.forEach(k => {
-          const el = document.getElementById('cella-' + k)
-          if (!el) return
-          const r = el.getBoundingClientRect()
-          sumX += r.left - cRect.left + r.width / 2
-          sumY += r.top - cRect.top + r.height / 2
-          count++
-        })
-        if (count === 0) return
-
-        const tx = sumX / count
-        const ty = sumY / count
-
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
-        line.setAttribute('x1', String(usX))
-        line.setAttribute('y1', String(usY))
-        line.setAttribute('x2', String(tx))
-        line.setAttribute('y2', String(ty))
-        line.setAttribute('stroke', colore)
-        line.setAttribute('stroke-width', '2')
-        line.setAttribute('stroke-dasharray', '5 3')
-        line.setAttribute('opacity', '0.75')
-        svg.appendChild(line)
-
-        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-        dot.setAttribute('cx', String(tx))
-        dot.setAttribute('cy', String(ty))
-        dot.setAttribute('r', '5')
-        dot.setAttribute('fill', colore)
-        svg.appendChild(dot)
-
-        const dotStart = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-        dotStart.setAttribute('cx', String(usX))
-        dotStart.setAttribute('cy', String(usY))
-        dotStart.setAttribute('r', '4')
-        dotStart.setAttribute('fill', colore)
-        dotStart.setAttribute('opacity', '0.5')
-        svg.appendChild(dotStart)
-      })
-    }, 150)
-    return () => clearTimeout(timer)
-  }, [step, rapporti])
-
-  async function toggleCompletata() {
-    const nuovoValore = !completata
-    setCompletata(nuovoValore)
-    await supabase.from('us').update({ completata: nuovoValore }).eq('id', usId)
   }
 
   async function salva() {
@@ -287,20 +268,15 @@ export default function SchedaUSPage() {
     const coloreRiga = riga === 'post' ? '#1a4a7a' : riga === 'ant' ? '#8a5c0a' : '#1a6b4a'
     const bgRiga = riga === 'post' ? '#e8f0f8' : riga === 'ant' ? '#fdf3e0' : '#e8f4ef'
     const isAttivo = inputAttivo === tipoKey
-
     return (
-      <div style={{ border:`0.5px solid ${coloreRiga}30`, borderRadius:'6px', padding:'8px', background: bgRiga, minHeight:'80px' }}>
+      <div id={`cella-${tipoKey}`} style={{ border:`0.5px solid ${coloreRiga}30`, borderRadius:'6px', padding:'8px', background: bgRiga, minHeight:'80px' }}>
         <div style={{ fontSize:'10px', color: coloreRiga, fontWeight:'500', marginBottom:'6px', textAlign:'center' }}>{label}</div>
-
-        {/* US collegate */}
         <div style={{ display:'flex', flexWrap:'wrap', gap:'4px', marginBottom:'6px' }}>
           {numeri.map(num => {
             const usCorr = allUS.find(u => u.numero_us === num)
             const vuota = usCreate.has(num) || (usCorr ? (!usCorr.tipo && !usCorr.descrizione) : false)
             return (
-              <div key={num} style={{
-                display:'flex', alignItems:'center', gap:'3px',
-                padding:'2px 6px', borderRadius:'4px', fontSize:'11px', fontWeight:'500',
+              <div key={num} style={{ display:'flex', alignItems:'center', gap:'3px', padding:'2px 6px', borderRadius:'4px', fontSize:'11px', fontWeight:'500',
                 background: vuota ? '#fff3cd' : '#cfe2ff',
                 border: `1px solid ${vuota ? '#f0a500' : '#185FA5'}`,
                 color: vuota ? '#8a5c0a' : '#185FA5',
@@ -313,27 +289,17 @@ export default function SchedaUSPage() {
             )
           })}
         </div>
-
-        {/* Input o pulsante + */}
         {isAttivo ? (
           <div style={{ display:'flex', gap:'4px' }}>
-            <input
-              autoFocus
-              type="number" min="1"
-              value={inputValore}
+            <input autoFocus type="number" min="1" value={inputValore}
               onChange={e => setInputValore(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') aggiungiRapporto(tipoKey); if (e.key === 'Escape') { setInputAttivo(null); setInputValore('') } }}
               style={{ width:'60px', padding:'3px 6px', border:`1px solid ${coloreRiga}`, borderRadius:'4px', background:'#fff', fontSize:'11px' }}
-              placeholder="US n."
-            />
+              placeholder="US n." />
             <button onClick={() => aggiungiRapporto(tipoKey)}
-              style={{ padding:'3px 7px', background: coloreRiga, color:'#fff', border:'none', borderRadius:'4px', fontSize:'11px', cursor:'pointer' }}>
-              ✓
-            </button>
+              style={{ padding:'3px 7px', background: coloreRiga, color:'#fff', border:'none', borderRadius:'4px', fontSize:'11px', cursor:'pointer' }}>✓</button>
             <button onClick={() => { setInputAttivo(null); setInputValore('') }}
-              style={{ padding:'3px 6px', background:'#f0efe9', color:'#888', border:'none', borderRadius:'4px', fontSize:'11px', cursor:'pointer' }}>
-              ✗
-            </button>
+              style={{ padding:'3px 6px', background:'#f0efe9', color:'#888', border:'none', borderRadius:'4px', fontSize:'11px', cursor:'pointer' }}>✗</button>
           </div>
         ) : (
           <button onClick={() => { setInputAttivo(tipoKey); setInputValore('') }}
@@ -349,7 +315,6 @@ export default function SchedaUSPage() {
 
   return (
     <div style={{ padding:'24px', maxWidth:'900px' }}>
-
       {toast && (
         <div style={{ position:'fixed', top:'20px', left:'50%', transform:'translateX(-50%)', background:'#1a1a1a', color:'#fff', padding:'10px 20px', borderRadius:'8px', fontSize:'12px', zIndex:1000 }}>
           {toast}
@@ -370,8 +335,7 @@ export default function SchedaUSPage() {
         </div>
         <div style={{ display:'flex', gap:'8px' }}>
           <button onClick={toggleCompletata}
-            style={{
-              padding:'7px 16px', borderRadius:'6px', fontSize:'12px', fontWeight:'500', cursor:'pointer',
+            style={{ padding:'7px 16px', borderRadius:'6px', fontSize:'12px', fontWeight:'500', cursor:'pointer',
               background: completata ? '#e8f4ef' : '#f8f7f4',
               color: completata ? '#1a6b4a' : '#8a8a84',
               border: completata ? '1.5px solid #1a6b4a' : '0.5px solid #c8c7be',
@@ -399,7 +363,6 @@ export default function SchedaUSPage() {
         ))}
       </div>
 
-      {/* STEP 0 — IDENTIFICAZIONE */}
       {step === 0 && (
         <div style={{ background:'#fff', border:'0.5px solid #e0dfd8', borderRadius:'10px', padding:'20px' }}>
           <div style={grid2}>
@@ -424,7 +387,6 @@ export default function SchedaUSPage() {
         </div>
       )}
 
-      {/* STEP 1 — DESCRIZIONE FISICA */}
       {step === 1 && (
         <div style={{ background:'#fff', border:'0.5px solid #e0dfd8', borderRadius:'10px', padding:'20px' }}>
           <div style={{ marginBottom:'12px' }}>
@@ -458,35 +420,23 @@ export default function SchedaUSPage() {
         </div>
       )}
 
-      {/* STEP 2 — RAPPORTI STRATIGRAFICI */}
       {step === 2 && (
         <div style={{ background:'#fff', border:'0.5px solid #e0dfd8', borderRadius:'10px', padding:'20px' }}>
-
-          {/* Legenda */}
           <div style={{ display:'flex', gap:'12px', marginBottom:'16px', padding:'8px 12px', background:'#f8f7f4', borderRadius:'6px', flexWrap:'wrap' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'11px', color:'#555550' }}>
-              <div style={{ width:'14px', height:'14px', borderRadius:'3px', background:'#e8f0f8', border:'0.5px solid #185FA5' }}/>
-              posteriorità
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'11px', color:'#555550' }}>
-              <div style={{ width:'14px', height:'14px', borderRadius:'3px', background:'#e8f4ef', border:'0.5px solid #1a6b4a' }}/>
-              contemporaneità
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'11px', color:'#555550' }}>
-              <div style={{ width:'14px', height:'14px', borderRadius:'3px', background:'#fdf3e0', border:'0.5px solid #8a5c0a' }}/>
-              anteriorità
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'11px', color:'#555550' }}>
-              <div style={{ width:'14px', height:'14px', borderRadius:'3px', background:'#cfe2ff', border:'1px solid #185FA5' }}/>
-              US documentata
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'11px', color:'#555550' }}>
-              <div style={{ width:'14px', height:'14px', borderRadius:'3px', background:'#fff3cd', border:'1px solid #f0a500' }}/>
-              US vuota ⚠
-            </div>
+            {[
+              { bg:'#e8f0f8', border:'#185FA5', label:'posteriorità' },
+              { bg:'#e8f4ef', border:'#1a6b4a', label:'contemporaneità' },
+              { bg:'#fdf3e0', border:'#8a5c0a', label:'anteriorità' },
+              { bg:'#cfe2ff', border:'#185FA5', label:'US documentata' },
+              { bg:'#fff3cd', border:'#f0a500', label:'US vuota ⚠' },
+            ].map(l => (
+              <div key={l.label} style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'11px', color:'#555550' }}>
+                <div style={{ width:'14px', height:'14px', borderRadius:'3px', background:l.bg, border:`1px solid ${l.border}` }}/>
+                {l.label}
+              </div>
+            ))}
           </div>
 
-          {/* GRIGLIA RAPPORTI con US corrente al centro */}
           <div style={{ overflowX:'auto', position:'relative' }}>
             <svg ref={svgRef} style={{ position:'absolute', top:0, left:0, pointerEvents:'none', zIndex:10 }} />
             <table style={{ width:'100%', borderCollapse:'separate', borderSpacing:'4px' }}>
@@ -501,49 +451,46 @@ export default function SchedaUSPage() {
                 </tr>
               </thead>
               <tbody>
-                {/* Riga posteriorità */}
                 <tr>
                   <td style={{ fontSize:'10px', fontWeight:'500', color:'#1a4a7a', padding:'4px 8px', verticalAlign:'middle' }}>
                     <div style={{ writingMode:'vertical-rl', transform:'rotate(180deg)', fontSize:'10px' }}>Posteriorità ↑</div>
                   </td>
                   {COLONNE.map(col => (
                     <td key={col.key} style={{ padding:'2px', verticalAlign:'top' }}>
-                      {col.post ? (
-                        <CellaRapporto tipoKey={col.post} label={col.post_label!} riga="post" />
-                      ) : (
-                        <div style={{ height:'80px', background:'#f8f7f4', borderRadius:'6px', border:'0.5px solid #e0dfd8' }} />
-                      )}
+                      {col.post ? <CellaRapporto tipoKey={col.post} label={col.post_label!} riga="post" />
+                        : <div style={{ height:'80px', background:'#f8f7f4', borderRadius:'6px', border:'0.5px solid #e0dfd8' }} />}
                     </td>
                   ))}
                 </tr>
-
-                {/* Riga contemporaneità */}
+                <tr>
+                  <td style={{ padding:'4px 8px' }} />
+                  <td colSpan={COLONNE.length} style={{ padding:'6px 2px' }}>
+                    <div style={{ display:'flex', justifyContent:'center' }}>
+                      <div id="us-corrente-center" style={{ padding:'8px 32px', background:'#fef9e7', border:'2px solid #f0a500', borderRadius:'8px', fontSize:'13px', fontWeight:'500', color:'#8a5c0a', textAlign:'center' }}>
+                        US {us.numero_us}{us.tipo ? ` — ${us.tipo}` : ''}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
                 <tr>
                   <td style={{ fontSize:'10px', fontWeight:'500', color:'#1a6b4a', padding:'4px 8px', verticalAlign:'middle' }}>
                     <div style={{ writingMode:'vertical-rl', transform:'rotate(180deg)', fontSize:'10px' }}>Contemporan. →</div>
                   </td>
                   {COLONNE.map(col => (
                     <td key={col.key} style={{ padding:'2px', verticalAlign:'top' }}>
-                      {col.cont ? (
-                        <CellaRapporto tipoKey={col.cont} label={col.cont_label!} riga="cont" />
-                      ) : (
-                        <div style={{ height:'80px', background:'#f8f7f4', borderRadius:'6px', border:'0.5px solid #e0dfd8' }} />
-                      )}
+                      {col.cont ? <CellaRapporto tipoKey={col.cont} label={col.cont_label!} riga="cont" />
+                        : <div style={{ height:'80px', background:'#f8f7f4', borderRadius:'6px', border:'0.5px solid #e0dfd8' }} />}
                     </td>
                   ))}
                 </tr>
-                {/* Riga anteriorità */}
                 <tr>
                   <td style={{ fontSize:'10px', fontWeight:'500', color:'#8a5c0a', padding:'4px 8px', verticalAlign:'middle' }}>
                     <div style={{ writingMode:'vertical-rl', transform:'rotate(180deg)', fontSize:'10px' }}>Anteriorità ↓</div>
                   </td>
                   {COLONNE.map(col => (
                     <td key={col.key} style={{ padding:'2px', verticalAlign:'top' }}>
-                      {col.ant ? (
-                        <CellaRapporto tipoKey={col.ant} label={col.ant_label!} riga="ant" />
-                      ) : (
-                        <div style={{ height:'80px', background:'#f8f7f4', borderRadius:'6px', border:'0.5px solid #e0dfd8' }} />
-                      )}
+                      {col.ant ? <CellaRapporto tipoKey={col.ant} label={col.ant_label!} riga="ant" />
+                        : <div style={{ height:'80px', background:'#f8f7f4', borderRadius:'6px', border:'0.5px solid #e0dfd8' }} />}
                     </td>
                   ))}
                 </tr>
@@ -553,7 +500,6 @@ export default function SchedaUSPage() {
         </div>
       )}
 
-      {/* STEP 3 — DOCUMENTAZIONE */}
       {step === 3 && (
         <div style={{ background:'#fff', border:'0.5px solid #e0dfd8', borderRadius:'10px', padding:'20px' }}>
           <div style={{ marginBottom:'12px' }}>
@@ -582,7 +528,6 @@ export default function SchedaUSPage() {
         </div>
       )}
 
-      {/* STEP 4 — INTERPRETAZIONE */}
       {step === 4 && (
         <div style={{ background:'#fff', border:'0.5px solid #e0dfd8', borderRadius:'10px', padding:'20px' }}>
           <div style={{ marginBottom:'12px' }}>

@@ -19,7 +19,7 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
 
   const { data: usList } = await supabase
     .from('us')
-    .select('*')
+    .select('id, numero_us, tipo, descrizione, stato, completata')
     .eq('scavo_id', id)
     .order('numero_us', { ascending: true })
 
@@ -134,6 +134,11 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
                           <span style={{ fontSize: '11px', background: '#e8f0f8', color: '#1a4a7a', padding: '1px 6px', borderRadius: '8px' }}>
                             {us.tipo ?? '—'}
                           </span>
+                          {us.completata && (
+                            <span style={{ fontSize: '11px', background: '#e8f4ef', color: '#1a6b4a', padding: '1px 6px', borderRadius: '8px', fontWeight: '500' }}>
+                              ✓ Completata
+                            </span>
+                          )}
                         </div>
                         {us.descrizione && (
                           <div style={{ fontSize: '11px', color: '#8a8a84', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

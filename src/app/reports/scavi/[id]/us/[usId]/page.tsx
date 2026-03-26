@@ -91,7 +91,7 @@ export default function SchedaUSPage() {
       if (scavoData) {
         setNomeScavo([scavoData.comune, scavoData.provincia ? `(${scavoData.provincia})` : '', scavoData.localita].filter(Boolean).join(' '))
       }
-      if (usData) { setUs(usData); setForm(usData) }
+      if (usData) { setUs(usData); setForm(usData); setCompletata(usData.completata ?? false) }
       if (th) {
         setTipiUS(th.filter((t: {tipo: string; valore: string}) => t.tipo === 'tipo_us').map((t: {tipo: string; valore: string}) => ({ value: t.valore, label: t.valore })))
         setConsistenze(th.filter((t: {tipo: string; valore: string}) => t.tipo === 'consistenza').map((t: {tipo: string; valore: string}) => ({ value: t.valore, label: t.valore })))
@@ -248,6 +248,12 @@ export default function SchedaUSPage() {
     return () => clearTimeout(timer)
   }, [step, rapporti])
 
+  async function toggleCompletata() {
+    const nuovoValore = !completata
+    setCompletata(nuovoValore)
+    await supabase.from('us').update({ completata: nuovoValore }).eq('id', usId)
+  }
+
   async function salva() {
     setSaving(true)
     await supabase.from('us').update({
@@ -362,10 +368,21 @@ export default function SchedaUSPage() {
           <h1 style={{ fontSize:'22px', fontWeight:'500' }}>US {us.numero_us}</h1>
           {us.tipo && <p style={{ fontSize:'12px', color:'#555550', marginTop:'2px' }}>{us.tipo}</p>}
         </div>
-        <button onClick={salva} disabled={saving}
-          style={{ padding:'7px 16px', background: saved ? '#1a6b4a' : '#1a4a7a', color:'#fff', border:'none', borderRadius:'6px', fontSize:'12px', fontWeight:'500', cursor:'pointer' }}>
-          {saving ? 'Salvataggio...' : saved ? '✓ Salvato' : 'Salva'}
-        </button>
+        <div style={{ display:'flex', gap:'8px' }}>
+          <button onClick={toggleCompletata}
+            style={{
+              padding:'7px 16px', borderRadius:'6px', fontSize:'12px', fontWeight:'500', cursor:'pointer',
+              background: completata ? '#e8f4ef' : '#f8f7f4',
+              color: completata ? '#1a6b4a' : '#8a8a84',
+              border: completata ? '1.5px solid #1a6b4a' : '0.5px solid #c8c7be',
+            }}>
+            {completata ? '✓ Completata' : 'Segna come completata'}
+          </button>
+          <button onClick={salva} disabled={saving}
+            style={{ padding:'7px 16px', background: saved ? '#1a6b4a' : '#1a4a7a', color:'#fff', border:'none', borderRadius:'6px', fontSize:'12px', fontWeight:'500', cursor:'pointer' }}>
+            {saving ? 'Salvataggio...' : saved ? '✓ Salvato' : 'Salva'}
+          </button>
+        </div>
       </div>
 
       <div style={{ display:'flex', gap:'2px', marginBottom:'20px', background:'#f0efe9', borderRadius:'8px', padding:'4px' }}>

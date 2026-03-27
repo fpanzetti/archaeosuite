@@ -133,7 +133,7 @@ export default function NuovoScavoPage() {
             </div>
           </div>
           <div>
-            <label style={req}>Soprintendenza (SABAP) *</label>
+            <label style={req}>Ufficio MiC competente per tutela *</label>
             <SearchableSelect options={sabapFiltrate} value={form.soprintendenza} onChange={v => set('soprintendenza', v)} placeholder={form.regione ? 'Cerca soprintendenza...' : 'Prima seleziona la regione...'} allowFreeText={true} />
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function NuovoScavoPage() {
           <div style={sect}>Identificativi</div>
           <div style={grid2}>
             <div>
-              <label style={req}>Committente *</label>
+              <label style={req}>Ente responsabile *</label>
               <input style={inp} value={form.committente} onChange={e => set('committente', e.target.value)} placeholder="Es. ENI S.p.A." required />
             </div>
             <div>

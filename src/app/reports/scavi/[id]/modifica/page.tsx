@@ -180,7 +180,7 @@ export default function ModificaScavoPage() {
             <div><label style={lbl}>Indirizzo</label>
               <input style={inp} value={form.indirizzo} onChange={e => set('indirizzo', e.target.value)} /></div>
           </div>
-          <div><label style={req}>Soprintendenza (SABAP) *</label>
+          <div><label style={req}>Ufficio MiC competente per tutela *</label>
             <SearchableSelect options={sabapFiltrate} value={form.soprintendenza} onChange={v => set('soprintendenza', v)} placeholder="Cerca soprintendenza..." allowFreeText={true} /></div>
         </div>
         <div style={card}>
@@ -205,7 +205,7 @@ export default function ModificaScavoPage() {
         <div style={card}>
           <div style={sect}>Identificativi</div>
           <div style={grid2}>
-            <div><label style={req}>Committente *</label>
+            <div><label style={req}>Ente responsabile *</label>
               <input style={inp} value={form.committente} onChange={e => set('committente', e.target.value)} required /></div>
             <div><label style={req}>Operatore *</label>
               <input style={inp} value={form.operatore} onChange={e => set('operatore', e.target.value)} required /></div>

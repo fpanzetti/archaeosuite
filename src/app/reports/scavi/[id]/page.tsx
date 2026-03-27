@@ -113,8 +113,8 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
               {scavo.provincia && <div><span style={{ color: '#8a8a84' }}>Provincia: </span>{scavo.provincia}</div>}
               {scavo.localita && <div><span style={{ color: '#8a8a84' }}>Località: </span>{scavo.localita}</div>}
               {scavo.indirizzo && <div><span style={{ color: '#8a8a84' }}>Indirizzo: </span>{scavo.indirizzo}</div>}
-              {scavo.soprintendenza && <div><span style={{ color: '#8a8a84' }}>SABAP: </span>{scavo.soprintendenza}</div>}
-              {scavo.committente && <div><span style={{ color: '#8a8a84' }}>Committente: </span>{scavo.committente}</div>}
+              {scavo.soprintendenza && <div><span style={{ color: '#8a8a84' }}>Ufficio MiC competente per tutela: </span>{scavo.soprintendenza}</div>}
+              {scavo.committente && <div><span style={{ color: '#8a8a84' }}>Ente responsabile: </span>{scavo.committente}</div>}
               {scavo.operatore && <div><span style={{ color: '#8a8a84' }}>Operatore: </span>{scavo.operatore}</div>}
               {scavo.direttore_scientifico && <div><span style={{ color: '#8a8a84' }}>Direttore: </span>{scavo.direttore_scientifico}</div>}
               {scavo.tipologia_intervento && <div><span style={{ color: '#8a8a84' }}>Tipologia: </span>{scavo.tipologia_intervento}</div>}

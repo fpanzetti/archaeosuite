@@ -45,7 +45,7 @@ export default function ProfiloPage() {
       const { data: account } = await supabase.from('account').select('nome, cognome, professione').eq('id', user.id).single()
       if (account) { setNome(account.nome ?? ''); setCognome(account.cognome ?? ''); setProfessione(account.professione ?? '') }
       const { data: accessiData } = await supabase.from('accesso_scavo').select('scavo_id, ruolo, scavo:scavo(denominazione, comune, provincia, stato)').eq('account_id', user.id)
-      if (accessiData) setAccessi(accessiData as Accesso[])
+      if (accessiData) setAccessi((accessiData as unknown[]).map((a) => { const r = a as { scavo_id: string; ruolo: string; scavo: { denominazione: string; comune: string; provincia: string | null; stato: string }[] }; return { ...r, scavo: r.scavo[0] } }))
       setLoading(false)
     }
     load()

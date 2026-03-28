@@ -505,7 +505,7 @@ export default function SchedaUSPage() {
           </button>
         </div>
         {ultimoSalvataggio && (
-          <div style={{ fontSize: '10px', color: '#8a8a84', textAlign: 'right' }}>
+          <div style={{ fontSize: '10px', color: '#8a8a84', textAlign: 'right', marginTop: '4px' }}>
             {'Ultimo salvataggio il ' + ultimoSalvataggio.toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' alle ore ' + ultimoSalvataggio.toLocaleTimeString('it-IT')}
           </div>
         )}

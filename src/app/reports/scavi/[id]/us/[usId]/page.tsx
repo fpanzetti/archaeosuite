@@ -157,6 +157,7 @@ export default function SchedaUSPage() {
         setUs(usData)
         setForm(usData)
         setCompletata(usData.completata ?? false)
+        if (usData.updated_at) setUltimoSalvataggio(new Date(usData.updated_at))
       }
       if (th) {
         setTipiUS(th.filter((t: {tipo: string; valore: string}) => t.tipo === 'tipo_us').map((t: {tipo: string; valore: string}) => ({ value: t.valore, label: t.valore })))
@@ -230,6 +231,12 @@ export default function SchedaUSPage() {
     }, 150)
     return () => clearTimeout(timer)
   }, [step, rapporti])
+
+  async function salvaField(field: string, value: unknown) {
+    const aggiornamento: Record<string, unknown> = { [field]: value }
+    const { data } = await supabase.from('us').update(aggiornamento).eq('id', usId).select('updated_at').single()
+    if (data?.updated_at) setUltimoSalvataggio(new Date(data.updated_at))
+  }
 
   function set(field: string, value: unknown) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -490,6 +497,11 @@ export default function SchedaUSPage() {
             {saving ? 'Salvataggio...' : saved ? '✓ Salvato' : 'Salva'}
           </button>
         </div>
+        {ultimoSalvataggio && (
+          <div style={{ fontSize: '10px', color: '#8a8a84', textAlign: 'right' }}>
+            {'Ultimo salvataggio il ' + ultimoSalvataggio.toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' alle ore ' + ultimoSalvataggio.toLocaleTimeString('it-IT')}
+          </div>
+        )}
       </div>
 
       {/* Tab step */}

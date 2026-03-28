@@ -128,6 +128,7 @@ export default function SchedaUSPage() {
   const [toast, setToast] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [dirty, setDirty] = useState(false)
   const [aggFoto, setAggFoto] = useState(0)
   const [tabAllegati, setTabAllegati] = useState<TipoAllegato>('foto')
   const svgRef = useRef<SVGSVGElement>(null)
@@ -240,6 +241,8 @@ export default function SchedaUSPage() {
 
   function set(field: string, value: unknown) {
     setForm(prev => ({ ...prev, [field]: value }))
+    setDirty(true)
+    setSaved(false)
   }
 
   function showToast(msg: string) {
@@ -351,8 +354,7 @@ export default function SchedaUSPage() {
       fase: form.fase,
       attivita: form.attivita,
     }).eq('id', usId)
-    setSaving(false); setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setSaving(false); setSaved(true); setDirty(false)
   }
 
   // Stili
@@ -492,9 +494,13 @@ export default function SchedaUSPage() {
               border: completata ? '1.5px solid #1a6b4a' : '0.5px solid #c8c7be' }}>
             {completata ? '✓ Completata' : 'Segna come completata'}
           </button>
-          <button onClick={salva} disabled={saving}
-            style={{ padding: '7px 16px', background: saved ? '#1a6b4a' : '#1a4a7a', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}>
-            {saving ? 'Salvataggio...' : saved ? '✓ Salvato' : 'Salva'}
+          <button onClick={salva} disabled={saving || (!dirty && !saved)}
+            style={{ padding: '7px 16px',
+              background: saving ? '#8a8a84' : saved ? '#1a6b4a' : dirty ? '#1a4a7a' : '#c8c7be',
+              color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '500',
+              cursor: (saving || (!dirty && !saved)) ? 'default' : 'pointer',
+              transition: 'background 0.2s' }}>
+            {saving ? 'Salvataggio...' : saved ? '✓ Salvato' : dirty ? 'Salva' : 'Salvato'}
           </button>
         </div>
         {ultimoSalvataggio && (

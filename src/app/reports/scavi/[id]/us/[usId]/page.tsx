@@ -57,6 +57,10 @@ type US = USBase & {
   lunghezza: number | null
   larghezza: number | null
   spessore: number | null
+  // Campionature condizionali
+  campionature_tipo: string | null
+  campionature_quantita: string | null
+  campionature_posizione: string | null
   // Step 5 — Interpretazione
   interpretazione: string | null
   tipo_formazione: string | null
@@ -76,7 +80,7 @@ type Scavo = {
   soprintendenza: string | null
 }
 
-const STEP_LABELS = ['Generale', 'Identificazione', 'Descrizione', 'Rapporti strat.', 'Documentazione', 'Interpretazione']
+const STEP_LABELS = ['Generale', 'Identificazione', 'Descrizione', 'Rapporti strat.', 'Documentazione', 'Interpretazione', 'Tabella materiali']
 
 const COLONNE = [
   { key: 'copre_taglia', post: 'copre', post_label: 'Copre', ant: 'coperto_da', ant_label: 'Coperta da', cont: null, cont_label: null },
@@ -333,8 +337,10 @@ export default function SchedaUSPage() {
       descrizione_estesa: form.descrizione_estesa,
       stato_conservazione: form.stato_conservazione,
       elementi_datanti: form.elementi_datanti,
-      dati_quantitativi: form.dati_quantitativi,
       campionature: form.campionature,
+      campionature_tipo: form.campionature_tipo,
+      campionature_quantita: form.campionature_quantita,
+      campionature_posizione: form.campionature_posizione,
       flottazione: form.flottazione,
       setacciatura: form.setacciatura,
       affidabilita_stratigrafica: form.affidabilita_stratigrafica,
@@ -459,7 +465,7 @@ export default function SchedaUSPage() {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div>
-            <h1 style={{ fontSize: '22px', fontWeight: '500', margin: 0 }}>US {us.numero_us}</h1>
+            <h1 style={{ fontSize: '22px', fontWeight: '500', margin: 0 }}>US {us.numero_us}{form.descrizione ? ` — ${form.descrizione}` : ''}</h1>
             {us.tipo && <p style={{ fontSize: '12px', color: '#555550', marginTop: '2px', marginBottom: 0 }}>{us.tipo}</p>}
           </div>
           {/* Natura e Polarità */}
@@ -624,9 +630,30 @@ export default function SchedaUSPage() {
         </div>
       )}
 
-      {/* ── STEP 2: DESCRIZIONE FISICA ── */}
+      {/* ── STEP 2: DESCRIZIONE ── */}
       {step === 2 && (
         <div>
+          <div style={card}>
+            <div style={sectionTitle}>Descrizione</div>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={lbl}>Definizione</label>
+              <input style={inp} value={form.definizione ?? ''} onChange={e => set('definizione', e.target.value)} placeholder="Definizione sintetica della US" />
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={lbl}>Criteri di distinzione</label>
+              <SearchableSelect options={[]} value={form.criteri_distinzione ?? ''} onChange={v => set('criteri_distinzione', v)} placeholder="Thesaurus da definire" allowFreeText={true} />
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={lbl}>Modo di formazione</label>
+              <textarea style={{ ...inp, height: '60px', resize: 'none' } as React.CSSProperties}
+                value={form.modo_formazione ?? ''} onChange={e => set('modo_formazione', e.target.value)}
+                placeholder="Processo di formazione" />
+            </div>
+            <div><label style={lbl}>Descrizione</label>
+              <textarea style={{ ...inp, height: '100px', resize: 'none' } as React.CSSProperties}
+                value={form.descrizione_estesa ?? ''} onChange={e => set('descrizione_estesa', e.target.value)}
+                placeholder="Descrizione completa della US" /></div>
+          </div>
           <div style={card}>
             <div style={sectionTitle}>Caratteristiche fisiche</div>
             <div style={{ marginBottom: '12px' }}>
@@ -647,30 +674,7 @@ export default function SchedaUSPage() {
             </div>
           </div>
           <div style={card}>
-            <div style={sectionTitle}>Descrizione</div>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={lbl}>Definizione</label>
-              <input style={inp} value={form.definizione ?? ''} onChange={e => set('definizione', e.target.value)} placeholder="Definizione sintetica della US" />
-            </div>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={lbl}>Criteri di distinzione</label>
-              <textarea style={{ ...inp, height: '60px', resize: 'none' } as React.CSSProperties}
-                value={form.criteri_distinzione ?? ''} onChange={e => set('criteri_distinzione', e.target.value)}
-                placeholder="Elementi che distinguono questa US dalle adiacenti" />
-            </div>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={lbl}>Modo di formazione</label>
-              <textarea style={{ ...inp, height: '60px', resize: 'none' } as React.CSSProperties}
-                value={form.modo_formazione ?? ''} onChange={e => set('modo_formazione', e.target.value)}
-                placeholder="Processo di formazione" />
-            </div>
-            <div><label style={lbl}>Descrizione estesa</label>
-              <textarea style={{ ...inp, height: '100px', resize: 'none' } as React.CSSProperties}
-                value={form.descrizione_estesa ?? ''} onChange={e => set('descrizione_estesa', e.target.value)}
-                placeholder="Descrizione completa della US" /></div>
-          </div>
-          <div style={card}>
-            <div style={sectionTitle}>Dati quantitativi e conservazione</div>
+            <div style={sectionTitle}>Conservazione e campionature</div>
             <div style={{ marginBottom: '12px' }}>
               <label style={lbl}>Stato di conservazione</label>
               <input style={inp} value={form.stato_conservazione ?? ''} onChange={e => set('stato_conservazione', e.target.value)} placeholder="Es. buono, frammentario..." />
@@ -682,16 +686,17 @@ export default function SchedaUSPage() {
                 placeholder="Materiali o caratteristiche utili alla datazione" />
             </div>
             <div style={{ marginBottom: '12px' }}>
-              <label style={lbl}>Dati quantitativi dei reperti</label>
-              <textarea style={{ ...inp, height: '60px', resize: 'none' } as React.CSSProperties}
-                value={form.dati_quantitativi ?? ''} onChange={e => set('dati_quantitativi', e.target.value)}
-                placeholder="Quantità e tipologia dei materiali recuperati" />
-            </div>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={lbl}>Campionature</label>
-              <textarea style={{ ...inp, height: '60px', resize: 'none' } as React.CSSProperties}
-                value={form.campionature ?? ''} onChange={e => set('campionature', e.target.value)}
-                placeholder="Campioni prelevati (tipo, quantità, posizione)" />
+              <RadioGroup label="Campionature" field="campionature" options={['sì', 'no']} />
+              {form.campionature === 'sì' && (
+                <div style={{ ...grid3, marginTop: '10px' }}>
+                  <div><label style={lbl}>Tipo</label>
+                    <input style={inp} value={form.campionature_tipo ?? ''} onChange={e => set('campionature_tipo', e.target.value)} placeholder="Tipo di campione" /></div>
+                  <div><label style={lbl}>Quantità</label>
+                    <input style={inp} value={form.campionature_quantita ?? ''} onChange={e => set('campionature_quantita', e.target.value)} placeholder="Quantità" /></div>
+                  <div><label style={lbl}>Posizione</label>
+                    <input style={inp} value={form.campionature_posizione ?? ''} onChange={e => set('campionature_posizione', e.target.value)} placeholder="Posizione prelievo" /></div>
+                </div>
+              )}
             </div>
             <div style={grid3}>
               <RadioGroup label="Flottazione" field="flottazione" options={['sì', 'no', 'parziale']} />
@@ -824,22 +829,6 @@ export default function SchedaUSPage() {
               <UploadFoto scavoId={scavoId} usId={usId} tipo={tabAllegati} onFotoAggiunta={() => setAggFoto(n => n + 1)} />
             </div>
           </div>
-
-          {/* Pulsante tabella materiali */}
-          <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a' }}>Tabella materiali</div>
-              <div style={{ fontSize: '11px', color: '#8a8a84', marginTop: '2px' }}>
-                Reperti associati a US {us.numero_us}
-              </div>
-            </div>
-            <button
-              disabled
-              style={{ padding: '7px 16px', background: '#f0efe9', color: '#8a8a84', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '12px', cursor: 'not-allowed' }}
-              title="Modulo in sviluppo">
-              Apri tabella →
-            </button>
-          </div>
         </div>
       )}
 
@@ -884,6 +873,20 @@ export default function SchedaUSPage() {
         </div>
       )}
 
+      {/* ── STEP 6: TABELLA MATERIALI ── */}
+      {step === 6 && (
+        <div style={card}>
+          <div style={sectionTitle}>Tabella materiali</div>
+          <div style={{ textAlign: 'center', padding: '32px 0' }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>📦</div>
+            <p style={{ fontSize: '14px', color: '#555550', marginBottom: '8px' }}>In sviluppo</p>
+            <p style={{ fontSize: '12px', color: '#8a8a84' }}>
+              La tabella materiali per US {us.numero_us} sarà disponibile a breve
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Navigazione step */}
       <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
         {step > 0 && (
@@ -892,7 +895,7 @@ export default function SchedaUSPage() {
             ← {STEP_LABELS[step - 1]}
           </button>
         )}
-        {step < 5 ? (
+        {step < 6 ? (
           <button onClick={() => { salva(); setStep(s => s + 1) }}
             style={{ flex: 2, padding: '10px', background: '#1a4a7a', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}>
             {STEP_LABELS[step + 1]} →

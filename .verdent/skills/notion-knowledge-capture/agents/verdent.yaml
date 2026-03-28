@@ -1,0 +1,6 @@
+interface:
+  display_name: 'Notion Knowledge Capture'
+  short_description: 'Capture conversations into structured Notion pages'
+  icon_dark: './assets/icon-dark.png'
+  icon_light: './assets/icon-light.png'
+  default_prompt: 'Capture this conversation into a structured Notion page.'

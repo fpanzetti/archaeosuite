@@ -129,6 +129,7 @@ export default function SchedaUSPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [dirty, setDirty] = useState(false)
+  const [ultimoSalvataggio, setUltimoSalvataggio] = useState<Date | null>(null)
   const [aggFoto, setAggFoto] = useState(0)
   const [tabAllegati, setTabAllegati] = useState<TipoAllegato>('foto')
   const svgRef = useRef<SVGSVGElement>(null)

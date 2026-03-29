@@ -32,6 +32,7 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
   const [autoreInput, setAutoreInput] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [tooltipId, setTooltipId] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -102,8 +103,9 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '6px' }}>
         {foto.map(f => (
           <div key={f.id}
-            title={f.didascalia ?? undefined}
             onClick={() => apriLightbox(f)}
+            onMouseEnter={() => setTooltipId(f.id)}
+            onMouseLeave={() => setTooltipId(null)}
             style={{ position: 'relative', cursor: 'pointer', borderRadius: '6px', overflow: 'hidden' }}>
             <img
               src={f.url_thumb ?? f.url}
@@ -111,11 +113,20 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
               style={{
                 width: '100%', aspectRatio: '1', objectFit: 'cover',
                 borderRadius: '6px', border: '0.5px solid #e0dfd8',
-                transition: 'transform 0.15s ease, opacity 0.15s ease',
+                transition: 'transform 0.2s ease',
+                transform: tooltipId === f.id ? 'scale(1.06)' : 'scale(1)',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.05)'; (e.currentTarget as HTMLImageElement).style.opacity = '0.9' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; (e.currentTarget as HTMLImageElement).style.opacity = '1' }}
             />
+            {tooltipId === f.id && f.didascalia && (
+              <div style={{
+                position: 'absolute', bottom: 0, left: 0, right: 0,
+                background: 'rgba(0,0,0,0.72)', color: '#fff',
+                fontSize: '10px', padding: '5px 7px',
+                lineHeight: '1.4', pointerEvents: 'none',
+              }}>
+                {f.didascalia}
+              </div>
+            )}
             {f.didascalia && (
               <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: '10px', padding: '1px 5px', borderRadius: '3px', lineHeight: '1.4' }}>✎</div>
             )}

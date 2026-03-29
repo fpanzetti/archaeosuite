@@ -112,18 +112,27 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
             {f.didascalia && (
               <div className="foto-overlay">{f.didascalia}</div>
             )}
-            {f.didascalia && (
-              <div className="foto-badge">✎</div>
-            )}
+            <div style={{ position: 'absolute', bottom: '4px', right: '4px', display: 'flex', gap: '3px' }}>
+              {f.didascalia && (
+                <div className="foto-badge">✎</div>
+              )}
+              {f.autore && (
+                <div className="foto-badge">👤</div>
+              )}
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Legenda */}
-      <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
+      {/* Legenda badge */}
+      <div style={{ display: 'flex', gap: '12px', marginTop: '8px', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#8a8a84' }}>
           <span style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '0 4px', borderRadius: '3px', fontSize: '10px' }}>✎</span>
           Ha una didascalia
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#8a8a84' }}>
+          <span style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '0 4px', borderRadius: '3px', fontSize: '10px' }}>👤</span>
+          Autore presente
         </div>
       </div>
 

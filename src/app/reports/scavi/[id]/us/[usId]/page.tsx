@@ -24,6 +24,9 @@ type US = USBase & {
   anno: number | null
   identificativo_saggio: string | null
   area_edificio: string | null
+  edificio: string | null
+  struttura: string | null
+  deposizione: string | null
   ambiente: string | null
   posizione: string | null
   settore: string | null

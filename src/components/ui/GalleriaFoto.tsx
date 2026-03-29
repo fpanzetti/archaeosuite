@@ -89,7 +89,8 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
             <img
               src={f.url_thumb ?? f.url}
               alt={f.didascalia ?? f.nome_file ?? 'allegato'}
-              style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: '6px', border: '0.5px solid #e0dfd8' }}
+              title={f.didascalia ?? undefined}
+            style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: '6px', border: '0.5px solid #e0dfd8' }}
             />
             {f.tipo && f.tipo !== 'foto' && (
               <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '9px', padding: '1px 5px', borderRadius: '3px' }}>
@@ -101,6 +102,13 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
             )}
           </div>
         ))}
+      </div>
+
+      {/* Legenda */}
+      <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#8a8a84' }}>
+          <span style={{ fontSize: '11px' }}>✎</span> La miniatura ha una didascalia
+        </div>
       </div>
 
       {/* Lightbox */}

@@ -791,7 +791,12 @@ export default function SchedaUSPage() {
 
           {/* Allegati grafici */}
           <div style={card}>
-            <div style={sectionTitle}>Allegati grafici</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '6px', borderBottom: '0.5px solid #e0dfd8' }}>
+              <span style={{ fontSize: '11px', fontWeight: '600', color: '#8a8a84', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Allegati grafici</span>
+              <span style={{ fontSize: '10px', color: '#8a8a84', background: '#f0efe9', padding: '1px 7px', borderRadius: '8px' }}>
+                💡 Passa con il mouse sopra una miniatura per visualizzare la didascalia
+              </span>
+            </div>
             {/* Tab tipo allegato */}
             <div style={{ display: 'flex', gap: '2px', marginBottom: '16px', background: '#f0efe9', borderRadius: '6px', padding: '3px' }}>
               {TIPO_ALLEGATO.map(t => (

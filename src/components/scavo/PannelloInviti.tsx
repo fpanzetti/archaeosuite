@@ -127,7 +127,7 @@ export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
   return (
     <div style={{ background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '10px', padding: '16px', marginTop: '12px' }}>
       <div style={{ fontSize: '11px', fontWeight: '500', color: '#1a4a7a', marginBottom: '12px', paddingBottom: '8px', borderBottom: '0.5px solid #e8f0f8' }}>
-        Accesso e collaboratori
+        Team e ruoli
       </div>
 
       {/* Lista collaboratori */}
@@ -139,13 +139,13 @@ export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
             const nomeCompleto = c.account ? `${c.account.nome} ${c.account.cognome}` : c.account_id.slice(0, 8)
             return (
               <div key={c.account_id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 0', borderBottom: '0.5px solid #f0efe9' }}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: badge.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '500', color: badge.color, flexShrink: 0 }}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: sonoIo ? '#e8f4ef' : badge.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600', color: sonoIo ? '#1a6b4a' : badge.color, flexShrink: 0, border: sonoIo ? '1.5px solid #1a6b4a' : 'none' }}>
                   {iniziali(c)}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a' }}>
-                    {nomeCompleto}
-                    {sonoIo && <span style={{ fontSize: '10px', color: '#8a8a84', marginLeft: '6px' }}>tu</span>}
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {sonoIo ? 'tu' : nomeCompleto}
+                    {sonoIo && <span style={{ fontSize: '10px', color: '#8a8a84' }}>({nomeCompleto})</span>}
                   </div>
                 </div>
                 <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '8px', background: badge.bg, color: badge.color, fontWeight: '500', flexShrink: 0 }}>

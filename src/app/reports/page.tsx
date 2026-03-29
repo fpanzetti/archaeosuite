@@ -33,21 +33,19 @@ export default async function ReportsPage({
       .select('scavo_id, account_id')
       .in('scavo_id', scaviIds)
 
-    // Filtra solo gli altri utenti
-    const altriAccessi = (tuttiAccessi ?? []).filter(a => a.account_id !== user.id)
+    const tuttiFiltered = (tuttiAccessi ?? []).filter(a => a.account_id !== user.id)
 
-    if (altriAccessi.length > 0) {
-      const accountIds = [...new Set(altriAccessi.map(a => a.account_id))]
+    if (tuttiFiltered.length > 0) {
+      const accountIds = [...new Set(tuttiFiltered.map(a => a.account_id))]
       const { data: accounts } = await supabase
         .from('account')
         .select('id, nome, cognome')
         .in('id', accountIds)
 
-      altriAccessi.forEach(a => {
+      tuttiFiltered.forEach(a => {
         const account = accounts?.find(ac => ac.id === a.account_id)
         if (!account) return
         if (!accessiMap[a.scavo_id]) accessiMap[a.scavo_id] = []
-        // Evita duplicati
         const giaPresente = accessiMap[a.scavo_id].some(c => c.nome === account.nome && c.cognome === account.cognome)
         if (!giaPresente) accessiMap[a.scavo_id].push({ nome: account.nome, cognome: account.cognome })
       })

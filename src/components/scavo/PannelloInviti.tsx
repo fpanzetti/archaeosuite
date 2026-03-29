@@ -153,10 +153,27 @@ export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
                 </span>
                 {/* Azioni */}
                 {!sonoIo && isResponsabile && (
-                  <button onClick={() => setMostraConferma(c.account_id)}
-                    style={{ padding: '3px 8px', background: 'none', border: '0.5px solid #e88', color: '#c00', borderRadius: '4px', fontSize: '11px', cursor: 'pointer', flexShrink: 0 }}>
-                    Rimuovi
-                  </button>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+                    <select
+                      value={c.ruolo}
+                      onChange={async e => {
+                        const nuovoRuolo = e.target.value
+                        await supabase.from('accesso_scavo').update({ ruolo: nuovoRuolo })
+                          .eq('scavo_id', scavoId).eq('account_id', c.account_id)
+                        setCollaboratori(prev => prev.map(x =>
+                          x.account_id === c.account_id ? { ...x, ruolo: nuovoRuolo } : x
+                        ))
+                      }}
+                      style={{ padding: '2px 6px', border: '0.5px solid #c8c7be', borderRadius: '4px', fontSize: '11px', background: '#f8f7f4', color: '#555550', cursor: 'pointer' }}>
+                      <option value="editor">Editor</option>
+                      <option value="collaboratore">Collaboratore</option>
+                      <option value="visualizzatore">Visualizzatore</option>
+                    </select>
+                    <button onClick={() => setMostraConferma(c.account_id)}
+                      style={{ padding: '3px 8px', background: 'none', border: '0.5px solid #e88', color: '#c00', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+                      Rimuovi
+                    </button>
+                  </div>
                 )}
                 {sonoIo && !isResponsabile && (
                   <button onClick={() => setMostraConfermaAbbandono(true)}

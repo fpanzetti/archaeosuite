@@ -31,8 +31,8 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
   const [didascaliaInput, setDidascaliaInput] = useState('')
   const [autoreInput, setAutoreInput] = useState('')
   const [salvando, setSalvando] = useState(false)
+  const [hoverIdFoto, setHoverIdFoto] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [tooltipId, setTooltipId] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -87,13 +87,19 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
     setEditingAutore(false)
   }
 
-  const labelTipo = tipo === 'foto' ? 'foto' : tipo === 'rilievo' ? 'rilievi' : tipo === 'altro' ? 'altri documenti' : 'allegati'
-  const inp: React.CSSProperties = { width: '100%', padding: '6px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '12px', fontFamily: 'inherit' }
+  // Messaggi stato vuoto corretti
+  const msgVuoto = tipo === 'foto' ? 'Nessuna foto'
+    : tipo === 'rilievo' ? 'Nessun rilievo'
+    : tipo === 'altro' ? 'Nessun altro documento'
+    : 'Nessun allegato'
 
-  if (loading) return <div style={{ fontSize: '12px', color: '#8a8a84', padding: '12px 0' }}>Caricamento {labelTipo}...</div>
+  const inp: React.CSSProperties = { width: '100%', padding: '6px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '12px', fontFamily: 'inherit' }
+  const lbl: React.CSSProperties = { display: 'block', fontSize: '11px', color: '#8a8a84', marginBottom: '3px', fontWeight: '500' }
+
+  if (loading) return <div style={{ fontSize: '12px', color: '#8a8a84', padding: '12px 0' }}>Caricamento...</div>
   if (foto.length === 0) return (
     <div style={{ textAlign: 'center', padding: '24px', color: '#8a8a84', fontSize: '12px', background: '#f8f7f4', borderRadius: '8px', border: '0.5px dashed #c8c7be' }}>
-      Nessun{tipo === 'foto' ? 'a foto' : tipo ? ` ${labelTipo.slice(0, -1)}` : ' allegato'} ancora
+      {msgVuoto}
     </div>
   )
 
@@ -102,42 +108,48 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
       {/* Griglia thumbnail */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '6px' }}>
         {foto.map(f => (
-          <div key={f.id}
+          <div
+            key={f.id}
             onClick={() => apriLightbox(f)}
-            onMouseEnter={() => setTooltipId(f.id)}
-            onMouseLeave={() => setTooltipId(null)}
-            style={{ position: 'relative', cursor: 'pointer', borderRadius: '6px', overflow: 'hidden' }}>
+            onMouseEnter={() => setHoverIdFoto(f.id)}
+            onMouseLeave={() => setHoverIdFoto(null)}
+            style={{ position: 'relative', cursor: 'pointer', borderRadius: '6px', overflow: 'hidden', border: '0.5px solid #e0dfd8' }}>
             <img
               src={f.url_thumb ?? f.url}
               alt={f.didascalia ?? f.nome_file ?? 'allegato'}
               style={{
-                width: '100%', aspectRatio: '1', objectFit: 'cover',
-                borderRadius: '6px', border: '0.5px solid #e0dfd8',
+                width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block',
                 transition: 'transform 0.2s ease',
-                transform: tooltipId === f.id ? 'scale(1.06)' : 'scale(1)',
+                transform: hoverIdFoto === f.id ? 'scale(1.08)' : 'scale(1)',
               }}
             />
-            {tooltipId === f.id && f.didascalia && (
+            {/* Overlay con didascalia al hover */}
+            {hoverIdFoto === f.id && f.didascalia && (
               <div style={{
                 position: 'absolute', bottom: 0, left: 0, right: 0,
-                background: 'rgba(0,0,0,0.72)', color: '#fff',
-                fontSize: '10px', padding: '5px 7px',
-                lineHeight: '1.4', pointerEvents: 'none',
+                background: 'linear-gradient(transparent, rgba(0,0,0,0.75))',
+                color: '#fff', fontSize: '10px', padding: '16px 6px 5px',
+                lineHeight: '1.3', pointerEvents: 'none',
               }}>
                 {f.didascalia}
               </div>
             )}
-            {f.didascalia && (
-              <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: '10px', padding: '1px 5px', borderRadius: '3px', lineHeight: '1.4' }}>✎</div>
+            {/* Badge didascalia sempre visibile */}
+            {f.didascalia && hoverIdFoto !== f.id && (
+              <div style={{
+                position: 'absolute', bottom: '4px', right: '4px',
+                background: 'rgba(0,0,0,0.55)', color: '#fff',
+                fontSize: '10px', padding: '1px 5px', borderRadius: '3px',
+              }}>✎</div>
             )}
           </div>
         ))}
       </div>
 
       {/* Legenda */}
-      <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+      <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#8a8a84' }}>
-          <span style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '0px 4px', borderRadius: '3px', fontSize: '10px' }}>✎</span>
+          <span style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '0 4px', borderRadius: '3px', fontSize: '10px' }}>✎</span>
           Ha una didascalia
         </div>
       </div>
@@ -146,8 +158,7 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
       {fotoAperta && (
         <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-          onClick={() => { setFotoAperta(null); setEditingDidascalia(false); setEditingAutore(false) }}
-        >
+          onClick={() => { setFotoAperta(null); setEditingDidascalia(false); setEditingAutore(false) }}>
           <div style={{ maxWidth: '800px', width: '100%', background: '#fff', borderRadius: '12px', overflow: 'hidden' }}
             onClick={e => e.stopPropagation()}>
             <img src={fotoAperta.url} alt={fotoAperta.didascalia ?? ''}
@@ -156,8 +167,9 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
 
               {/* Didascalia */}
               <div style={{ marginBottom: '8px' }}>
+                <label style={lbl}>Didascalia</label>
                 {editingDidascalia ? (
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
                     <input autoFocus style={{ ...inp, flex: 1 }} value={didascaliaInput}
                       onChange={e => setDidascaliaInput(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') salvaDidascalia(); if (e.key === 'Escape') setEditingDidascalia(false) }}
@@ -173,10 +185,9 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
                   </div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {fotoAperta.didascalia
-                      ? <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a' }}>{fotoAperta.didascalia}</span>
-                      : <span style={{ fontSize: '12px', color: '#c8c7be' }}>Nessuna didascalia</span>
-                    }
+                    <span style={{ fontSize: '12px', color: fotoAperta.didascalia ? '#1a1a1a' : '#c8c7be' }}>
+                      {fotoAperta.didascalia ?? 'Nessuna didascalia'}
+                    </span>
                     <button onClick={() => setEditingDidascalia(true)}
                       style={{ padding: '2px 8px', background: 'none', border: '0.5px solid #c8c7be', borderRadius: '4px', fontSize: '11px', color: '#8a8a84', cursor: 'pointer' }}>
                       ✎ {fotoAperta.didascalia ? 'Modifica' : 'Aggiungi'}
@@ -187,12 +198,13 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
 
               {/* Autore */}
               <div style={{ marginBottom: '10px' }}>
+                <label style={lbl}>Autore</label>
                 {editingAutore ? (
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
                     <input autoFocus style={{ ...inp, flex: 1 }} value={autoreInput}
                       onChange={e => setAutoreInput(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') salvaAutore(); if (e.key === 'Escape') setEditingAutore(false) }}
-                      placeholder="Nome e cognome autore..." />
+                      placeholder="Nome e cognome..." />
                     <button onClick={salvaAutore} disabled={salvando}
                       style={{ padding: '5px 12px', background: '#1a4a7a', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
                       {salvando ? '...' : 'Salva'}
@@ -204,8 +216,8 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
                   </div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '11px', color: '#8a8a84' }}>
-                      {fotoAperta.autore ? `Autore: ${fotoAperta.autore}` : 'Nessun autore'}
+                    <span style={{ fontSize: '12px', color: fotoAperta.autore ? '#1a1a1a' : '#c8c7be' }}>
+                      {fotoAperta.autore ?? 'Nessun autore'}
                     </span>
                     <button onClick={() => setEditingAutore(true)}
                       style={{ padding: '2px 8px', background: 'none', border: '0.5px solid #c8c7be', borderRadius: '4px', fontSize: '11px', color: '#8a8a84', cursor: 'pointer' }}>

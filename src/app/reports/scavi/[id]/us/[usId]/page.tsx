@@ -382,7 +382,7 @@ export default function SchedaUSPage() {
     const val = (form as Record<string, unknown>)[field] as string | null
     return (
       <div>
-        <label style={lbl}>{label}</label>
+        {label && <label style={lbl}>{label}</label>}
         <div style={{ display: 'flex', gap: '6px' }}>
           {options.map(opt => (
             <button key={opt} type="button" onClick={() => set(field, val === opt ? null : opt)}
@@ -561,8 +561,8 @@ export default function SchedaUSPage() {
               <SearchableSelect options={tipiUS} value={form.tipo ?? ''} onChange={v => set('tipo', v)} placeholder="Seleziona tipo..." />
             </div>
             <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-              <RadioGroup label="Natura" field="natura" options={['Naturale', 'Artificiale']} />
-              <RadioGroup label="Polarità" field="polarita" options={['Positiva', 'Negativa']} />
+              <RadioGroup label="" field="natura" options={['Naturale', 'Artificiale']} />
+              <RadioGroup label="" field="polarita" options={['Positiva', 'Negativa']} />
             </div>
           </div>
           <div style={card}>

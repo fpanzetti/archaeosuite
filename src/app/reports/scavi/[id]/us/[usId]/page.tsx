@@ -813,7 +813,7 @@ export default function SchedaUSPage() {
             </div>
             <GalleriaFoto scavoId={scavoId} usId={usId} aggiornamento={aggFoto} tipo={tabAllegati} />
             <div style={{ marginTop: '10px' }}>
-              <UploadFoto scavoId={scavoId} usId={usId} tipo={tabAllegati} onFotoAggiunta={() => setAggFoto(n => n + 1)} />
+              <UploadFoto scavoId={scavoId} usId={usId} tipo={tabAllegati} responsabileCampo={form.responsabile_campo ?? undefined} onFotoAggiunta={() => setAggFoto(n => n + 1)} />
             </div>
           </div>
         </div>

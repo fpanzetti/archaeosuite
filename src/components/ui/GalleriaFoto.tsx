@@ -112,14 +112,12 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
             {f.didascalia && (
               <div className="foto-overlay">{f.didascalia}</div>
             )}
-            <div style={{ position: 'absolute', bottom: '4px', right: '4px', display: 'flex', gap: '3px' }}>
-              {f.didascalia && (
-                <div className="foto-badge">✎</div>
-              )}
-              {f.autore && (
-                <div className="foto-badge">👤</div>
-              )}
-            </div>
+            {f.didascalia && (
+              <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: '10px', padding: '1px 5px', borderRadius: '3px' }}>✎</div>
+            )}
+            {f.autore && (
+              <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: '10px', padding: '1px 5px', borderRadius: '3px' }}>👤</div>
+            )}
           </div>
         ))}
       </div>

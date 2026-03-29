@@ -468,30 +468,7 @@ export default function SchedaUSPage() {
             <h1 style={{ fontSize: '22px', fontWeight: '500', margin: 0 }}>US {us.numero_us}{form.descrizione ? ` — ${form.descrizione}` : ''}</h1>
             {us.tipo && <p style={{ fontSize: '12px', color: '#555550', marginTop: '2px', marginBottom: 0 }}>{us.tipo}</p>}
           </div>
-          {/* Natura e Polarità */}
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {(['naturale', 'artificiale'] as const).map(opt => (
-              <button key={opt} type="button" onClick={() => set('natura', form.natura === opt ? null : opt)}
-                style={{ padding: '4px 10px', borderRadius: '5px', fontSize: '11px', cursor: 'pointer',
-                  background: form.natura === opt ? '#e8f0f8' : '#f8f7f4',
-                  color: form.natura === opt ? '#1a4a7a' : '#8a8a84',
-                  border: form.natura === opt ? '0.5px solid #1a4a7a' : '0.5px solid #c8c7be',
-                  fontWeight: form.natura === opt ? '500' : '400' }}>
-                {opt}
-              </button>
-            ))}
-            <div style={{ width: '1px', background: '#e0dfd8', margin: '0 2px' }} />
-            {(['positiva', 'negativa'] as const).map(opt => (
-              <button key={opt} type="button" onClick={() => set('polarita', form.polarita === opt ? null : opt)}
-                style={{ padding: '4px 10px', borderRadius: '5px', fontSize: '11px', cursor: 'pointer',
-                  background: form.polarita === opt ? '#e8f4ef' : '#f8f7f4',
-                  color: form.polarita === opt ? '#1a6b4a' : '#8a8a84',
-                  border: form.polarita === opt ? '0.5px solid #1a6b4a' : '0.5px solid #c8c7be',
-                  fontWeight: form.polarita === opt ? '500' : '400' }}>
-                {opt}
-              </button>
-            ))}
-          </div>
+
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={toggleCompletata}
@@ -575,31 +552,35 @@ export default function SchedaUSPage() {
       {step === 1 && (
         <div>
           <div style={card}>
-            <div style={sectionTitle}>Tipo e anno</div>
-            <div style={grid2}>
-              <div><label style={lblBlue}>Tipo US *</label>
-                <SearchableSelect options={tipiUS} value={form.tipo ?? ''} onChange={v => set('tipo', v)} placeholder="Seleziona tipo..." /></div>
-              <div><label style={lbl}>Anno</label>
-                <input style={inp} type="number" value={form.anno ?? ''} onChange={e => set('anno', e.target.value ? parseInt(e.target.value) : null)} placeholder={new Date().getFullYear().toString()} /></div>
+            <div style={sectionTitle}>Tipo</div>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={lblBlue}>Tipo US *</label>
+              <SearchableSelect options={tipiUS} value={form.tipo ?? ''} onChange={v => set('tipo', v)} placeholder="Seleziona tipo..." />
             </div>
-            <div style={grid2}>
-              <div><label style={lbl}>Data apertura</label>
-                <input style={inp} type="date" value={form.data_apertura ?? ''} onChange={e => set('data_apertura', e.target.value)} /></div>
-              <div><label style={lbl}>Data chiusura</label>
-                <input style={inp} type="date" value={form.data_chiusura ?? ''} onChange={e => set('data_chiusura', e.target.value)} /></div>
+            <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+              <RadioGroup label="Natura" field="natura" options={['Naturale', 'Artificiale']} />
+              <RadioGroup label="Polarità" field="polarita" options={['Positiva', 'Negativa']} />
             </div>
           </div>
           <div style={card}>
             <div style={sectionTitle}>Dati topografici</div>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={lbl}>Identificativo del saggio / edificio / struttura / deposizione</label>
-              <input style={inp} value={form.identificativo_saggio ?? ''} onChange={e => set('identificativo_saggio', e.target.value)} placeholder="Es. Saggio 3, Edificio B, Tomba 12..." />
+            <div style={grid2}>
+              <div><label style={lbl}>Saggio</label>
+                <input style={inp} value={form.saggio ?? ''} onChange={e => set('saggio', e.target.value)} placeholder="Es. Saggio 3" /></div>
+              <div><label style={lbl}>Area</label>
+                <input style={inp} value={form.area_scavo ?? ''} onChange={e => set('area_scavo', e.target.value)} placeholder="Es. Area A" /></div>
             </div>
             <div style={grid2}>
-              <div><label style={lbl}>Area / Edificio / Struttura</label>
-                <input style={inp} value={form.area_edificio ?? ''} onChange={e => set('area_edificio', e.target.value)} placeholder="Es. Area A, Edificio 1..." /></div>
+              <div><label style={lbl}>Edificio</label>
+                <input style={inp} value={form.edificio ?? ''} onChange={e => set('edificio', e.target.value)} placeholder="Es. Edificio B" /></div>
+              <div><label style={lbl}>Struttura</label>
+                <input style={inp} value={form.struttura ?? ''} onChange={e => set('struttura', e.target.value)} placeholder="Es. Muro perimetrale" /></div>
+            </div>
+            <div style={grid2}>
+              <div><label style={lbl}>Deposizione</label>
+                <input style={inp} value={form.deposizione ?? ''} onChange={e => set('deposizione', e.target.value)} placeholder="Es. Tomba 12" /></div>
               <div><label style={lbl}>Ambiente / Unità funzionale</label>
-                <input style={inp} value={form.ambiente ?? ''} onChange={e => set('ambiente', e.target.value)} placeholder="Es. Ambiente 3, Vano B..." /></div>
+                <input style={inp} value={form.ambiente ?? ''} onChange={e => set('ambiente', e.target.value)} placeholder="Es. Ambiente 3" /></div>
             </div>
             <div style={grid2}>
               <div><label style={lbl}>Posizione</label>
@@ -610,15 +591,12 @@ export default function SchedaUSPage() {
             <div style={grid2}>
               <div><label style={lbl}>Quadrato/i</label>
                 <input style={inp} value={form.quadrati ?? ''} onChange={e => set('quadrati', e.target.value)} placeholder="Es. B3, C4-D4..." /></div>
-            </div>
-            <p style={{ fontSize: '10px', color: '#8a8a84', marginTop: '-4px', marginBottom: '12px' }}>
-              Se lo scavo non è suddiviso in aree o settori usa valori convenzionali (es. A / 1 / —)
-            </p>
-            <div style={grid3}>
-              <div><label style={lbl}>Quota min (m)</label>
-                <input style={inp} type="number" step="0.01" value={form.quota_min ?? ''} onChange={e => set('quota_min', e.target.value ? parseFloat(e.target.value) : null)} placeholder="Es. -1.48" /></div>
-              <div><label style={lbl}>Quota max (m)</label>
-                <input style={inp} type="number" step="0.01" value={form.quota_max ?? ''} onChange={e => set('quota_max', e.target.value ? parseFloat(e.target.value) : null)} placeholder="Es. -0.92" /></div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div><label style={lbl}>Quota min (m)</label>
+                  <input style={inp} type="number" step="0.01" value={form.quota_min ?? ''} onChange={e => set('quota_min', e.target.value ? parseFloat(e.target.value) : null)} placeholder="-1.48" /></div>
+                <div><label style={lbl}>Quota max (m)</label>
+                  <input style={inp} type="number" step="0.01" value={form.quota_max ?? ''} onChange={e => set('quota_max', e.target.value ? parseFloat(e.target.value) : null)} placeholder="-0.92" /></div>
+              </div>
             </div>
           </div>
           <div style={card}>

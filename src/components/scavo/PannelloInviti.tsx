@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 interface Collaboratore {
   account_id: string
@@ -16,13 +17,18 @@ interface Props {
   scavoDenominazione: string
 }
 
-export default function PannelloInviti({ scavoId }: Props) {
+export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
   const [collaboratori, setCollaboratori] = useState<Collaboratore[]>([])
   const [email, setEmail] = useState('')
   const [ruolo, setRuolo] = useState('collaboratore')
   const [loading, setLoading] = useState(false)
   const [risultato, setRisultato] = useState<{ url?: string; errore?: string } | null>(null)
   const [utenteCorrente, setUtenteCorrente] = useState<string | null>(null)
+  const [ruoloCorrente, setRuoloCorrente] = useState<string | null>(null)
+  const [mostraConferma, setMostraConferma] = useState<string | null>(null) // account_id da rimuovere
+  const [mostraConfermaAbbandono, setMostraConfermaAbbandono] = useState(false)
+  const [azione, setAzione] = useState(false)
+  const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
@@ -30,7 +36,6 @@ export default function PannelloInviti({ scavoId }: Props) {
       const { data: { user } } = await supabase.auth.getUser()
       setUtenteCorrente(user?.id ?? null)
 
-      // Prima query: accessi
       const { data: accessi } = await supabase
         .from('accesso_scavo')
         .select('account_id, ruolo')
@@ -38,7 +43,9 @@ export default function PannelloInviti({ scavoId }: Props) {
 
       if (!accessi) return
 
-      // Seconda query: dati account
+      const mioAccesso = accessi.find(a => a.account_id === user?.id)
+      setRuoloCorrente(mioAccesso?.ruolo ?? null)
+
       const ids = accessi.map(a => a.account_id)
       const { data: accounts } = await supabase
         .from('account')
@@ -68,18 +75,37 @@ export default function PannelloInviti({ scavoId }: Props) {
     return { bg: '#f0efe9', color: '#8a8a84' }
   }
 
+  async function rimuoviCollaboratore(accountId: string) {
+    setAzione(true)
+    await supabase.from('accesso_scavo').delete()
+      .eq('scavo_id', scavoId)
+      .eq('account_id', accountId)
+    setCollaboratori(prev => prev.filter(c => c.account_id !== accountId))
+    setMostraConferma(null)
+    setAzione(false)
+  }
+
+  async function abbandonaScavo() {
+    if (!utenteCorrente) return
+    setAzione(true)
+    await supabase.from('accesso_scavo').delete()
+      .eq('scavo_id', scavoId)
+      .eq('account_id', utenteCorrente)
+    setMostraConfermaAbbandono(false)
+    setAzione(false)
+    router.push('/reports')
+  }
+
   async function invita() {
     if (!email) return
     setLoading(true)
     setRisultato(null)
-
     const res = await fetch('/api/invita', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ scavoId, email, ruolo }),
     })
     const data = await res.json()
-
     if (data.error) {
       setRisultato({ errore: data.error })
     } else {
@@ -88,6 +114,8 @@ export default function PannelloInviti({ scavoId }: Props) {
     }
     setLoading(false)
   }
+
+  const isResponsabile = ruoloCorrente === 'editor'
 
   const inp: React.CSSProperties = {
     width: '100%', padding: '7px 10px',
@@ -108,81 +136,135 @@ export default function PannelloInviti({ scavoId }: Props) {
           {collaboratori.map(c => {
             const badge = coloreBadge(c.ruolo)
             const sonoIo = c.account_id === utenteCorrente
+            const nomeCompleto = c.account ? `${c.account.nome} ${c.account.cognome}` : c.account_id.slice(0, 8)
             return (
               <div key={c.account_id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 0', borderBottom: '0.5px solid #f0efe9' }}>
-                {/* Avatar iniziali */}
                 <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: badge.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '500', color: badge.color, flexShrink: 0 }}>
                   {iniziali(c)}
                 </div>
-                {/* Nome e email */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a' }}>
-                    {c.account ? `${c.account.nome} ${c.account.cognome}` : c.account_id.slice(0, 8)}
+                    {nomeCompleto}
                     {sonoIo && <span style={{ fontSize: '10px', color: '#8a8a84', marginLeft: '6px' }}>tu</span>}
                   </div>
-
                 </div>
-                {/* Badge ruolo */}
                 <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '8px', background: badge.bg, color: badge.color, fontWeight: '500', flexShrink: 0 }}>
                   {c.ruolo}
                 </span>
+                {/* Azioni */}
+                {!sonoIo && isResponsabile && (
+                  <button onClick={() => setMostraConferma(c.account_id)}
+                    style={{ padding: '3px 8px', background: 'none', border: '0.5px solid #e88', color: '#c00', borderRadius: '4px', fontSize: '11px', cursor: 'pointer', flexShrink: 0 }}>
+                    Rimuovi
+                  </button>
+                )}
+                {sonoIo && !isResponsabile && (
+                  <button onClick={() => setMostraConfermaAbbandono(true)}
+                    style={{ padding: '3px 8px', background: 'none', border: '0.5px solid #c8c7be', color: '#8a8a84', borderRadius: '4px', fontSize: '11px', cursor: 'pointer', flexShrink: 0 }}>
+                    Abbandona
+                  </button>
+                )}
               </div>
             )
           })}
         </div>
       )}
 
-      {/* Form invito */}
-      <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', marginBottom: '8px' }}>
-        Invita un collaboratore
-      </div>
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-        <div style={{ flex: 2 }}>
-          <input style={inp} type="email" value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="nome@email.com"
-            onKeyDown={e => { if (e.key === 'Enter') invita() }}
-          />
-        </div>
-        <div style={{ flex: 1 }}>
-          <select style={inp} value={ruolo} onChange={e => setRuolo(e.target.value)}>
-            <option value="editor">Editor</option>
-            <option value="collaboratore">Collaboratore</option>
-            <option value="visualizzatore">Visualizzatore</option>
-          </select>
-        </div>
-      </div>
-
-      <button onClick={invita} disabled={loading || !email}
-        style={{
-          width: '100%', padding: '8px',
-          background: email ? '#1a4a7a' : '#f0efe9',
-          color: email ? '#fff' : '#8a8a84',
-          border: 'none', borderRadius: '6px',
-          fontSize: '12px', fontWeight: '500',
-          cursor: email ? 'pointer' : 'default',
-        }}>
-        {loading ? 'Invio...' : 'Invia invito'}
-      </button>
-
-      {risultato?.errore && (
-        <p style={{ fontSize: '11px', color: '#c00', marginTop: '8px' }}>{risultato.errore}</p>
+      {/* Form invito — solo per editor */}
+      {isResponsabile && (
+        <>
+          <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', marginBottom: '8px' }}>
+            Invita un collaboratore
+          </div>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+            <div style={{ flex: 2 }}>
+              <input style={inp} type="email" value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="nome@email.com"
+                onKeyDown={e => { if (e.key === 'Enter') invita() }}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <select style={inp} value={ruolo} onChange={e => setRuolo(e.target.value)}>
+                <option value="editor">Editor</option>
+                <option value="collaboratore">Collaboratore</option>
+                <option value="visualizzatore">Visualizzatore</option>
+              </select>
+            </div>
+          </div>
+          <button onClick={invita} disabled={loading || !email}
+            style={{
+              width: '100%', padding: '8px',
+              background: email ? '#1a4a7a' : '#f0efe9',
+              color: email ? '#fff' : '#8a8a84',
+              border: 'none', borderRadius: '6px',
+              fontSize: '12px', fontWeight: '500',
+              cursor: email ? 'pointer' : 'default',
+            }}>
+            {loading ? 'Invio...' : 'Invia invito'}
+          </button>
+          {risultato?.errore && (
+            <p style={{ fontSize: '11px', color: '#c00', marginTop: '8px' }}>{risultato.errore}</p>
+          )}
+          {risultato?.url && (
+            <div style={{ marginTop: '10px', padding: '10px', background: '#e8f4ef', borderRadius: '6px', border: '0.5px solid #1a6b4a30' }}>
+              <div style={{ fontSize: '11px', color: '#1a6b4a', fontWeight: '500', marginBottom: '4px' }}>✓ Invito creato</div>
+              <div style={{ fontSize: '11px', color: '#555550', marginBottom: '6px' }}>Copia e invia questo link al collaboratore:</div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input style={{ ...inp, fontSize: '11px', color: '#1a4a7a' }}
+                  value={risultato.url} readOnly
+                  onClick={e => (e.target as HTMLInputElement).select()}
+                />
+                <button onClick={() => navigator.clipboard.writeText(risultato.url!)}
+                  style={{ padding: '5px 10px', background: '#1a4a7a', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  Copia
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
-      {risultato?.url && (
-        <div style={{ marginTop: '10px', padding: '10px', background: '#e8f4ef', borderRadius: '6px', border: '0.5px solid #1a6b4a30' }}>
-          <div style={{ fontSize: '11px', color: '#1a6b4a', fontWeight: '500', marginBottom: '4px' }}>✓ Invito creato</div>
-          <div style={{ fontSize: '11px', color: '#555550', marginBottom: '6px' }}>Copia e invia questo link al collaboratore:</div>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <input style={{ ...inp, fontSize: '11px', color: '#1a4a7a' }}
-              value={risultato.url} readOnly
-              onClick={e => (e.target as HTMLInputElement).select()}
-            />
-            <button
-              onClick={() => navigator.clipboard.writeText(risultato.url!)}
-              style={{ padding: '5px 10px', background: '#1a4a7a', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              Copia
-            </button>
+      {/* Modale conferma rimozione */}
+      {mostraConferma && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '12px', padding: '24px', maxWidth: '380px', width: '100%' }}>
+            <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a1a', marginBottom: '8px' }}>Rimuovi collaboratore</div>
+            <div style={{ fontSize: '12px', color: '#555550', marginBottom: '20px' }}>
+              Sei sicuro di voler rimuovere {collaboratori.find(c => c.account_id === mostraConferma)?.account?.nome} {collaboratori.find(c => c.account_id === mostraConferma)?.account?.cognome} dallo scavo <strong>{scavoDenominazione}</strong>?
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => setMostraConferma(null)}
+                style={{ flex: 1, padding: '9px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
+                Annulla
+              </button>
+              <button onClick={() => rimuoviCollaboratore(mostraConferma)} disabled={azione}
+                style={{ flex: 1, padding: '9px', background: '#c00', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: azione ? 'default' : 'pointer' }}>
+                {azione ? 'Rimozione...' : 'Rimuovi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale conferma abbandono */}
+      {mostraConfermaAbbandono && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '12px', padding: '24px', maxWidth: '380px', width: '100%' }}>
+            <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a1a', marginBottom: '8px' }}>Abbandona scavo</div>
+            <div style={{ fontSize: '12px', color: '#555550', marginBottom: '20px' }}>
+              Sei sicuro di voler abbandonare lo scavo <strong>{scavoDenominazione}</strong>? Non potrai più accedervi senza un nuovo invito.
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => setMostraConfermaAbbandono(false)}
+                style={{ flex: 1, padding: '9px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
+                Annulla
+              </button>
+              <button onClick={abbandonaScavo} disabled={azione}
+                style={{ flex: 1, padding: '9px', background: '#c00', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: azione ? 'default' : 'pointer' }}>
+                {azione ? 'Abbandono...' : 'Abbandona'}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -22,6 +22,33 @@ export default async function ReportsPage({
 
   const { data: scavi } = await query
 
+  // Carica accessi condivisi per tutti gli scavi
+  const scaviIds = scavi?.map(s => s.id) ?? []
+  let accessiMap: Record<string, { nome: string; cognome: string }[]> = {}
+
+  if (scaviIds.length > 0) {
+    const { data: accessi } = await supabase
+      .from('accesso_scavo')
+      .select('scavo_id, account_id')
+      .in('scavo_id', scaviIds)
+      .neq('account_id', user.id)
+
+    if (accessi && accessi.length > 0) {
+      const accountIds = [...new Set(accessi.map(a => a.account_id))]
+      const { data: accounts } = await supabase
+        .from('account')
+        .select('id, nome, cognome')
+        .in('id', accountIds)
+
+      accessi.forEach(a => {
+        const account = accounts?.find(ac => ac.id === a.account_id)
+        if (!account) return
+        if (!accessiMap[a.scavo_id]) accessiMap[a.scavo_id] = []
+        accessiMap[a.scavo_id].push({ nome: account.nome, cognome: account.cognome })
+      })
+    }
+  }
+
   const statoInfo = (s: string) => {
     if (s === 'in_corso') return { label: 'In corso', bg: '#e8f0f8', color: '#1a4a7a' }
     if (s === 'in_elaborazione') return { label: 'In elaborazione', bg: '#fdf3e0', color: '#8a5c0a' }
@@ -113,12 +140,12 @@ export default async function ReportsPage({
           {scavi.map(scavo => {
             const info = statoInfo(scavo.stato ?? 'archiviato')
             const numUS = (scavo.us as unknown as { count: number }[])?.[0]?.count ?? 0
+            const collaboratori = accessiMap[scavo.id] ?? []
             return (
               <Link key={scavo.id} href={`/reports/scavi/${scavo.id}`} style={{ textDecoration: 'none' }}>
                 <div style={{
                   background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '10px',
                   padding: '14px 16px', cursor: 'pointer',
-                  transition: 'border-color 0.15s',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                     <div style={{ flex: 1 }}>
@@ -128,7 +155,7 @@ export default async function ReportsPage({
                       <div style={{ fontSize: '12px', color: '#8a8a84', marginBottom: '8px' }}>
                         {[scavo.regione, scavo.datazione_contesto].filter(Boolean).join(' · ')}
                       </div>
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                         <span style={{ fontSize: '11px', background: info.bg, color: info.color, padding: '2px 8px', borderRadius: '10px' }}>
                           {info.label}
                         </span>
@@ -140,6 +167,11 @@ export default async function ReportsPage({
                             {scavo.tipologia_intervento}
                           </span>
                         )}
+                        {collaboratori.map((c, i) => (
+                          <span key={i} style={{ fontSize: '11px', background: '#e8f4ef', color: '#1a6b4a', padding: '2px 8px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            👤 {c.nome} {c.cognome}
+                          </span>
+                        ))}
                       </div>
                     </div>
                     <div style={{ fontSize: '12px', color: '#c8c7be', marginLeft: '12px' }}>→</div>

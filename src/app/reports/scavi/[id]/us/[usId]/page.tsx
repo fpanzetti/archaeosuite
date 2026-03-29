@@ -835,26 +835,24 @@ export default function SchedaUSPage() {
           <div style={card}>
             <div style={sectionTitle}>Cronologia</div>
             <div style={grid2}>
+              <div><label style={lbl}>Epoca</label>
+                <input style={inp} value={form.epoca ?? ''} onChange={e => set('epoca', e.target.value)} placeholder="Es. Età del Ferro, medievale..." /></div>
+              <div><label style={lbl}>Periodo</label>
+                <input style={inp} value={form.periodo ?? ''} onChange={e => set('periodo', e.target.value)} placeholder="Es. Prima età del Bronzo..." /></div>
+            </div>
+            <div style={grid2}>
+              <div><label style={lbl}>Fase</label>
+                <input style={inp} value={form.fase ?? ''} onChange={e => set('fase', e.target.value)} placeholder="Es. Fase I, II..." /></div>
+            </div>
+            <div style={grid2}>
               <div><label style={lbl}>Datazione iniziale</label>
                 <input style={inp} value={form.cronologia_iniziale ?? ''} onChange={e => set('cronologia_iniziale', e.target.value)} placeholder="Es. IV sec. a.C." /></div>
               <div><label style={lbl}>Datazione finale</label>
                 <input style={inp} value={form.cronologia_finale ?? ''} onChange={e => set('cronologia_finale', e.target.value)} placeholder="Es. III sec. a.C." /></div>
             </div>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={lbl}>Metodo di datazione</label>
+            <div><label style={lbl}>Metodo di datazione</label>
               <SearchableSelect options={metodiDatazione} value={form.metodo_datazione ?? ''} onChange={v => set('metodo_datazione', v)} placeholder="Seleziona..." allowFreeText={true} />
             </div>
-          </div>
-          <div style={card}>
-            <div style={sectionTitle}>Contestualizzazione</div>
-            <div style={grid2}>
-              <div><label style={lbl}>Periodo</label>
-                <input style={inp} value={form.periodo ?? ''} onChange={e => set('periodo', e.target.value)} placeholder="Es. Età del Bronzo, medievale..." /></div>
-              <div><label style={lbl}>Fase</label>
-                <input style={inp} value={form.fase ?? ''} onChange={e => set('fase', e.target.value)} placeholder="Es. Fase I, II..." /></div>
-            </div>
-            <div><label style={lbl}>Attività</label>
-              <input style={inp} value={form.attivita ?? ''} onChange={e => set('attivita', e.target.value)} placeholder="Es. abbandono, crollo, riporto..." /></div>
           </div>
         </div>
       )}

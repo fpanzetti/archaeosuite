@@ -19,6 +19,7 @@ interface Props {
   scavoId: string
   usId?: string
   tipo?: string
+  responsabileCampo?: string
   onFotoAggiunta?: (foto: Foto) => void
 }
 
@@ -38,8 +39,7 @@ async function ridimensiona(file: File, maxLato: number): Promise<Blob> {
         else { width = Math.round(width * maxLato / height); height = maxLato }
       }
       const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
+      canvas.width = width; canvas.height = height
       const ctx = canvas.getContext('2d')!
       ctx.drawImage(img, 0, 0, width, height)
       canvas.toBlob(blob => {
@@ -52,22 +52,69 @@ async function ridimensiona(file: File, maxLato: number): Promise<Blob> {
   })
 }
 
+// Estrai data EXIF da JPEG/TIFF
+async function estraiDataExif(file: File): Promise<string | null> {
+  try {
+    const buffer = await file.arrayBuffer()
+    const view = new DataView(buffer)
+    // Verifica marker JPEG
+    if (view.getUint16(0) !== 0xFFD8) return null
+    let offset = 2
+    while (offset < view.byteLength - 1) {
+      const marker = view.getUint16(offset)
+      if (marker === 0xFFE1) {
+        // APP1 — potrebbe contenere EXIF
+        const segLen = view.getUint16(offset + 2)
+        const exifHeader = new Uint8Array(buffer, offset + 4, 6)
+        const isExif = String.fromCharCode(...exifHeader).startsWith('Exif')
+        if (!isExif) { offset += 2 + segLen; continue }
+        const tiffOffset = offset + 10
+        const littleEndian = view.getUint16(tiffOffset) === 0x4949
+        const ifdOffset = tiffOffset + view.getUint32(tiffOffset + 4, littleEndian)
+        const numEntries = view.getUint16(ifdOffset, littleEndian)
+        for (let i = 0; i < numEntries; i++) {
+          const entryOffset = ifdOffset + 2 + i * 12
+          const tag = view.getUint16(entryOffset, littleEndian)
+          // Tag 0x0132 = DateTime, 0x9003 = DateTimeOriginal
+          if (tag === 0x9003 || tag === 0x0132) {
+            const valueOffset = tiffOffset + view.getUint32(entryOffset + 8, littleEndian)
+            let dateStr = ''
+            for (let j = 0; j < 19; j++) {
+              const c = view.getUint8(valueOffset + j)
+              if (c === 0) break
+              dateStr += String.fromCharCode(c)
+            }
+            // Formato EXIF: "YYYY:MM:DD HH:MM:SS" → "YYYY-MM-DD"
+            const match = dateStr.match(/^(\d{4}):(\d{2}):(\d{2})/)
+            if (match) return `${match[1]}-${match[2]}-${match[3]}`
+          }
+        }
+      }
+      const segLen = view.getUint16(offset + 2)
+      offset += 2 + segLen
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 const LABEL_TIPO: Record<string, string> = {
   foto: 'foto',
   rilievo: 'rilievo',
   altro: 'altro documento',
 }
 
-export default function UploadFoto({ scavoId, usId, tipo: tipoProp, onFotoAggiunta }: Props) {
+export default function UploadFoto({ scavoId, usId, tipo: tipoProp, responsabileCampo, onFotoAggiunta }: Props) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const [didascalia, setDidascalia] = useState('')
+  const [autore, setAutore] = useState(responsabileCampo ?? '')
   const [fileSelezionato, setFileSelezionato] = useState<File | null>(null)
   const [errore, setErrore] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
-  // Il tipo è determinato dalla prop esterna (tab attiva) — non modificabile dall'utente
   const tipoEffettivo = tipoProp ?? 'foto'
   const labelTipo = LABEL_TIPO[tipoEffettivo] ?? tipoEffettivo
 
@@ -85,32 +132,32 @@ export default function UploadFoto({ scavoId, usId, tipo: tipoProp, onFotoAggiun
     if (!fileSelezionato) return
     setUploading(true)
     setErrore('')
-
     try {
-      // Leggi dimensioni originali
+      // Dimensioni originali
       const imgOrig = new Image()
       const origUrl = URL.createObjectURL(fileSelezionato)
       await new Promise(res => { imgOrig.onload = res; imgOrig.src = origUrl })
       const { width: w, height: h } = imgOrig
       URL.revokeObjectURL(origUrl)
 
-      // Ridimensiona immagine principale e thumbnail
+      // Data EXIF o fallback a oggi
+      const dataExif = await estraiDataExif(fileSelezionato)
+      const dataScatto = dataExif ?? new Date().toISOString().split('T')[0]
+
+      // Ridimensiona
       const blobMain = await ridimensiona(fileSelezionato, MAX_LATO)
       const blobThumb = await ridimensiona(fileSelezionato, MAX_THUMB)
 
+      // ID file: scavoId_usId_timestamp
       const timestamp = Date.now()
-      const baseName = `${scavoId}/${usId ?? 'scavo'}/${timestamp}`
-      const pathMain = `${baseName}.jpg`
-      const pathThumb = `${baseName}_thumb.jpg`
+      const usSegment = usId ?? 'scavo'
+      const fileId = `${scavoId}_${usSegment}_${timestamp}`
+      const pathMain = `${scavoId}/${usSegment}/${fileId}.jpg`
+      const pathThumb = `${scavoId}/${usSegment}/${fileId}_thumb.jpg`
 
-      const { error: e1 } = await supabase.storage
-        .from('foto-scavi')
-        .upload(pathMain, blobMain, { contentType: 'image/jpeg', upsert: false })
+      const { error: e1 } = await supabase.storage.from('foto-scavi').upload(pathMain, blobMain, { contentType: 'image/jpeg', upsert: false })
       if (e1) throw new Error(e1.message)
-
-      const { error: e2 } = await supabase.storage
-        .from('foto-scavi')
-        .upload(pathThumb, blobThumb, { contentType: 'image/jpeg', upsert: false })
+      const { error: e2 } = await supabase.storage.from('foto-scavi').upload(pathThumb, blobThumb, { contentType: 'image/jpeg', upsert: false })
       if (e2) throw new Error(e2.message)
 
       const { data: urlMain } = supabase.storage.from('foto-scavi').getPublicUrl(pathMain)
@@ -121,13 +168,14 @@ export default function UploadFoto({ scavoId, usId, tipo: tipoProp, onFotoAggiun
         us_id: usId ?? null,
         url: urlMain.publicUrl,
         url_thumb: urlThumb.publicUrl,
-        nome_file: fileSelezionato.name,
+        nome_file: fileId,
         didascalia: didascalia || null,
+        autore: autore || null,
         tipo: tipoEffettivo,
         larghezza: w,
         altezza: h,
         dimensione_kb: Math.round(blobMain.size / 1024),
-        data_scatto: new Date().toISOString().split('T')[0],
+        data_scatto: dataScatto,
       }).select().single()
 
       if (eDb) throw new Error(eDb.message)
@@ -136,8 +184,8 @@ export default function UploadFoto({ scavoId, usId, tipo: tipoProp, onFotoAggiun
       setPreview(null)
       setFileSelezionato(null)
       setDidascalia('')
+      setAutore(responsabileCampo ?? '')
       if (inputRef.current) inputRef.current.value = ''
-
     } catch (err) {
       setErrore(err instanceof Error ? err.message : 'Errore durante upload')
     }
@@ -150,6 +198,7 @@ export default function UploadFoto({ scavoId, usId, tipo: tipoProp, onFotoAggiun
     background: '#f8f7f4', color: '#1a1a1a',
     fontSize: '12px', fontFamily: 'inherit',
   }
+  const lbl: React.CSSProperties = { display: 'block', fontSize: '11px', color: '#8a8a84', marginBottom: '4px', fontWeight: '500' }
 
   const labelUpload = tipoEffettivo === 'foto' ? '📷 Aggiungi foto'
     : tipoEffettivo === 'rilievo' ? '📐 Aggiungi rilievo'
@@ -161,10 +210,8 @@ export default function UploadFoto({ scavoId, usId, tipo: tipoProp, onFotoAggiun
       <div style={{ fontSize: '11px', fontWeight: '500', color: '#1a4a7a', marginBottom: '12px', paddingBottom: '8px', borderBottom: '0.5px solid #e8f0f8' }}>
         {labelUpload}
       </div>
-
       {!preview ? (
-        <div
-          onClick={() => inputRef.current?.click()}
+        <div onClick={() => inputRef.current?.click()}
           style={{ border: '1.5px dashed #c8c7be', borderRadius: '8px', padding: '24px', textAlign: 'center', cursor: 'pointer', background: '#f8f7f4' }}>
           <div style={{ fontSize: '24px', marginBottom: '8px' }}>
             {tipoEffettivo === 'foto' ? '📷' : tipoEffettivo === 'rilievo' ? '📐' : '📎'}
@@ -178,8 +225,12 @@ export default function UploadFoto({ scavoId, usId, tipo: tipoProp, onFotoAggiun
           <img src={preview} alt="anteprima"
             style={{ width: '100%', maxHeight: '240px', objectFit: 'contain', background: '#f0efe9', borderRadius: '6px', marginBottom: '10px' }} />
           <div style={{ marginBottom: '8px' }}>
-            <label style={{ display: 'block', fontSize: '11px', color: '#8a8a84', marginBottom: '4px', fontWeight: '500' }}>Didascalia</label>
+            <label style={lbl}>Didascalia</label>
             <input style={inp} value={didascalia} onChange={e => setDidascalia(e.target.value)} placeholder="Descrizione opzionale..." />
+          </div>
+          <div style={{ marginBottom: '8px' }}>
+            <label style={lbl}>Autore</label>
+            <input style={inp} value={autore} onChange={e => setAutore(e.target.value)} placeholder="Nome e cognome..." />
           </div>
           <div style={{ marginBottom: '8px', padding: '6px 10px', background: '#f8f7f4', borderRadius: '6px', fontSize: '11px', color: '#8a8a84' }}>
             Tipo: <strong style={{ color: '#1a4a7a' }}>{labelTipo}</strong>

@@ -230,7 +230,31 @@ export default function UploadFoto({ scavoId, usId, tipo: tipoProp, responsabile
           </div>
           <div style={{ marginBottom: '8px' }}>
             <label style={lbl}>Autore</label>
-            <input style={inp} value={autore} onChange={e => setAutore(e.target.value)} placeholder="Nome e cognome..." />
+            {responsabileCampo ? (
+              <div>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                  <button type="button" onClick={() => setAutore(responsabileCampo)}
+                    style={{ padding: '5px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
+                      background: autore === responsabileCampo ? '#e8f0f8' : '#f8f7f4',
+                      color: autore === responsabileCampo ? '#1a4a7a' : '#555550',
+                      border: autore === responsabileCampo ? '0.5px solid #1a4a7a' : '0.5px solid #c8c7be' }}>
+                    {responsabileCampo}
+                  </button>
+                  <button type="button" onClick={() => setAutore('')}
+                    style={{ padding: '5px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
+                      background: autore !== responsabileCampo ? '#e8f0f8' : '#f8f7f4',
+                      color: autore !== responsabileCampo ? '#1a4a7a' : '#555550',
+                      border: autore !== responsabileCampo ? '0.5px solid #1a4a7a' : '0.5px solid #c8c7be' }}>
+                    Altro
+                  </button>
+                </div>
+                {autore !== responsabileCampo && (
+                  <input style={inp} value={autore} onChange={e => setAutore(e.target.value)} placeholder="Nome e cognome..." autoFocus />
+                )}
+              </div>
+            ) : (
+              <input style={inp} value={autore} onChange={e => setAutore(e.target.value)} placeholder="Nome e cognome..." />
+            )}
           </div>
           <div style={{ marginBottom: '8px', padding: '6px 10px', background: '#f8f7f4', borderRadius: '6px', fontSize: '11px', color: '#8a8a84' }}>
             Tipo: <strong style={{ color: '#1a4a7a' }}>{labelTipo}</strong>

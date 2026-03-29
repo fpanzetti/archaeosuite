@@ -31,7 +31,6 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
   const [didascaliaInput, setDidascaliaInput] = useState('')
   const [autoreInput, setAutoreInput] = useState('')
   const [salvando, setSalvando] = useState(false)
-  const [hoverIdFoto, setHoverIdFoto] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
@@ -108,39 +107,13 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
       {/* Griglia thumbnail */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '6px' }}>
         {foto.map(f => (
-          <div
-            key={f.id}
-            onClick={() => apriLightbox(f)}
-            onMouseEnter={() => setHoverIdFoto(f.id)}
-            onMouseLeave={() => setHoverIdFoto(null)}
-            style={{ position: 'relative', cursor: 'pointer', borderRadius: '6px', overflow: 'hidden', border: '0.5px solid #e0dfd8' }}>
-            <img
-              src={f.url_thumb ?? f.url}
-              alt={f.didascalia ?? f.nome_file ?? 'allegato'}
-              style={{
-                width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block',
-                transition: 'transform 0.2s ease',
-                transform: hoverIdFoto === f.id ? 'scale(1.08)' : 'scale(1)',
-              }}
-            />
-            {/* Overlay con didascalia al hover */}
-            {hoverIdFoto === f.id && f.didascalia && (
-              <div style={{
-                position: 'absolute', bottom: 0, left: 0, right: 0,
-                background: 'linear-gradient(transparent, rgba(0,0,0,0.75))',
-                color: '#fff', fontSize: '10px', padding: '16px 6px 5px',
-                lineHeight: '1.3', pointerEvents: 'none',
-              }}>
-                {f.didascalia}
-              </div>
+          <div key={f.id} className="foto-thumb" onClick={() => apriLightbox(f)}>
+            <img src={f.url_thumb ?? f.url} alt={f.didascalia ?? f.nome_file ?? 'allegato'} />
+            {f.didascalia && (
+              <div className="foto-overlay">{f.didascalia}</div>
             )}
-            {/* Badge didascalia sempre visibile */}
-            {f.didascalia && hoverIdFoto !== f.id && (
-              <div style={{
-                position: 'absolute', bottom: '4px', right: '4px',
-                background: 'rgba(0,0,0,0.55)', color: '#fff',
-                fontSize: '10px', padding: '1px 5px', borderRadius: '3px',
-              }}>✎</div>
+            {f.didascalia && (
+              <div className="foto-badge">✎</div>
             )}
           </div>
         ))}

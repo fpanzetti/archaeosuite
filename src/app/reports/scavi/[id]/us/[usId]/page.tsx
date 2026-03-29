@@ -67,6 +67,7 @@ type US = USBase & {
   // Step 5 — Interpretazione
   interpretazione: string | null
   tipo_formazione: string | null
+  epoca: string | null
   cronologia_iniziale: string | null
   cronologia_finale: string | null
   metodo_datazione: string | null

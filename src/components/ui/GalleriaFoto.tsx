@@ -7,6 +7,7 @@ interface Foto {
   url: string
   url_thumb: string | null
   didascalia: string | null
+  autore: string | null
   nome_file: string | null
   data_scatto: string | null
   tipo: string | null
@@ -26,15 +27,17 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
   const [foto, setFoto] = useState<Foto[]>([])
   const [fotoAperta, setFotoAperta] = useState<Foto | null>(null)
   const [editingDidascalia, setEditingDidascalia] = useState(false)
+  const [editingAutore, setEditingAutore] = useState(false)
   const [didascaliaInput, setDidascaliaInput] = useState('')
-  const [salvandoDidascalia, setSalvandoDidascalia] = useState(false)
+  const [autoreInput, setAutoreInput] = useState('')
+  const [salvando, setSalvando] = useState(false)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   useEffect(() => {
     async function carica() {
       setLoading(true)
-      let query = supabase.from('foto').select('*').eq('scavo_id', scavoId).order('created_at', { ascending: false })
+      let query = supabase.from('foto').select('*').eq('scavo_id', scavoId).order('created_at', { ascending: true })
       if (usId) query = query.eq('us_id', usId)
       if (tipo) query = query.eq('tipo', tipo)
       const { data } = await query
@@ -47,7 +50,9 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
   function apriLightbox(f: Foto) {
     setFotoAperta(f)
     setDidascaliaInput(f.didascalia ?? '')
+    setAutoreInput(f.autore ?? '')
     setEditingDidascalia(false)
+    setEditingAutore(false)
   }
 
   async function eliminaFoto(id: string, url: string) {
@@ -61,13 +66,24 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
 
   async function salvaDidascalia() {
     if (!fotoAperta) return
-    setSalvandoDidascalia(true)
+    setSalvando(true)
     await supabase.from('foto').update({ didascalia: didascaliaInput || null }).eq('id', fotoAperta.id)
     const aggiornata = { ...fotoAperta, didascalia: didascaliaInput || null }
     setFotoAperta(aggiornata)
     setFoto(prev => prev.map(f => f.id === fotoAperta.id ? aggiornata : f))
-    setSalvandoDidascalia(false)
+    setSalvando(false)
     setEditingDidascalia(false)
+  }
+
+  async function salvaAutore() {
+    if (!fotoAperta) return
+    setSalvando(true)
+    await supabase.from('foto').update({ autore: autoreInput || null }).eq('id', fotoAperta.id)
+    const aggiornata = { ...fotoAperta, autore: autoreInput || null }
+    setFotoAperta(aggiornata)
+    setFoto(prev => prev.map(f => f.id === fotoAperta.id ? aggiornata : f))
+    setSalvando(false)
+    setEditingAutore(false)
   }
 
   const labelTipo = tipo === 'foto' ? 'foto' : tipo === 'rilievo' ? 'rilievi' : tipo === 'altro' ? 'altri documenti' : 'allegati'
@@ -85,29 +101,33 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
       {/* Griglia thumbnail */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '6px' }}>
         {foto.map(f => (
-          <div key={f.id} style={{ position: 'relative', cursor: 'pointer' }} onClick={() => apriLightbox(f)}>
+          <div key={f.id}
+            title={f.didascalia ?? undefined}
+            onClick={() => apriLightbox(f)}
+            style={{ position: 'relative', cursor: 'pointer', borderRadius: '6px', overflow: 'hidden' }}>
             <img
               src={f.url_thumb ?? f.url}
               alt={f.didascalia ?? f.nome_file ?? 'allegato'}
-              title={f.didascalia ?? undefined}
-            style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: '6px', border: '0.5px solid #e0dfd8' }}
+              style={{
+                width: '100%', aspectRatio: '1', objectFit: 'cover',
+                borderRadius: '6px', border: '0.5px solid #e0dfd8',
+                transition: 'transform 0.15s ease, opacity 0.15s ease',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.05)'; (e.currentTarget as HTMLImageElement).style.opacity = '0.9' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; (e.currentTarget as HTMLImageElement).style.opacity = '1' }}
             />
-            {f.tipo && f.tipo !== 'foto' && (
-              <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '9px', padding: '1px 5px', borderRadius: '3px' }}>
-                {f.tipo}
-              </div>
-            )}
             {f.didascalia && (
-              <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: '9px', padding: '1px 4px', borderRadius: '3px' }}>✎</div>
+              <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: '10px', padding: '1px 5px', borderRadius: '3px', lineHeight: '1.4' }}>✎</div>
             )}
           </div>
         ))}
       </div>
 
       {/* Legenda */}
-      <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#8a8a84' }}>
-          <span style={{ fontSize: '11px' }}>✎</span> La miniatura ha una didascalia
+          <span style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '0px 4px', borderRadius: '3px', fontSize: '10px' }}>✎</span>
+          Ha una didascalia
         </div>
       </div>
 
@@ -115,28 +135,25 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
       {fotoAperta && (
         <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-          onClick={() => { setFotoAperta(null); setEditingDidascalia(false) }}
+          onClick={() => { setFotoAperta(null); setEditingDidascalia(false); setEditingAutore(false) }}
         >
           <div style={{ maxWidth: '800px', width: '100%', background: '#fff', borderRadius: '12px', overflow: 'hidden' }}
             onClick={e => e.stopPropagation()}>
             <img src={fotoAperta.url} alt={fotoAperta.didascalia ?? ''}
               style={{ width: '100%', maxHeight: '500px', objectFit: 'contain', background: '#1a1a1a' }} />
             <div style={{ padding: '12px 16px' }}>
-              {/* Didascalia — visualizzazione o modifica */}
-              <div style={{ marginBottom: '10px' }}>
+
+              {/* Didascalia */}
+              <div style={{ marginBottom: '8px' }}>
                 {editingDidascalia ? (
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <input
-                      autoFocus
-                      style={{ ...inp, flex: 1 }}
-                      value={didascaliaInput}
+                    <input autoFocus style={{ ...inp, flex: 1 }} value={didascaliaInput}
                       onChange={e => setDidascaliaInput(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') salvaDidascalia(); if (e.key === 'Escape') setEditingDidascalia(false) }}
-                      placeholder="Aggiungi una didascalia..."
-                    />
-                    <button onClick={salvaDidascalia} disabled={salvandoDidascalia}
+                      placeholder="Aggiungi una didascalia..." />
+                    <button onClick={salvaDidascalia} disabled={salvando}
                       style={{ padding: '5px 12px', background: '#1a4a7a', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
-                      {salvandoDidascalia ? '...' : 'Salva'}
+                      {salvando ? '...' : 'Salva'}
                     </button>
                     <button onClick={() => setEditingDidascalia(false)}
                       style={{ padding: '5px 10px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
@@ -156,6 +173,37 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
                   </div>
                 )}
               </div>
+
+              {/* Autore */}
+              <div style={{ marginBottom: '10px' }}>
+                {editingAutore ? (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input autoFocus style={{ ...inp, flex: 1 }} value={autoreInput}
+                      onChange={e => setAutoreInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') salvaAutore(); if (e.key === 'Escape') setEditingAutore(false) }}
+                      placeholder="Nome e cognome autore..." />
+                    <button onClick={salvaAutore} disabled={salvando}
+                      style={{ padding: '5px 12px', background: '#1a4a7a', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
+                      {salvando ? '...' : 'Salva'}
+                    </button>
+                    <button onClick={() => setEditingAutore(false)}
+                      style={{ padding: '5px 10px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
+                      Annulla
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '11px', color: '#8a8a84' }}>
+                      {fotoAperta.autore ? `Autore: ${fotoAperta.autore}` : 'Nessun autore'}
+                    </span>
+                    <button onClick={() => setEditingAutore(true)}
+                      style={{ padding: '2px 8px', background: 'none', border: '0.5px solid #c8c7be', borderRadius: '4px', fontSize: '11px', color: '#8a8a84', cursor: 'pointer' }}>
+                      ✎ {fotoAperta.autore ? 'Modifica' : 'Aggiungi'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Metadati e azioni */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: '11px', color: '#8a8a84', display: 'flex', gap: '12px' }}>
@@ -173,7 +221,7 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
                     style={{ padding: '5px 10px', background: '#fff8f8', color: '#c00', border: '0.5px solid #e88', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
                     Elimina
                   </button>
-                  <button onClick={() => { setFotoAperta(null); setEditingDidascalia(false) }}
+                  <button onClick={() => { setFotoAperta(null); setEditingDidascalia(false); setEditingAutore(false) }}
                     style={{ padding: '5px 10px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
                     Chiudi
                   </button>

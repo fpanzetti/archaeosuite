@@ -54,9 +54,8 @@ async function ridimensiona(file: File, maxLato: number): Promise<Blob> {
 
 const LABEL_TIPO: Record<string, string> = {
   foto: 'foto',
-  pianta: 'pianta',
-  prospetto: 'prospetto',
-  sezione: 'sezione',
+  rilievo: 'rilievo',
+  altro: 'altro documento',
 }
 
 export default function UploadFoto({ scavoId, usId, tipo: tipoProp, onFotoAggiunta }: Props) {
@@ -153,9 +152,8 @@ export default function UploadFoto({ scavoId, usId, tipo: tipoProp, onFotoAggiun
   }
 
   const labelUpload = tipoEffettivo === 'foto' ? '📷 Aggiungi foto'
-    : tipoEffettivo === 'pianta' ? '📐 Aggiungi pianta'
-    : tipoEffettivo === 'prospetto' ? '🏛 Aggiungi prospetto'
-    : tipoEffettivo === 'sezione' ? '✂️ Aggiungi sezione'
+    : tipoEffettivo === 'rilievo' ? '📐 Aggiungi rilievo'
+    : tipoEffettivo === 'altro' ? '📎 Aggiungi documento'
     : 'Aggiungi allegato'
 
   return (
@@ -169,9 +167,9 @@ export default function UploadFoto({ scavoId, usId, tipo: tipoProp, onFotoAggiun
           onClick={() => inputRef.current?.click()}
           style={{ border: '1.5px dashed #c8c7be', borderRadius: '8px', padding: '24px', textAlign: 'center', cursor: 'pointer', background: '#f8f7f4' }}>
           <div style={{ fontSize: '24px', marginBottom: '8px' }}>
-            {tipoEffettivo === 'foto' ? '📷' : tipoEffettivo === 'pianta' ? '📐' : tipoEffettivo === 'prospetto' ? '🏛' : '✂️'}
+            {tipoEffettivo === 'foto' ? '📷' : tipoEffettivo === 'rilievo' ? '📐' : '📎'}
           </div>
-          <div style={{ fontSize: '12px', color: '#8a8a84' }}>Clicca per selezionare {tipoEffettivo === 'foto' ? 'una foto' : `una ${labelTipo}`}</div>
+          <div style={{ fontSize: '12px', color: '#8a8a84' }}>Clicca per selezionare {tipoEffettivo === 'foto' ? 'una foto' : tipoEffettivo === 'rilievo' ? 'un rilievo' : 'un documento'}</div>
           <div style={{ fontSize: '11px', color: '#c8c7be', marginTop: '4px' }}>JPG, PNG, WEBP, PDF — max 10MB</div>
           <input ref={inputRef} type="file" accept="image/*,application/pdf" onChange={onFileChange} style={{ display: 'none' }} />
         </div>

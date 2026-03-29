@@ -104,7 +104,7 @@ const INVERSO: Record<string, string> = {
 
 const FLOTTAZIONE_OPT: Opt[] = [{ value: 'sì', label: 'Sì' }, { value: 'no', label: 'No' }, { value: 'parziale', label: 'Parziale' }]
 const AFFIDABILITA_OPT: Opt[] = [{ value: 'alta', label: 'Alta' }, { value: 'media', label: 'Media' }, { value: 'bassa', label: 'Bassa' }]
-const TIPO_ALLEGATO = ['foto', 'pianta', 'prospetto', 'sezione'] as const
+const TIPO_ALLEGATO = ['foto', 'rilievo', 'altro'] as const
 type TipoAllegato = typeof TIPO_ALLEGATO[number]
 
 export default function SchedaUSPage() {
@@ -806,7 +806,7 @@ export default function SchedaUSPage() {
                     background: tabAllegati === t ? '#fff' : 'transparent',
                     color: tabAllegati === t ? '#1a4a7a' : '#8a8a84',
                     boxShadow: tabAllegati === t ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
-                  {t === 'foto' ? '📷 Foto' : t === 'pianta' ? '📐 Piante' : t === 'prospetto' ? '🏛 Prospetti' : '✂️ Sezioni'}
+                  {t === 'foto' ? '📷 Foto' : t === 'rilievo' ? '📐 Rilievi' : '📎 Altri documenti'}
                 </button>
               ))}
             </div>

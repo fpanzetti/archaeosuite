@@ -70,7 +70,7 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
     setEditingDidascalia(false)
   }
 
-  const labelTipo = tipo === 'foto' ? 'foto' : tipo === 'pianta' ? 'piante' : tipo === 'prospetto' ? 'prospetti' : tipo === 'sezione' ? 'sezioni' : 'allegati'
+  const labelTipo = tipo === 'foto' ? 'foto' : tipo === 'rilievo' ? 'rilievi' : tipo === 'altro' ? 'altri documenti' : 'allegati'
   const inp: React.CSSProperties = { width: '100%', padding: '6px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '12px', fontFamily: 'inherit' }
 
   if (loading) return <div style={{ fontSize: '12px', color: '#8a8a84', padding: '12px 0' }}>Caricamento {labelTipo}...</div>

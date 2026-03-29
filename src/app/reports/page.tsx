@@ -22,29 +22,34 @@ export default async function ReportsPage({
 
   const { data: scavi } = await query
 
-  // Carica accessi condivisi per tutti gli scavi
+  // Carica accessi condivisi: altri utenti che hanno accesso agli stessi scavi dell'utente corrente
   const scaviIds = scavi?.map(s => s.id) ?? []
-  let accessiMap: Record<string, { nome: string; cognome: string }[]> = {}
+  const accessiMap: Record<string, { nome: string; cognome: string }[]> = {}
 
   if (scaviIds.length > 0) {
-    const { data: accessi } = await supabase
+    // Carica tutti gli accessi per questi scavi (incluso l'utente corrente)
+    const { data: tuttiAccessi } = await supabase
       .from('accesso_scavo')
       .select('scavo_id, account_id')
       .in('scavo_id', scaviIds)
-      .neq('account_id', user.id)
 
-    if (accessi && accessi.length > 0) {
-      const accountIds = [...new Set(accessi.map(a => a.account_id))]
+    // Filtra solo gli altri utenti
+    const altriAccessi = (tuttiAccessi ?? []).filter(a => a.account_id !== user.id)
+
+    if (altriAccessi.length > 0) {
+      const accountIds = [...new Set(altriAccessi.map(a => a.account_id))]
       const { data: accounts } = await supabase
         .from('account')
         .select('id, nome, cognome')
         .in('id', accountIds)
 
-      accessi.forEach(a => {
+      altriAccessi.forEach(a => {
         const account = accounts?.find(ac => ac.id === a.account_id)
         if (!account) return
         if (!accessiMap[a.scavo_id]) accessiMap[a.scavo_id] = []
-        accessiMap[a.scavo_id].push({ nome: account.nome, cognome: account.cognome })
+        // Evita duplicati
+        const giaPresente = accessiMap[a.scavo_id].some(c => c.nome === account.nome && c.cognome === account.cognome)
+        if (!giaPresente) accessiMap[a.scavo_id].push({ nome: account.nome, cognome: account.cognome })
       })
     }
   }

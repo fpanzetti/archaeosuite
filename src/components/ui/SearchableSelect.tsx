@@ -7,22 +7,24 @@ interface Props {
   options: Option[]
   value: string
   onChange: (value: string) => void
+  onNewValue?: (value: string) => void
   placeholder?: string
   allowFreeText?: boolean
 }
 
-export default function SearchableSelect({ options, value, onChange, placeholder = 'Cerca...', allowFreeText = false }: Props) {
+export default function SearchableSelect({ options, value, onChange, onNewValue, placeholder = 'Cerca...', allowFreeText = false }: Props) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const ref = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const filtered = options.filter(o =>
-    o.label.toLowerCase().includes(query.toLowerCase())
-  )
-
   const selected = options.find(o => o.value === value)
   const displayValue = selected ? selected.label : (allowFreeText && value ? value : '')
+
+  // Quando apro il dropdown mostro subito tutti i valori, filtrati se query non vuota
+  const filtered = query
+    ? options.filter(o => o.label.toLowerCase().includes(query.toLowerCase()))
+    : options
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -35,14 +37,9 @@ export default function SearchableSelect({ options, value, onChange, placeholder
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  // Quando si apre il dropdown con un valore esistente, pre-popola la query
   function handleFocus() {
-    if (!open) {
-      setQuery(displayValue) // pre-popola con il valore corrente
-      setOpen(true)
-      // Seleziona tutto il testo per facilitare la sostituzione
-      setTimeout(() => inputRef.current?.select(), 0)
-    }
+    setQuery('')   // reset query ma mostra tutti i valori
+    setOpen(true)
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -55,6 +52,13 @@ export default function SearchableSelect({ options, value, onChange, placeholder
     onChange('')
     setQuery('')
     setOpen(false)
+  }
+
+  function selectValue(val: string, isNew: boolean = false) {
+    onChange(val)
+    if (isNew && onNewValue) onNewValue(val)
+    setOpen(false)
+    setQuery('')
   }
 
   const inp: React.CSSProperties = {
@@ -70,9 +74,10 @@ export default function SearchableSelect({ options, value, onChange, placeholder
     minWidth: 0,
   }
 
+  const queryIsNew = query && !options.find(o => o.label.toLowerCase() === query.toLowerCase()) && query !== value
+
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      {/* Campo con X per cancellare */}
       <div style={{
         display: 'flex', alignItems: 'center',
         border: '0.5px solid #c8c7be', borderRadius: '6px',
@@ -87,22 +92,14 @@ export default function SearchableSelect({ options, value, onChange, placeholder
           onFocus={handleFocus}
         />
         {value && (
-          <button
-            type="button"
-            onMouseDown={handleClear}
-            style={{
-              padding: '0 8px', background: 'none', border: 'none',
-              color: '#8a8a84', cursor: 'pointer', fontSize: '14px',
-              lineHeight: 1, flexShrink: 0,
-            }}
-            title="Cancella"
-          >
+          <button type="button" onMouseDown={handleClear}
+            style={{ padding: '0 8px', background: 'none', border: 'none', color: '#8a8a84', cursor: 'pointer', fontSize: '16px', lineHeight: 1, flexShrink: 0 }}
+            title="Cancella">
             ×
           </button>
         )}
       </div>
 
-      {/* Dropdown */}
       {open && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
@@ -110,34 +107,36 @@ export default function SearchableSelect({ options, value, onChange, placeholder
           boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: '200px', overflowY: 'auto',
           marginTop: '2px',
         }}>
-          {/* Opzione "Usa valore digitato" per testo libero */}
-          {allowFreeText && query && query !== displayValue && !options.find(o => o.label.toLowerCase() === query.toLowerCase()) && (
+          {/* Opzione "Usa valore digitato" per testo libero nuovo */}
+          {allowFreeText && queryIsNew && (
             <div
               style={{ padding: '8px 10px', fontSize: '12px', color: '#1a4a7a', cursor: 'pointer', borderBottom: '0.5px solid #f0efe9', background: '#f8fcff' }}
-              onMouseDown={() => { onChange(query); setOpen(false); setQuery('') }}
-            >
+              onMouseDown={() => selectValue(query, true)}>
               Usa &quot;{query}&quot;
             </div>
           )}
           {filtered.length === 0 && !allowFreeText && (
             <div style={{ padding: '8px 10px', fontSize: '12px', color: '#8a8a84' }}>Nessun risultato</div>
           )}
-          {filtered.length === 0 && allowFreeText && !query && (
-            <div style={{ padding: '8px 10px', fontSize: '12px', color: '#c8c7be' }}>Digita per cercare o inserire un valore</div>
+          {filtered.length === 0 && allowFreeText && query && !queryIsNew && (
+            <div style={{ padding: '8px 10px', fontSize: '12px', color: '#8a8a84' }}>{value}</div>
           )}
           {filtered.map(o => (
-            <div
-              key={o.value}
+            <div key={o.value}
               style={{
                 padding: '8px 10px', fontSize: '12px', cursor: 'pointer',
                 background: o.value === value ? '#e8f0f8' : 'transparent',
                 color: o.value === value ? '#1a4a7a' : '#1a1a1a',
               }}
-              onMouseDown={() => { onChange(o.value); setOpen(false); setQuery('') }}
-            >
+              onMouseDown={() => selectValue(o.value)}>
               {o.label}
             </div>
           ))}
+          {filtered.length === 0 && allowFreeText && !query && (
+            <div style={{ padding: '8px 10px', fontSize: '12px', color: '#c8c7be' }}>
+              Digita per cercare o inserire un nuovo valore
+            </div>
+          )}
         </div>
       )}
     </div>

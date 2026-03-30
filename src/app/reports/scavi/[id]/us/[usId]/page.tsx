@@ -144,6 +144,14 @@ export default function SchedaUSPage() {
   const router = useRouter()
   const supabase = createClient()
 
+  async function salvaNelThesaurus(tipo: string, valore: string) {
+    if (!valore.trim()) return
+    await supabase.from('thesaurus').upsert(
+      { tipo, valore, ordine: 9999 },
+      { onConflict: 'tipo,valore', ignoreDuplicates: true }
+    )
+  }
+
   const reloadUS = useCallback(async () => {
     const { data } = await supabase.from('us').select('id, numero_us, tipo, descrizione')
       .eq('scavo_id', scavoId).order('numero_us')
@@ -852,7 +860,7 @@ export default function SchedaUSPage() {
                 <input style={inp} value={form.cronologia_finale ?? ''} onChange={e => set('cronologia_finale', e.target.value)} placeholder="Es. III sec. a.C." /></div>
             </div>
             <div><label style={lbl}>Metodo di datazione</label>
-              <SearchableSelect options={metodiDatazione} value={form.metodo_datazione ?? ''} onChange={v => set('metodo_datazione', v)} placeholder="Seleziona..." allowFreeText={true} />
+              <SearchableSelect options={metodiDatazione} value={form.metodo_datazione ?? ''} onChange={v => set('metodo_datazione', v)} onNewValue={v => salvaNelThesaurus('metodo_datazione', v)} placeholder="Seleziona..." allowFreeText={true} />
             </div>
           </div>
         </div>

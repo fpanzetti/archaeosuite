@@ -15,6 +15,7 @@ export default function SearchableSelect({ options, value, onChange, placeholder
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const ref = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const filtered = options.filter(o =>
     o.label.toLowerCase().includes(query.toLowerCase())
@@ -34,22 +35,74 @@ export default function SearchableSelect({ options, value, onChange, placeholder
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  const inp = {
-    width: '100%', padding: '7px 10px',
-    border: '0.5px solid #c8c7be', borderRadius: '6px',
-    background: '#f8f7f4', color: '#1a1a1a', fontSize: '12px',
-    cursor: 'pointer' as const,
+  // Quando si apre il dropdown con un valore esistente, pre-popola la query
+  function handleFocus() {
+    if (!open) {
+      setQuery(displayValue) // pre-popola con il valore corrente
+      setOpen(true)
+      // Seleziona tutto il testo per facilitare la sostituzione
+      setTimeout(() => inputRef.current?.select(), 0)
+    }
+  }
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setQuery(e.target.value)
+    setOpen(true)
+  }
+
+  function handleClear(e: React.MouseEvent) {
+    e.stopPropagation()
+    onChange('')
+    setQuery('')
+    setOpen(false)
+  }
+
+  const inp: React.CSSProperties = {
+    flex: 1,
+    padding: '7px 10px',
+    border: 'none',
+    background: 'transparent',
+    color: '#1a1a1a',
+    fontSize: '12px',
+    cursor: 'text',
+    outline: 'none',
+    fontFamily: 'inherit',
+    minWidth: 0,
   }
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <input
-        style={inp}
-        value={open ? query : displayValue}
-        placeholder={placeholder}
-        onChange={e => { setQuery(e.target.value); setOpen(true) }}
-        onFocus={() => setOpen(true)}
-      />
+      {/* Campo con X per cancellare */}
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        border: '0.5px solid #c8c7be', borderRadius: '6px',
+        background: '#f8f7f4', overflow: 'hidden',
+      }}>
+        <input
+          ref={inputRef}
+          style={inp}
+          value={open ? query : displayValue}
+          placeholder={placeholder}
+          onChange={handleChange}
+          onFocus={handleFocus}
+        />
+        {value && (
+          <button
+            type="button"
+            onMouseDown={handleClear}
+            style={{
+              padding: '0 8px', background: 'none', border: 'none',
+              color: '#8a8a84', cursor: 'pointer', fontSize: '14px',
+              lineHeight: 1, flexShrink: 0,
+            }}
+            title="Cancella"
+          >
+            ×
+          </button>
+        )}
+      </div>
+
+      {/* Dropdown */}
       {open && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
@@ -57,9 +110,10 @@ export default function SearchableSelect({ options, value, onChange, placeholder
           boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: '200px', overflowY: 'auto',
           marginTop: '2px',
         }}>
-          {allowFreeText && query && !options.find(o => o.label.toLowerCase() === query.toLowerCase()) && (
+          {/* Opzione "Usa valore digitato" per testo libero */}
+          {allowFreeText && query && query !== displayValue && !options.find(o => o.label.toLowerCase() === query.toLowerCase()) && (
             <div
-              style={{ padding: '8px 10px', fontSize: '12px', color: '#1a4a7a', cursor: 'pointer', borderBottom: '0.5px solid #f0efe9' }}
+              style={{ padding: '8px 10px', fontSize: '12px', color: '#1a4a7a', cursor: 'pointer', borderBottom: '0.5px solid #f0efe9', background: '#f8fcff' }}
               onMouseDown={() => { onChange(query); setOpen(false); setQuery('') }}
             >
               Usa &quot;{query}&quot;
@@ -67,6 +121,9 @@ export default function SearchableSelect({ options, value, onChange, placeholder
           )}
           {filtered.length === 0 && !allowFreeText && (
             <div style={{ padding: '8px 10px', fontSize: '12px', color: '#8a8a84' }}>Nessun risultato</div>
+          )}
+          {filtered.length === 0 && allowFreeText && !query && (
+            <div style={{ padding: '8px 10px', fontSize: '12px', color: '#c8c7be' }}>Digita per cercare o inserire un valore</div>
           )}
           {filtered.map(o => (
             <div

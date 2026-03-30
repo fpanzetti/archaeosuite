@@ -9,7 +9,7 @@ type Opt = { value: string; label: string }
 type Sabap = { id: string; nome: string; regione: string }
 type Provincia = { sigla: string; nome: string; regione: string }
 
-export default function NuovoScavoPage() {
+function NuovoScavoForm() {
   const [form, setForm] = useState({
     nazione: 'Italia', regione: '', soprintendenza: '',
     provincia: '', comune: '', localita: '', indirizzo: '',
@@ -247,5 +247,14 @@ export default function NuovoScavoPage() {
         </div>
       </form>
     </div>
+  )
+}
+
+
+export default function NuovoScavoPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '24px', color: '#8a8a84', fontSize: '12px' }}>Caricamento...</div>}>
+      <NuovoScavoForm />
+    </Suspense>
   )
 }

@@ -7,8 +7,10 @@ export async function creaProgetto(form: Record<string, string>) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Non autenticato' }
 
+  const denominazione = [form.committente, form.tipologia_intervento].filter(Boolean).join(' — ') || 'Progetto senza nome'
+
   const { data, error } = await supabase.from('progetto').insert({
-    denominazione: form.denominazione || null,
+    denominazione,
     committente: form.committente || null,
     operatore: form.operatore || null,
     direttore_scientifico: form.direttore_scientifico || null,

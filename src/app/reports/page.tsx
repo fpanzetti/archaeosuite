@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import AssegnaProgetto from '@/components/scavo/AssegnaProgetto'
 
 export default async function ReportsPage({
   searchParams,
@@ -198,64 +199,37 @@ export default async function ReportsPage({
         </div>
       )}
 
-      {/* Sezione Scavi standalone */}
-      <div>
-        {progetti && progetti.length > 0 && (
-          <div style={{ fontSize: '11px', fontWeight: '600', color: '#8a8a84', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
-            Scavi non assegnati a progetti
+      {/* Sezione Scavi standalone — gestita da componente Client */}
+      {scaviStandalone.length === 0 && (!progetti || progetti.length === 0) ? (
+        <div style={{ textAlign: 'center', padding: '48px 0', color: '#8a8a84' }}>
+          <div style={{ fontSize: '32px', marginBottom: '12px' }}>⛏️</div>
+          <div style={{ fontSize: '14px', marginBottom: '6px' }}>
+            {q ? `Nessun risultato per "${q}"` : 'Nessuno scavo ancora'}
           </div>
-        )}
-        {scaviStandalone.length === 0 && (!progetti || progetti.length === 0) ? (
-          <div style={{ textAlign: 'center', padding: '48px 0', color: '#8a8a84' }}>
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>⛏️</div>
-            <div style={{ fontSize: '14px', marginBottom: '6px' }}>
-              {q ? `Nessun risultato per "${q}"` : 'Nessuno scavo ancora'}
+          {!q && (
+            <div style={{ fontSize: '12px' }}>
+              <Link href="/reports/scavi/nuovo" style={{ color: '#1a4a7a' }}>Crea il primo scavo →</Link>
+              {' · '}
+              <Link href="/reports/progetti/nuovo" style={{ color: '#8a5c0a' }}>o crea un progetto →</Link>
             </div>
-            {!q && (
-              <div style={{ fontSize: '12px' }}>
-                <Link href="/reports/scavi/nuovo" style={{ color: '#1a4a7a' }}>Crea il primo scavo →</Link>
-                {' · '}
-                <Link href="/reports/progetti/nuovo" style={{ color: '#8a5c0a' }}>o crea un progetto →</Link>
-              </div>
-            )}
-          </div>
-        ) : scaviStandalone.length === 0 ? (
-          <div style={{ fontSize: '12px', color: '#c8c7be', padding: '12px 0' }}>
-            Tutti gli scavi sono assegnati a un progetto
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {scaviStandalone.map(scavo => {
-              const info = statoInfo(scavo.stato ?? 'archiviato')
-              const numUS = (scavo.us as unknown as { count: number }[])?.[0]?.count ?? 0
-              return (
-                <Link key={scavo.id} href={`/reports/scavi/${scavo.id}`} style={{ textDecoration: 'none' }}>
-                  <div style={{ background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '10px', padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '14px', fontWeight: '500', color: '#1a1a1a', marginBottom: '3px' }}>
-                          {scavo.denominazione}
-                        </div>
-                        <div style={{ fontSize: '12px', color: '#8a8a84', marginBottom: '8px' }}>
-                          {[scavo.regione, scavo.datazione_contesto].filter(Boolean).join(' · ')}
-                        </div>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '11px', background: info.bg, color: info.color, padding: '2px 8px', borderRadius: '10px' }}>{info.label}</span>
-                          <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '2px 8px', borderRadius: '10px' }}>{numUS} US</span>
-                          {scavo.tipologia_intervento && (
-                            <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '2px 8px', borderRadius: '10px' }}>{scavo.tipologia_intervento}</span>
-                          )}
-                        </div>
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#c8c7be', marginLeft: '12px' }}>→</div>
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      ) : (
+        <AssegnaProgetto
+          scavi={scaviStandalone.map(s => ({
+            id: s.id,
+            denominazione: s.denominazione ?? '',
+            stato: s.stato ?? null,
+            tipologia_intervento: s.tipologia_intervento ?? null,
+            us: (s.us as unknown as { count: number }[]) ?? [],
+          }))}
+          progetti={(progetti ?? []).map(p => ({
+            id: p.id,
+            committente: p.committente ?? null,
+            denominazione: p.denominazione ?? null,
+          }))}
+        />
+      )}
     </div>
   )
 }

@@ -51,33 +51,7 @@ export default async function ReportsPage({
   const inElab = tuttiScavi?.filter(s => s.stato === 'in_elaborazione').length ?? 0
   const archiviati = tuttiScavi?.filter(s => s.stato === 'archiviato').length ?? 0
 
-  function CardScavo({ scavo }: { scavo: typeof tuttiScavi extends (infer T)[] | undefined ? T : never }) {
-    const info = statoInfo((scavo as { stato?: string }).stato ?? 'archiviato')
-    const numUS = ((scavo as { us?: { count: number }[] }).us as unknown as { count: number }[])?.[0]?.count ?? 0
-    return (
-      <Link href={`/reports/scavi/${(scavo as { id: string }).id}`} style={{ textDecoration: 'none' }}>
-        <div style={{ padding: '10px 12px', background: '#f8f7f4', borderRadius: '6px', border: '0.5px solid #e0dfd8' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a', marginBottom: '3px' }}>
-                {(scavo as { denominazione?: string }).denominazione}
-              </div>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '11px', background: info.bg, color: info.color, padding: '1px 6px', borderRadius: '8px' }}>{info.label}</span>
-                <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '1px 6px', borderRadius: '8px' }}>{numUS} US</span>
-                {(scavo as { tipologia_intervento?: string }).tipologia_intervento && (
-                  <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '1px 6px', borderRadius: '8px' }}>
-                    {(scavo as { tipologia_intervento?: string }).tipologia_intervento}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div style={{ fontSize: '12px', color: '#c8c7be', marginLeft: '12px' }}>→</div>
-          </div>
-        </div>
-      </Link>
-    )
-  }
+
 
   return (
     <div style={{ padding: '24px', maxWidth: '900px' }}>
@@ -189,9 +163,26 @@ export default async function ReportsPage({
                   {/* Scavi del progetto */}
                   {scaviProgetto.length > 0 && (
                     <div style={{ padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: '6px', background: '#fafaf8' }}>
-                      {scaviProgetto.map(scavo => (
-                        <CardScavo key={scavo.id} scavo={scavo} />
-                      ))}
+                      {scaviProgetto.map(scavo => {
+                        const info = statoInfo(scavo.stato ?? 'archiviato')
+                        const numUS = (scavo.us as unknown as { count: number }[])?.[0]?.count ?? 0
+                        return (
+                          <Link key={scavo.id} href={`/reports/scavi/${scavo.id}`} style={{ textDecoration: 'none' }}>
+                            <div style={{ padding: '10px 12px', background: '#f8f7f4', borderRadius: '6px', border: '0.5px solid #e0dfd8' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a', marginBottom: '3px' }}>{scavo.denominazione}</div>
+                                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                    <span style={{ fontSize: '11px', background: info.bg, color: info.color, padding: '1px 6px', borderRadius: '8px' }}>{info.label}</span>
+                                    <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '1px 6px', borderRadius: '8px' }}>{numUS} US</span>
+                                  </div>
+                                </div>
+                                <div style={{ fontSize: '12px', color: '#c8c7be', marginLeft: '12px' }}>→</div>
+                              </div>
+                            </div>
+                          </Link>
+                        )
+                      })}
                     </div>
                   )}
                   {scaviProgetto.length === 0 && (

@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import { creaScavo } from '../actions'
@@ -29,10 +29,28 @@ export default function NuovoScavoPage() {
   const [gpsLoading, setGpsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const progettoId = searchParams.get('progetto_id')
   const supabase = createClient()
 
   useEffect(() => {
     async function loadData() {
+      // Se viene da un progetto, eredita i dati
+      if (progettoId) {
+        const { data: progetto } = await supabase.from('progetto').select('*').eq('id', progettoId).single()
+        if (progetto) {
+          setForm(prev => ({
+            ...prev,
+            committente: progetto.committente ?? '',
+            operatore: progetto.operatore ?? '',
+            direttore_scientifico: progetto.direttore_scientifico ?? '',
+            tipologia_intervento: progetto.tipologia_intervento ?? '',
+            tipo_contesto: progetto.tipo_contesto ?? '',
+            datazione_contesto: progetto.datazione_contesto ?? '',
+            data_inizio: progetto.data_inizio ?? '',
+          }))
+        }
+      }
       const [{ data: th }, { data: sb }, { data: pv }] = await Promise.all([
         supabase.from('thesaurus').select('*').order('ordine'),
         supabase.from('sabap').select('*').order('nome'),
@@ -80,7 +98,7 @@ export default function NuovoScavoPage() {
     if (!form.comune) { setError('Il campo Comune è obbligatorio'); return }
     setLoading(true)
     setError('')
-    const result = await creaScavo(form)
+    const result = await creaScavo({ ...form, progetto_id: progettoId ?? '' })
     if (result?.error) { setError(result.error); setLoading(false) }
   }
 
@@ -95,7 +113,7 @@ export default function NuovoScavoPage() {
   return (
     <div style={{ padding:'24px', maxWidth:'760px' }}>
       <div style={{ marginBottom:'24px' }}>
-        <div style={{ fontSize:'11px', color:'#8a8a84', marginBottom:'6px' }}>ArchaeoReports / Scavi</div>
+        <div style={{ fontSize:'11px', color:'#8a8a84', marginBottom:'6px' }}>{progettoId ? <span style={{color:'#1a4a7a', cursor:'pointer'}} onClick={() => router.push(`/reports/progetti/${progettoId}`)}>← Progetto</span> : 'ArchaeoReports / Scavi'}</div>
         <h1 style={{ fontSize:'20px', fontWeight:'500' }}>Nuovo scavo</h1>
         <p style={{ fontSize:'12px', color:'#8a8a84', marginTop:'4px' }}>
           I campi in <span style={{ color:'#1a4a7a', fontWeight:'500' }}>blu</span> sono obbligatori

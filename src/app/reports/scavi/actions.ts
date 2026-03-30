@@ -10,6 +10,7 @@ export async function creaScavo(formData: {
   committente: string; direttore_scientifico: string; operatore: string;
   tipologia_intervento: string; tipo_contesto: string;
   datazione_contesto: string; data_inizio: string; note: string;
+  progetto_id?: string;
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -46,6 +47,7 @@ export async function creaScavo(formData: {
       datazione_contesto: formData.datazione_contesto || null,
       data_inizio: formData.data_inizio || null,
       note: formData.note || null,
+      progetto_id: formData.progetto_id || null,
       responsabile_id: user.id,
     })
     .select()
@@ -59,5 +61,5 @@ export async function creaScavo(formData: {
     ruolo: 'editor',
   })
 
-  redirect('/reports')
+  redirect(formData.progetto_id ? `/reports/progetti/${formData.progetto_id}` : '/reports')
 }

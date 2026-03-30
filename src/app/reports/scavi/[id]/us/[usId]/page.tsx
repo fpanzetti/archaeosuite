@@ -148,7 +148,7 @@ export default function SchedaUSPage() {
     if (!valore.trim()) return
     await supabase.from('thesaurus').upsert(
       { tipo, valore, ordine: 9999 },
-      { onConflict: 'tipo,valore', ignoreDuplicates: true }
+      { onConflict: 'tipo,valore' }
     )
   }
 

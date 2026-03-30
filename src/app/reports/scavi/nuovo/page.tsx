@@ -33,6 +33,14 @@ function NuovoScavoForm() {
   const progettoId = searchParams.get('progetto_id')
   const supabase = createClient()
 
+  async function salvaNelThesaurus(tipo: string, valore: string) {
+    if (!valore.trim()) return
+    await supabase.from('thesaurus').upsert(
+      { tipo, valore, ordine: 9999 },
+      { onConflict: 'tipo,valore' }
+    )
+  }
+
   useEffect(() => {
     async function loadData() {
       // Se viene da un progetto, eredita i dati

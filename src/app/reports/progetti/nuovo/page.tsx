@@ -19,6 +19,14 @@ export default function NuovoProgettoPage() {
   const router = useRouter()
   const supabase = createClient()
 
+  async function salvaNelThesaurus(tipo: string, valore: string) {
+    if (!valore.trim()) return
+    await supabase.from('thesaurus').upsert(
+      { tipo, valore, ordine: 9999 },
+      { onConflict: 'tipo,valore' }
+    )
+  }
+
   useEffect(() => {
     async function loadData() {
       const { data: th } = await supabase.from('thesaurus').select('*').order('ordine')

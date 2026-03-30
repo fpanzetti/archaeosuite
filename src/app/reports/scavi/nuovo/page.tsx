@@ -210,7 +210,7 @@ function NuovoScavoForm() {
             </div>
             <div>
               <label style={lbl}>Tipo di contesto</label>
-              <SearchableSelect options={tipiContesto} value={form.tipo_contesto} onChange={v => set('tipo_contesto', v)} placeholder="Cerca o scrivi nuovo contesto..." allowFreeText={true} />
+              <SearchableSelect options={tipiContesto.filter(t => t.value !== 'Altro')} value={form.tipo_contesto} onChange={v => set('tipo_contesto', v)} placeholder="Scrivi tipo di contesto..." allowFreeText={true} />
             </div>
           </div>
         </div>

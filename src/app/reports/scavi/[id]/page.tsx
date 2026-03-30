@@ -34,9 +34,12 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div style={{ padding: '24px' }}>
-      <div style={{ fontSize: '11px', color: '#8a8a84', marginBottom: '16px' }}>
-        <Link href="/reports" style={{ color: '#1a4a7a', textDecoration: 'none' }}>Scavi</Link>
-        {' / '}{nome}
+      <div style={{ fontSize: '11px', color: '#8a8a84', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Link href="/reports" style={{ color: '#1a4a7a', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '11px' }}>
+          ← Elenco scavi
+        </Link>
+        <span style={{ color: '#c8c7be' }}>/</span>
+        <span>{nome}</span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px' }}>

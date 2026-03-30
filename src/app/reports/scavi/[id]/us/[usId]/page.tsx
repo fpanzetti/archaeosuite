@@ -459,6 +459,12 @@ export default function SchedaUSPage() {
 
   return (
     <div style={{ padding: '24px', maxWidth: '900px' }}>
+      <div style={{ marginBottom: '16px' }}>
+        <a href={`/reports/scavi/${scavoId}`}
+          style={{ fontSize: '11px', color: '#1a4a7a', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px' }}>
+          ← Elenco US
+        </a>
+      </div>
       {toast && (
         <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: '#1a1a1a', color: '#fff', padding: '10px 20px', borderRadius: '8px', fontSize: '12px', zIndex: 1000 }}>
           {toast}

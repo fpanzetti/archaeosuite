@@ -4,6 +4,7 @@ import Link from 'next/link'
 import PannelloInviti from '@/components/scavo/PannelloInviti'
 import AggiuntaUS from '@/components/scavo/AggiuntaUS'
 import ElencoUS from '@/components/scavo/ElencoUS'
+import ElencoTombe from '@/components/scavo/ElencoTombe'
 
 export default async function ScavoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -104,6 +105,12 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
 
         <div>
           <ElencoUS scavoId={id} usList={usList ?? []} />
+          <div style={{ marginTop: '24px' }}>
+            <div style={{ fontSize: '11px', fontWeight: '600', color: '#8a8a84', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
+              Contesti funerari
+            </div>
+            <ElencoTombe scavoId={id} />
+          </div>
         </div>
       </div>
     </div>

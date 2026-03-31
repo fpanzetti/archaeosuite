@@ -35,11 +35,11 @@ export default function AggiuntaUS({ scavoId }: Props) {
             <span>⛏️</span> US
           </button>
           <div style={{ borderTop: '0.5px solid #f0efe9' }} />
-          <button
-            disabled
-            style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', fontSize: '12px', color: '#8a8a84', cursor: 'not-allowed', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span>⚱️</span> Contesto funerario</span>
-            <span style={{ fontSize: '9px', background: '#f0efe9', padding: '1px 5px', borderRadius: '8px' }}>presto</span>
+          <button onClick={() => { setAperto(false); router.push(`/reports/scavi/${scavoId}/tombe/nuova`) }}
+            style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', fontSize: '12px', color: '#1a1a1a', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px' }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#f8f7f4')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+            <span>⚱️</span> Contesto funerario
           </button>
         </div>
       )}

@@ -587,28 +587,30 @@ export default function SchedaTombaPage() {
       {step === 5 && (
         <div>
           <div style={card}>
-            <div style={sectionTitle}>Posizione degli arti</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px', marginBottom: '6px', padding: '0 0 4px' }}>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>Arto</div>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 32px' }}>
+              <div>
+                <div style={sectionTitle}>Arti superiori</div>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
+                  <div style={{ flex: 1 }} />
+                  <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
+                  <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
+                </div>
+                <ArteSxDx label="Omero" baseName="omero" />
+                <ArteSxDx label="Avambraccio" baseName="avambraccio" />
+                <ArteSxDx label="Mano" baseName="mano" />
+              </div>
+              <div>
+                <div style={sectionTitle}>Arti inferiori</div>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
+                  <div style={{ flex: 1 }} />
+                  <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
+                  <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
+                </div>
+                <ArteSxDx label="Femore" baseName="femore" />
+                <ArteSxDx label="Tibia" baseName="tibia" femminile />
+                <ArteSxDx label="Piede" baseName="piede" />
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
-              <div style={{ flex: 1 }} />
-              <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
-              <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
-              <div style={{ flex: 1 }} />
-              <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
-              <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
-            </div>
-            <ArteSxDx label="Omero" baseName="omero" />
-            <ArteSxDx label="Avambraccio" baseName="avambraccio" />
-            <ArteSxDx label="Mano" baseName="mano" />
-            <ArteSxDx label="Femore" baseName="femore" />
-            <ArteSxDx label="Tibia" baseName="tibia" femminile />
-            <ArteSxDx label="Piede" baseName="piede" />
             <div style={{ marginTop: '12px' }}>
               <label style={lbl}>Elementi dislocati</label>
               <textarea style={{ ...inp, height: '64px', resize: 'none' } as React.CSSProperties}

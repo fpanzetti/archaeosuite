@@ -35,7 +35,24 @@ export default function AggiuntaUS({ scavoId }: Props) {
             <span>⛏️</span> US
           </button>
           <div style={{ borderTop: '0.5px solid #f0efe9' }} />
-          <button onClick={() => { setAperto(false); router.push(`/reports/scavi/${scavoId}/tombe/nuova`) }}
+          <button onClick={async () => {
+              setAperto(false)
+              const { createClient } = await import('@/lib/supabase/client')
+              const supabase = createClient()
+              const { data: tombe } = await supabase
+                .from('contesto_funerario')
+                .select('numero_tomba')
+                .eq('scavo_id', scavoId)
+                .order('numero_tomba', { ascending: false })
+                .limit(1)
+              const prossimoN = (tombe?.[0]?.numero_tomba ?? 0) + 1
+              const { data } = await supabase
+                .from('contesto_funerario')
+                .insert({ scavo_id: scavoId, numero_tomba: prossimoN })
+                .select()
+                .single()
+              if (data) router.push(`/reports/scavi/${scavoId}/tombe/${data.id}`)
+            }}
             style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', fontSize: '12px', color: '#1a1a1a', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px' }}
             onMouseEnter={e => (e.currentTarget.style.background = '#f8f7f4')}
             onMouseLeave={e => (e.currentTarget.style.background = 'none')}>

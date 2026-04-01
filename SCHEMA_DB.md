@@ -243,6 +243,7 @@ Scheda di contesto funerario (ArchaeoTombs).
 | scavo_id | UUID | FK → scavo |
 | us_id | UUID NULLABLE | FK → us |
 | contesto_funerario_id | UUID NULLABLE | FK → contesto_funerario |
+| reperto_funerario_id | UUID NULLABLE | FK → reperto_funerario |
 | url | TEXT | URL pubblica Supabase Storage |
 | url_thumb | TEXT | |
 | nome_file | TEXT | formato: scavoId_usId_timestamp |

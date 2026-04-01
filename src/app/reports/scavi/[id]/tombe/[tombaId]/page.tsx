@@ -27,6 +27,7 @@ const STEP_LABELS = [
 
 type Tomba = Record<string, unknown>
 type Reperto = { id: string; rp_n: number | null; descrizione: string | null; datazione: string | null }
+type FotoRP = { id: string; url: string; url_thumb: string | null; didascalia: string | null }
 
 export default function SchedaTombaPage() {
   const params = useParams()
@@ -37,6 +38,7 @@ export default function SchedaTombaPage() {
   const [tomba, setTomba] = useState<Tomba | null>(null)
   const [nomeScavo, setNomeScavo] = useState('')
   const [reperti, setReperti] = useState<Reperto[]>([])
+  const [fotoReperti, setFotoReperti] = useState<Record<string, FotoRP[]>>({})
   const [dirty, setDirty] = useState(false)
   const [saved, setSaved] = useState(true)
   const [ultimoSalvataggio, setUltimoSalvataggio] = useState<Date | null>(null)
@@ -59,7 +61,20 @@ export default function SchedaTombaPage() {
       ])
       if (t) { setTomba(t); setForm(t) }
       if (s) setNomeScavo(s.denominazione ?? '')
-      if (r) setReperti(r)
+      if (r) {
+        setReperti(r)
+        // Carica foto per ogni reperto
+        const { data: fotoData } = await supabase.from('foto').select('id, url, url_thumb, didascalia, reperto_funerario_id')
+          .eq('scavo_id', scavoId).in('reperto_funerario_id', r.map((rep: Reperto) => rep.id))
+        if (fotoData) {
+          const grouped: Record<string, FotoRP[]> = {}
+          fotoData.forEach((f: FotoRP & { reperto_funerario_id: string }) => {
+            if (!grouped[f.reperto_funerario_id]) grouped[f.reperto_funerario_id] = []
+            grouped[f.reperto_funerario_id].push(f)
+          })
+          setFotoReperti(grouped)
+        }
+      }
     }
     load()
   }, [tombaId, scavoId])
@@ -97,8 +112,84 @@ export default function SchedaTombaPage() {
 
   async function eliminaReperto(id: string) {
     if (!confirm('Eliminare questo reperto?')) return
+    await supabase.from('foto').delete().eq('reperto_funerario_id', id)
     await supabase.from('reperto_funerario').delete().eq('id', id)
     setReperti(prev => prev.filter(r => r.id !== id))
+    setFotoReperti(prev => { const next = { ...prev }; delete next[id]; return next })
+  }
+
+  async function uploadFotoRP(repertoId: string, file: File) {
+    const img = new Image()
+    const origUrl = URL.createObjectURL(file)
+    await new Promise(res => { img.onload = res; img.src = origUrl })
+    const { width: w, height: h } = img
+    URL.revokeObjectURL(origUrl)
+
+    // Ridimensiona
+    const canvas = document.createElement('canvas')
+    let cw = w, ch = h
+    const MAX = 1920
+    if (cw > MAX || ch > MAX) {
+      if (cw > ch) { ch = Math.round(ch * MAX / cw); cw = MAX }
+      else { cw = Math.round(cw * MAX / ch); ch = MAX }
+    }
+    canvas.width = cw; canvas.height = ch
+    canvas.getContext('2d')!.drawImage(img, 0, 0, cw, ch)
+    const blob = await new Promise<Blob>((res, rej) => canvas.toBlob(b => b ? res(b) : rej(), 'image/jpeg', 0.8))
+
+    // Thumb
+    const canvasT = document.createElement('canvas')
+    let tw = w, th = h
+    const MAXT = 400
+    if (tw > MAXT || th > MAXT) {
+      if (tw > th) { th = Math.round(th * MAXT / tw); tw = MAXT }
+      else { tw = Math.round(tw * MAXT / th); th = MAXT }
+    }
+    canvasT.width = tw; canvasT.height = th
+    canvasT.getContext('2d')!.drawImage(img, 0, 0, tw, th)
+    const blobT = await new Promise<Blob>((res, rej) => canvasT.toBlob(b => b ? res(b) : rej(), 'image/jpeg', 0.8))
+
+    const ts = Date.now()
+    const seg = `rp_${repertoId}`
+    const fileId = `${scavoId}_${seg}_${ts}`
+    const path = `${scavoId}/${seg}/${fileId}.jpg`
+    const pathT = `${scavoId}/${seg}/${fileId}_thumb.jpg`
+
+    await supabase.storage.from('foto-scavi').upload(path, blob, { contentType: 'image/jpeg' })
+    await supabase.storage.from('foto-scavi').upload(pathT, blobT, { contentType: 'image/jpeg' })
+
+    const { data: urlM } = supabase.storage.from('foto-scavi').getPublicUrl(path)
+    const { data: urlT } = supabase.storage.from('foto-scavi').getPublicUrl(pathT)
+
+    const { data: foto } = await supabase.from('foto').insert({
+      scavo_id: scavoId,
+      contesto_funerario_id: tombaId,
+      reperto_funerario_id: repertoId,
+      url: urlM.publicUrl,
+      url_thumb: urlT.publicUrl,
+      nome_file: fileId,
+      tipo: 'foto',
+      larghezza: w, altezza: h,
+      dimensione_kb: Math.round(blob.size / 1024),
+      data_scatto: new Date().toISOString().split('T')[0],
+    }).select('id, url, url_thumb, didascalia').single()
+
+    if (foto) {
+      setFotoReperti(prev => ({
+        ...prev,
+        [repertoId]: [...(prev[repertoId] ?? []), foto],
+      }))
+    }
+  }
+
+  async function eliminaFotoRP(repertoId: string, fotoId: string, url: string) {
+    const path = url.split('/foto-scavi/')[1]
+    if (path) await supabase.storage.from('foto-scavi').remove([path])
+    await supabase.from('foto').delete().eq('id', fotoId)
+    setFotoReperti(prev => ({
+      ...prev,
+      [repertoId]: (prev[repertoId] ?? []).filter(f => f.id !== fotoId),
+    }))
   }
 
   // Stili
@@ -749,25 +840,64 @@ export default function SchedaTombaPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {reperti.map(r => (
                 <div key={r.id} style={{ background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '10px', padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a4a7a' }}>RP {r.rp_n}</div>
-                    <button onClick={() => eliminaReperto(r.id)}
-                      style={{ padding: '3px 8px', background: 'none', border: '0.5px solid #e88', color: '#c00', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
-                      Elimina
-                    </button>
-                  </div>
-                  <div style={{ marginBottom: '8px' }}>
-                    <label style={lbl}>Descrizione</label>
-                    <textarea style={{ ...inp, height: '80px', resize: 'none' } as React.CSSProperties}
-                      value={r.descrizione ?? ''}
-                      onChange={e => aggiornaReperto(r.id, 'descrizione', e.target.value || null)}
-                      placeholder="Descrizione del reperto..." />
-                  </div>
-                  <div>
-                    <label style={lbl}>Datazione</label>
-                    <input style={inp} value={r.datazione ?? ''}
-                      onChange={e => aggiornaReperto(r.id, 'datazione', e.target.value || null)}
-                      placeholder="Es. IV a.C." />
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    {/* Colonna foto a sinistra */}
+                    <div style={{ width: '120px', flexShrink: 0 }}>
+                      {(fotoReperti[r.id] ?? []).length > 0 ? (
+                        <div style={{ position: 'relative', cursor: 'pointer' }}>
+                          <img src={(fotoReperti[r.id][0].url_thumb ?? fotoReperti[r.id][0].url)}
+                            alt={`RP ${r.rp_n}`}
+                            style={{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '6px', border: '0.5px solid #e0dfd8' }} />
+                          {fotoReperti[r.id].length > 1 && (
+                            <div style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '10px', padding: '1px 6px', borderRadius: '10px' }}>
+                              {fotoReperti[r.id].length}
+                            </div>
+                          )}
+                          {/* Mini gallery on click */}
+                          <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
+                            {fotoReperti[r.id].map(f => (
+                              <div key={f.id} style={{ position: 'relative' }}>
+                                <img src={f.url_thumb ?? f.url} alt="" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '3px', border: '0.5px solid #e0dfd8' }} />
+                                <span onClick={() => eliminaFotoRP(r.id, f.id, f.url)}
+                                  style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#c00', color: '#fff', width: '14px', height: '14px', borderRadius: '50%', fontSize: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', lineHeight: '1' }}>×</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ width: '120px', height: '90px', background: '#f8f7f4', borderRadius: '6px', border: '0.5px dashed #c8c7be', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c8c7be', fontSize: '11px' }}>
+                          Nessuna foto
+                        </div>
+                      )}
+                      <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginTop: '6px', padding: '4px 0', background: '#f8f7f4', border: '0.5px solid #c8c7be', borderRadius: '4px', fontSize: '10px', color: '#1a4a7a', cursor: 'pointer' }}>
+                        📷 Aggiungi
+                        <input type="file" accept="image/*" style={{ display: 'none' }}
+                          onChange={e => { const f = e.target.files?.[0]; if (f) uploadFotoRP(r.id, f); e.target.value = '' }} />
+                      </label>
+                    </div>
+                    {/* Colonna dati a destra */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a4a7a' }}>RP {r.rp_n}</div>
+                        <button onClick={() => eliminaReperto(r.id)}
+                          style={{ padding: '3px 8px', background: 'none', border: '0.5px solid #e88', color: '#c00', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+                          Elimina
+                        </button>
+                      </div>
+                      <div style={{ marginBottom: '8px' }}>
+                        <label style={lbl}>Descrizione</label>
+                        <textarea style={{ ...inp, height: '80px', resize: 'none' } as React.CSSProperties}
+                          value={r.descrizione ?? ''}
+                          onChange={e => aggiornaReperto(r.id, 'descrizione', e.target.value || null)}
+                          placeholder="Descrizione del reperto..." />
+                      </div>
+                      <div>
+                        <label style={lbl}>Datazione</label>
+                        <input style={inp} value={r.datazione ?? ''}
+                          onChange={e => aggiornaReperto(r.id, 'datazione', e.target.value || null)}
+                          placeholder="Es. IV a.C." />
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}

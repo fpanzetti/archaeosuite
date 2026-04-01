@@ -21,7 +21,7 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
 
   const { data: usList } = await supabase
     .from('us')
-    .select('id, numero_us, tipo, descrizione, stato, completata')
+    .select('id, numero_us, tipo, descrizione, stato, completata, contesto_funerario_id')
     .eq('scavo_id', id)
     .order('numero_us', { ascending: true })
 

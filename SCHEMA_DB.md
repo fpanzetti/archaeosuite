@@ -111,6 +111,7 @@ Tabella principale per le Unità Stratigrafiche.
 | cronologia_finale | TEXT | |
 | metodo_datazione | TEXT | |
 | responsabile_campo | TEXT | |
+| contesto_funerario_id | UUID NULLABLE | FK → contesto_funerario |
 | updated_at | TIMESTAMPTZ | trigger automatico |
 | created_at | TIMESTAMPTZ | |
 

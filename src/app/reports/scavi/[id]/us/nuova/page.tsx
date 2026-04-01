@@ -13,8 +13,10 @@ export default function NuovaUSPage() {
     numero_us: '',
     tipo: '',
     descrizione: '',
+    contesto_funerario_id: '',
   })
   const [tipiUS, setTipiUS] = useState<Opt[]>([])
+  const [tombe, setTombe] = useState<{ id: string; numero_tomba: number }[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -22,12 +24,12 @@ export default function NuovaUSPage() {
 
   useEffect(() => {
     async function loadData() {
-      const { data } = await supabase
-        .from('thesaurus')
-        .select('*')
-        .eq('tipo', 'tipo_us')
-        .order('ordine')
-      if (data) setTipiUS(data.map(t => ({ value: t.valore, label: t.valore })))
+      const [{ data: th }, { data: tb }] = await Promise.all([
+        supabase.from('thesaurus').select('*').eq('tipo', 'tipo_us').order('ordine'),
+        supabase.from('contesto_funerario').select('id, numero_tomba').eq('scavo_id', scavoId).order('numero_tomba'),
+      ])
+      if (th) setTipiUS(th.map(t => ({ value: t.valore, label: t.valore })))
+      if (tb) setTombe(tb)
     }
     loadData()
   }, [])
@@ -50,6 +52,7 @@ export default function NuovaUSPage() {
         tipo: form.tipo || null,
         descrizione: form.descrizione || null,
         stato: 'aperta',
+        contesto_funerario_id: form.contesto_funerario_id || null,
       })
 
     if (errUS) { setError(errUS.message); setLoading(false); return }
@@ -111,6 +114,17 @@ export default function NuovaUSPage() {
               placeholder="Es. Strato di riempimento della fossa sepolcrale"
             />
           </div>
+          {tombe.length > 0 && (
+            <div style={{ marginTop: '12px' }}>
+              <label style={lbl}>Assegna a contesto funerario</label>
+              <select style={inp} value={form.contesto_funerario_id} onChange={e => set('contesto_funerario_id', e.target.value)}>
+                <option value="">— Nessuno —</option>
+                {tombe.map(t => (
+                  <option key={t.id} value={t.id}>Tb {t.numero_tomba}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {error && <p style={{ fontSize:'12px', color:'#c00', marginBottom:'12px' }}>{error}</p>}

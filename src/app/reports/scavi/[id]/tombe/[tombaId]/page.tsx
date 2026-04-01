@@ -40,6 +40,7 @@ export default function SchedaTombaPage() {
   const [reperti, setReperti] = useState<Reperto[]>([])
   const [fotoReperti, setFotoReperti] = useState<Record<string, FotoRP[]>>({})
   const [ultimaUS, setUltimaUS] = useState<number | null>(null)
+  const [allUS, setAllUS] = useState<{ id: string; numero_us: number }[]>([])
   const [dirty, setDirty] = useState(false)
   const [saved, setSaved] = useState(true)
   const [ultimoSalvataggio, setUltimoSalvataggio] = useState<Date | null>(null)
@@ -55,15 +56,17 @@ export default function SchedaTombaPage() {
 
   useEffect(() => {
     async function load() {
-      const [{ data: t }, { data: s }, { data: r }, { data: lastUS }] = await Promise.all([
+      const [{ data: t }, { data: s }, { data: r }, { data: lastUS }, { data: usData }] = await Promise.all([
         supabase.from('contesto_funerario').select('*').eq('id', tombaId).single(),
         supabase.from('scavo').select('denominazione, responsabile_campo').eq('id', scavoId).single(),
         supabase.from('reperto_funerario').select('*').eq('contesto_funerario_id', tombaId).order('rp_n'),
         supabase.from('us').select('numero_us').eq('scavo_id', scavoId).order('numero_us', { ascending: false }).limit(1),
+        supabase.from('us').select('id, numero_us').eq('scavo_id', scavoId).order('numero_us'),
       ])
       if (t) { setTomba(t); setForm(t) }
       if (s) setNomeScavo(s.denominazione ?? '')
       if (lastUS?.[0]) setUltimaUS(lastUS[0].numero_us)
+      if (usData) setAllUS(usData)
       if (r) {
         setReperti(r)
         // Carica foto per ogni reperto
@@ -193,6 +196,60 @@ export default function SchedaTombaPage() {
       ...prev,
       [repertoId]: (prev[repertoId] ?? []).filter(f => f.id !== fotoId),
     }))
+  }
+
+  async function creaOSelezionaUS(numero: number): Promise<string | null> {
+    const esistente = allUS.find(u => u.numero_us === numero)
+    if (esistente) {
+      // Associa alla tomba
+      await supabase.from('us').update({ contesto_funerario_id: tombaId }).eq('id', esistente.id)
+      return esistente.id
+    }
+    // Crea nuova US vuota associata alla tomba
+    const { data } = await supabase.from('us').insert({
+      scavo_id: scavoId, numero_us: numero, stato: 'aperta', contesto_funerario_id: tombaId,
+    }).select('id, numero_us').single()
+    if (data) {
+      setAllUS(prev => [...prev, data].sort((a, b) => a.numero_us - b.numero_us))
+      setUltimaUS(Math.max(ultimaUS ?? 0, data.numero_us))
+      return data.id
+    }
+    return null
+  }
+
+  function USInput({ label, field }: { label: string; field: string }) {
+    const [filtro, setFiltroUS] = useState('')
+    const [aperto, setAperto] = useState(false)
+    const val = form[field] as string ?? ''
+    const prossimoNumero = allUS.length > 0 ? Math.max(...allUS.map(u => u.numero_us)) + 1 : 1
+    const filtrate = allUS.filter(u => String(u.numero_us).includes(filtro))
+
+    return (
+      <div style={{ position: 'relative' }}>
+        <label style={lbl}>{label}</label>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <input style={inp} value={val}
+            onFocus={() => { setAperto(true); setFiltroUS(val) }}
+            onChange={e => { set(field, e.target.value || null); setFiltroUS(e.target.value); setAperto(true) }}
+            onBlur={() => setTimeout(() => setAperto(false), 200)}
+            placeholder="N. US" />
+        </div>
+        {aperto && (
+          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: '150px', overflowY: 'auto', background: '#fff', border: '0.5px solid #c8c7be', borderRadius: '6px', zIndex: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+            {filtrate.slice(0, 10).map(u => (
+              <div key={u.id} onMouseDown={() => { set(field, String(u.numero_us)); creaOSelezionaUS(u.numero_us); setAperto(false) }}
+                style={{ padding: '6px 10px', fontSize: '12px', cursor: 'pointer', borderBottom: '0.5px solid #f0efe9' }}>
+                US {u.numero_us}
+              </div>
+            ))}
+            <div onMouseDown={() => { set(field, String(prossimoNumero)); creaOSelezionaUS(prossimoNumero); setAperto(false) }}
+              style={{ padding: '6px 10px', fontSize: '12px', cursor: 'pointer', color: '#1a4a7a', fontWeight: '500' }}>
+              + Crea US {prossimoNumero}
+            </div>
+          </div>
+        )}
+      </div>
+    )
   }
 
   // Stili
@@ -403,14 +460,10 @@ export default function SchedaTombaPage() {
           <div style={card}>
             <div style={sectionTitle}>Indicazioni stratigrafiche (US)</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-              <div><label style={lbl}>Copertura</label>
-                <input style={inp} value={form.us_copertura as string ?? ''} onChange={e => set('us_copertura', e.target.value || null)} placeholder="Es. 131" /></div>
-              <div><label style={lbl}>Defunto e corredo</label>
-                <input style={inp} value={form.us_defunto_corredo as string ?? ''} onChange={e => set('us_defunto_corredo', e.target.value || null)} placeholder="Es. 132" /></div>
-              <div><label style={lbl}>Corredo accompagno</label>
-                <input style={inp} value={form.us_corredo_accompagno as string ?? ''} onChange={e => set('us_corredo_accompagno', e.target.value || null)} placeholder="Es. 133" /></div>
-              <div><label style={lbl}>Taglio</label>
-                <input style={inp} value={form.us_taglio as string ?? ''} onChange={e => set('us_taglio', e.target.value || null)} placeholder="Es. 134" /></div>
+              <USInput label="Copertura" field="us_copertura" />
+              <USInput label="Defunto e corredo" field="us_defunto_corredo" />
+              <USInput label="Corredo accompagno" field="us_corredo_accompagno" />
+              <USInput label="Taglio" field="us_taglio" />
               <div><label style={lbl}>Altro</label>
                 <input style={inp} value={form.us_altro as string ?? ''} onChange={e => set('us_altro', e.target.value || null)} /></div>
             </div>

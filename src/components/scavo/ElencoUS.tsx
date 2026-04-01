@@ -11,6 +11,7 @@ type US = {
   descrizione: string | null
   stato: string
   completata: boolean
+  contesto_funerario_id: string | null
 }
 
 type Tomba = {
@@ -33,6 +34,7 @@ type Filtro = 'tutti' | 'us' | 'funerario'
 
 export default function ElencoUS({ scavoId, usList, tombeList = [] }: Props) {
   const [filtro, setFiltro] = useState<Filtro>('tutti')
+  const [ricerca, setRicerca] = useState('')
   const [modificaAttiva, setModificaAttiva] = useState(false)
   const [selezionate, setSelezionate] = useState<Set<string>>(new Set())
   const [eliminando, setEliminando] = useState(false)
@@ -40,9 +42,15 @@ export default function ElencoUS({ scavoId, usList, tombeList = [] }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
-  // Per ora tutte le US sono tipo "us" — il tipo funerario arriverà dopo
-  const listeFiltrate = filtro === 'funerario' ? [] : usList
-  const tombeFiltrate = filtro === 'us' ? [] : tombeList
+  // Filtro per tipo + ricerca
+  const usFiltratePerTipo = filtro === 'funerario' ? [] : usList
+  const tombeFiltratePerTipo = filtro === 'us' ? [] : tombeList
+  const listeFiltrate = ricerca
+    ? usFiltratePerTipo.filter(us => String(us.numero_us).includes(ricerca) || (us.descrizione ?? '').toLowerCase().includes(ricerca.toLowerCase()))
+    : usFiltratePerTipo
+  const tombeFiltrate = ricerca
+    ? tombeFiltratePerTipo.filter(t => String(t.numero_tomba).includes(ricerca))
+    : tombeFiltratePerTipo
 
   const nUS = usList.length
   const nFunerario = tombeList.length
@@ -114,6 +122,18 @@ export default function ElencoUS({ scavoId, usList, tombeList = [] }: Props) {
         </button>
       </div>
 
+      {/* Ricerca */}
+      {(nUS + nFunerario) > 10 && (
+        <div style={{ marginBottom: '8px' }}>
+          <input
+            style={{ width: '100%', padding: '6px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '12px', fontFamily: 'inherit' }}
+            value={ricerca}
+            onChange={e => setRicerca(e.target.value)}
+            placeholder="Cerca per numero US o descrizione..."
+          />
+        </div>
+      )}
+
       {/* Filtri */}
       <div style={{ display: 'flex', gap: '2px', marginBottom: '12px', background: '#f0efe9', borderRadius: '6px', padding: '3px' }}>
         {([['tutti', 'Tutte'], ['us', 'US'], ['funerario', '⚱️ Funerario']] as [Filtro, string][]).map(([val, label]) => (
@@ -167,6 +187,14 @@ export default function ElencoUS({ scavoId, usList, tombeList = [] }: Props) {
                           {us.tipo}
                         </span>
                       )}
+                      {us.contesto_funerario_id && (() => {
+                        const tb = tombeList.find(t => t.id === us.contesto_funerario_id)
+                        return tb ? (
+                          <span style={{ fontSize: '10px', background: '#f5e8f8', color: '#7a1a6b', padding: '1px 6px', borderRadius: '8px' }}>
+                            Rif. Tb {tb.numero_tomba}
+                          </span>
+                        ) : null
+                      })()}
                     </div>
                     {us.descrizione && (
                       <div style={{ fontSize: '11px', color: '#555550', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

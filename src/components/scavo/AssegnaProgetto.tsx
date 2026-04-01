@@ -2,6 +2,9 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import BadgeTeam from '@/components/scavo/BadgeTeam'
+
+type Collaboratore = { id: string; nome: string | null; cognome: string | null }
 
 interface Scavo {
   id: string
@@ -9,6 +12,7 @@ interface Scavo {
   stato: string | null
   tipologia_intervento: string | null
   us: { count: number }[]
+  collaboratori: Collaboratore[]
 }
 
 interface Progetto {
@@ -122,6 +126,9 @@ export default function AssegnaProgetto({ scavi, progetti }: Props) {
                         <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '2px 8px', borderRadius: '10px' }}>{numUS} US</span>
                         {scavo.tipologia_intervento && (
                           <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '2px 8px', borderRadius: '10px' }}>{scavo.tipologia_intervento}</span>
+                        )}
+                        {scavo.collaboratori.length > 0 && (
+                          <BadgeTeam collaboratori={scavo.collaboratori} />
                         )}
                       </div>
                     </div>

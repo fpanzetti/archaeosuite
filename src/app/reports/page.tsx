@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import AssegnaProgetto from '@/components/scavo/AssegnaProgetto'
+import BadgeTeam from '@/components/scavo/BadgeTeam'
 
 export default async function ReportsPage({
   searchParams,
@@ -29,6 +30,26 @@ export default async function ReportsPage({
   if (q) queryScavi = queryScavi.ilike('denominazione', `%${q}%`)
 
   const { data: tuttiScavi } = await queryScavi
+
+  // Carica collaboratori per tutti gli scavi
+  const scaviIds = tuttiScavi?.map(s => s.id) ?? []
+  const { data: accessi } = scaviIds.length > 0
+    ? await supabase
+        .from('accesso_scavo')
+        .select('scavo_id, account(id, nome, cognome)')
+        .in('scavo_id', scaviIds)
+        .neq('account_id', user.id)
+    : { data: [] }
+
+  // Mappa scavoId → collaboratori
+  type Collaboratore = { id: string; nome: string | null; cognome: string | null }
+  const collaboratoriPerScavo: Record<string, Collaboratore[]> = {}
+  accessi?.forEach((a: { scavo_id: string; account: Collaboratore | Collaboratore[] }) => {
+    const acc = Array.isArray(a.account) ? a.account[0] : a.account
+    if (!acc) return
+    if (!collaboratoriPerScavo[a.scavo_id]) collaboratoriPerScavo[a.scavo_id] = []
+    collaboratoriPerScavo[a.scavo_id].push(acc)
+  })
 
   // Separa scavi con progetto da quelli standalone
   const scaviConProgetto = tuttiScavi?.filter(s => s.progetto_id) ?? []
@@ -173,9 +194,12 @@ export default async function ReportsPage({
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <div style={{ flex: 1 }}>
                                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a', marginBottom: '3px' }}>{scavo.denominazione}</div>
-                                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                                     <span style={{ fontSize: '11px', background: info.bg, color: info.color, padding: '1px 6px', borderRadius: '8px' }}>{info.label}</span>
                                     <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '1px 6px', borderRadius: '8px' }}>{numUS} US</span>
+                                    {(collaboratoriPerScavo[scavo.id] ?? []).length > 0 && (
+                                      <BadgeTeam collaboratori={collaboratoriPerScavo[scavo.id]} />
+                                    )}
                                   </div>
                                 </div>
                                 <div style={{ fontSize: '12px', color: '#c8c7be', marginLeft: '12px' }}>→</div>
@@ -222,6 +246,7 @@ export default async function ReportsPage({
             stato: s.stato ?? null,
             tipologia_intervento: s.tipologia_intervento ?? null,
             us: (s.us as unknown as { count: number }[]) ?? [],
+            collaboratori: collaboratoriPerScavo[s.id] ?? [],
           }))}
           progetti={(progetti ?? []).map(p => ({
             id: p.id,

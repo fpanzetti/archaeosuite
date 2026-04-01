@@ -12,6 +12,14 @@ interface Collaboratore {
   } | null
 }
 
+interface InvitoPendente {
+  id: string
+  email: string
+  ruolo: string
+  expires_at: string
+  created_at: string
+}
+
 interface Props {
   scavoId: string
   scavoDenominazione: string
@@ -28,6 +36,8 @@ export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
   const [mostraConferma, setMostraConferma] = useState<string | null>(null) // account_id da rimuovere
   const [mostraConfermaAbbandono, setMostraConfermaAbbandono] = useState(false)
   const [azione, setAzione] = useState(false)
+  const [inviti, setInviti] = useState<InvitoPendente[]>([])
+  const [reinviando, setReinviando] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -59,6 +69,18 @@ export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
       }))
 
       setCollaboratori(merged)
+
+      // Carica inviti pendenti (solo editor)
+      if (mioAccesso?.ruolo === 'editor') {
+        const { data: invPendenti } = await supabase
+          .from('invito')
+          .select('id, email, ruolo, expires_at, created_at')
+          .eq('scavo_id', scavoId)
+          .eq('usato', false)
+          .gt('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false })
+        setInviti(invPendenti ?? [])
+      }
     }
     carica()
   }, [scavoId])
@@ -96,6 +118,28 @@ export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
     router.push('/reports')
   }
 
+  async function revocaInvito(invito_id: string) {
+    await fetch('/api/invita', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invito_id }),
+    })
+    setInviti(prev => prev.filter(i => i.id !== invito_id))
+  }
+
+  async function reinviaInvito(invito_id: string) {
+    setReinviando(invito_id)
+    await fetch('/api/invita', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invito_id }),
+    })
+    // Aggiorna expires_at localmente
+    const nuovaScadenza = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    setInviti(prev => prev.map(i => i.id === invito_id ? { ...i, expires_at: nuovaScadenza } : i))
+    setReinviando(null)
+  }
+
   async function invita() {
     if (!email) return
     setLoading(true)
@@ -111,6 +155,17 @@ export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
     } else {
       setRisultato({ url: data.url })
       setEmail('')
+      // Aggiunge il nuovo invito alla lista pendenti
+      if (data.token) {
+        const nuovoInvito: InvitoPendente = {
+          id: data.token, // temporaneo, refresh lo sistemerà
+          email: email.toLowerCase().trim(),
+          ruolo,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          created_at: new Date().toISOString(),
+        }
+        setInviti(prev => [nuovoInvito, ...prev])
+      }
     }
     setLoading(false)
   }

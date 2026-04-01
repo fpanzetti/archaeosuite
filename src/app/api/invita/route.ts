@@ -1,8 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { sendInviteEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const { scavoId, email, ruolo } = await req.json()
@@ -18,7 +16,9 @@ export async function POST(req: NextRequest) {
     .eq('account_id', user.id)
     .single()
 
-  if (!accesso) return NextResponse.json({ error: 'Accesso negato' }, { status: 403 })
+  if (!accesso || accesso.ruolo !== 'editor') {
+    return NextResponse.json({ error: 'Solo gli editor possono invitare collaboratori' }, { status: 403 })
+  }
 
   const { data: scavo } = await supabase
     .from('scavo')
@@ -32,6 +32,8 @@ export async function POST(req: NextRequest) {
     .eq('id', user.id)
     .single()
 
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+
   const { data: invito, error } = await supabase
     .from('invito')
     .upsert({
@@ -39,7 +41,8 @@ export async function POST(req: NextRequest) {
       email: email.toLowerCase().trim(),
       ruolo: ruolo ?? 'collaboratore',
       creato_da: user.id,
-      stato: 'in_attesa',
+      usato: false,
+      expires_at: expiresAt,
     }, { onConflict: 'scavo_id,email' })
     .select()
     .single()
@@ -47,42 +50,99 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? req.nextUrl.origin
-  const urlAccettazione = `${baseUrl}/invito/${invito.token}`
   const nomeInvitante = invitante ? `${invitante.nome} ${invitante.cognome}` : 'Un collaboratore'
+  const scavoNome = scavo?.denominazione ?? scavo?.comune ?? 'uno scavo'
 
-  // Invia email tramite Resend
-  const { error: emailError } = await resend.emails.send({
-    from: 'ArchaeoSuite <onboarding@resend.dev>',
+  await sendInviteEmail({
     to: email,
-    subject: `Invito a collaborare su ${scavo?.denominazione ?? 'uno scavo'}`,
-    html: `
-      <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
-        <h2 style="font-size: 20px; font-weight: 500; color: #1a1a1a; margin-bottom: 8px;">
-          Sei stato invitato su ArchaeoSuite
-        </h2>
-        <p style="font-size: 14px; color: #555550; margin-bottom: 24px;">
-          <strong>${nomeInvitante}</strong> ti ha invitato a collaborare come <strong>${ruolo}</strong>
-          sullo scavo <strong>${scavo?.denominazione ?? scavo?.comune ?? 'N/D'}</strong>.
-        </p>
-        <a href="${urlAccettazione}"
-          style="display: inline-block; padding: 12px 24px; background: #1a4a7a; color: #fff;
-          text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 500;">
-          Accetta invito
-        </a>
-        <p style="font-size: 12px; color: #8a8a84; margin-top: 24px;">
-          Il link scade tra 7 giorni. Se non ti aspettavi questo invito puoi ignorare questa email.
-        </p>
-        <p style="font-size: 11px; color: #c8c7be; margin-top: 8px;">
-          ${urlAccettazione}
-        </p>
-      </div>
-    `,
+    scavoNome,
+    ruolo,
+    token: invito.token,
+    nomeInvitante,
+    baseUrl,
   })
 
-  if (emailError) {
-    console.error('Errore invio email:', emailError)
-    // Non blocchiamo — l'invito è comunque creato e il link è disponibile
+  const url = `${baseUrl}/invito/${invito.token}`
+  return NextResponse.json({ ok: true, token: invito.token, url })
+}
+
+export async function DELETE(req: NextRequest) {
+  const { invito_id } = await req.json()
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
+
+  // Verifica che l'utente sia editor dello scavo associato all'invito
+  const { data: invito } = await supabase
+    .from('invito')
+    .select('scavo_id')
+    .eq('id', invito_id)
+    .single()
+
+  if (!invito) return NextResponse.json({ error: 'Invito non trovato' }, { status: 404 })
+
+  const { data: accesso } = await supabase
+    .from('accesso_scavo')
+    .select('ruolo')
+    .eq('scavo_id', invito.scavo_id)
+    .eq('account_id', user.id)
+    .single()
+
+  if (!accesso || accesso.ruolo !== 'editor') {
+    return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 })
   }
 
-  return NextResponse.json({ ok: true, token: invito.token, url: urlAccettazione })
+  await supabase.from('invito').delete().eq('id', invito_id)
+  return NextResponse.json({ ok: true })
+}
+
+export async function PATCH(req: NextRequest) {
+  const { invito_id } = await req.json()
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
+
+  const { data: invito } = await supabase
+    .from('invito')
+    .select('scavo_id, email, ruolo, token')
+    .eq('id', invito_id)
+    .single()
+
+  if (!invito) return NextResponse.json({ error: 'Invito non trovato' }, { status: 404 })
+
+  const { data: accesso } = await supabase
+    .from('accesso_scavo')
+    .select('ruolo')
+    .eq('scavo_id', invito.scavo_id)
+    .eq('account_id', user.id)
+    .single()
+
+  if (!accesso || accesso.ruolo !== 'editor') {
+    return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 })
+  }
+
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+  const { error } = await supabase
+    .from('invito')
+    .update({ expires_at: expiresAt, usato: false })
+    .eq('id', invito_id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  const { data: scavo } = await supabase.from('scavo').select('denominazione, comune').eq('id', invito.scavo_id).single()
+  const { data: invitante } = await supabase.from('account').select('nome, cognome').eq('id', user.id).single()
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? req.nextUrl.origin
+
+  await sendInviteEmail({
+    to: invito.email,
+    scavoNome: scavo?.denominazione ?? scavo?.comune ?? 'uno scavo',
+    ruolo: invito.ruolo,
+    token: invito.token,
+    nomeInvitante: invitante ? `${invitante.nome} ${invitante.cognome}` : 'Un collaboratore',
+    baseUrl,
+  })
+
+  return NextResponse.json({ ok: true })
 }

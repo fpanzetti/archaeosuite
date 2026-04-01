@@ -264,43 +264,41 @@ export default function SchedaTombaPage() {
         <div>
           <div style={card}>
             <div style={sectionTitle}>Dimensioni sepoltura (m)</div>
-            <div style={grid3}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px', marginBottom: '12px' }}>
               <div><label style={lbl}>Larghezza</label>
                 <input style={inp} type="number" step="0.01" value={form.larghezza as number ?? ''} onChange={e => set('larghezza', parseFloat(e.target.value) || null)} /></div>
               <div><label style={lbl}>Lunghezza</label>
                 <input style={inp} type="number" step="0.01" value={form.lunghezza as number ?? ''} onChange={e => set('lunghezza', parseFloat(e.target.value) || null)} /></div>
               <div><label style={lbl}>Profondità max</label>
                 <input style={inp} type="number" step="0.01" value={form.profondita_max as number ?? ''} onChange={e => set('profondita_max', parseFloat(e.target.value) || null)} /></div>
+              <SelectField label="Orientamento" field="orientamento" options={ORIENTAMENTI} />
             </div>
-            <SelectField label="Orientamento" field="orientamento" options={ORIENTAMENTI} />
           </div>
           <div style={card}>
             <div style={sectionTitle}>Indicazioni stratigrafiche (US)</div>
-            <div style={grid2}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
               <div><label style={lbl}>Copertura</label>
                 <input style={inp} value={form.us_copertura as string ?? ''} onChange={e => set('us_copertura', e.target.value || null)} placeholder="Es. 131" /></div>
-              <div><label style={lbl}>Defunto e corredo personale</label>
+              <div><label style={lbl}>Defunto e corredo</label>
                 <input style={inp} value={form.us_defunto_corredo as string ?? ''} onChange={e => set('us_defunto_corredo', e.target.value || null)} placeholder="Es. 132" /></div>
-            </div>
-            <div style={grid2}>
-              <div><label style={lbl}>Corredo di accompagno</label>
+              <div><label style={lbl}>Corredo accompagno</label>
                 <input style={inp} value={form.us_corredo_accompagno as string ?? ''} onChange={e => set('us_corredo_accompagno', e.target.value || null)} placeholder="Es. 133" /></div>
               <div><label style={lbl}>Taglio</label>
                 <input style={inp} value={form.us_taglio as string ?? ''} onChange={e => set('us_taglio', e.target.value || null)} placeholder="Es. 134" /></div>
+              <div><label style={lbl}>Altro</label>
+                <input style={inp} value={form.us_altro as string ?? ''} onChange={e => set('us_altro', e.target.value || null)} /></div>
             </div>
-            <div><label style={lbl}>Altro</label>
-              <input style={inp} value={form.us_altro as string ?? ''} onChange={e => set('us_altro', e.target.value || null)} /></div>
           </div>
           <div style={card}>
             <div style={sectionTitle}>Reperti particolari (RP)</div>
-            <div style={grid2}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
               <div><label style={lbl}>Corredo personale</label>
                 <input style={inp} value={form.rp_corredo_personale as string ?? ''} onChange={e => set('rp_corredo_personale', e.target.value || null)} placeholder="Es. 170" /></div>
               <div><label style={lbl}>Corredo di accompagno</label>
                 <input style={inp} value={form.rp_corredo_accompagno as string ?? ''} onChange={e => set('rp_corredo_accompagno', e.target.value || null)} placeholder="Es. 141-149,151" /></div>
+              <div><label style={lbl}>Altro</label>
+                <input style={inp} value={form.rp_altro as string ?? ''} onChange={e => set('rp_altro', e.target.value || null)} /></div>
             </div>
-            <div><label style={lbl}>Altro</label>
-              <input style={inp} value={form.rp_altro as string ?? ''} onChange={e => set('rp_altro', e.target.value || null)} /></div>
           </div>
           <div style={card}>
             <div style={sectionTitle}>Relazioni e datazione</div>
@@ -342,7 +340,10 @@ export default function SchedaTombaPage() {
         <div>
           <div style={card}>
             <div style={sectionTitle}>Caratteri deposizionali</div>
-            <RadioGroup label="Tipo di sepoltura" field="tipo_sepoltura" options={['Incinerazione', 'Inumazione']} />
+            <div style={grid2}>
+              <RadioGroup label="Tipo di sepoltura" field="tipo_sepoltura" options={['Incinerazione', 'Inumazione']} />
+  
+            </div>
             <RadioGroup label="" field="tipo_numerosita" options={['Singola', 'Bisoma', 'Multipla', 'Collettiva']} />
             {(form.tipo_numerosita === 'Multipla' || form.tipo_numerosita === 'Collettiva') && (
               <div style={{ marginBottom: '10px' }}>
@@ -360,7 +361,7 @@ export default function SchedaTombaPage() {
           </div>
           <div style={card}>
             <div style={sectionTitle}>Caratteristiche strutturali</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
               {[
                 ['segnacolo', 'Segnacolo'],
                 ['cassone_muratura', 'Cassone in muratura'],
@@ -385,7 +386,7 @@ export default function SchedaTombaPage() {
           </div>
           <div style={card}>
             <div style={sectionTitle}>Elementi rituali</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
               <RadioGroup label="Frammentazione ceramica rituale" field="frammentazione_ceramica" options={SI_NO} />
               <RadioGroup label="Oggetti rituali" field="oggetti_rituali" options={SI_NO} />
               <RadioGroup label="Organico pasto / ossa animali" field="organico_pasto" options={SI_NO} />

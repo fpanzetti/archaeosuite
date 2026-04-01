@@ -77,7 +77,7 @@ export default function ElencoTombe({ scavoId }: Props) {
           style={{ padding: '10px 14px', background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a', marginBottom: '3px' }}>
-              Tomba {t.numero_tomba}
+              Tb {t.numero_tomba}
               {t.settore && <span style={{ fontSize: '11px', color: '#8a8a84', marginLeft: '8px' }}>Settore {t.settore}</span>}
             </div>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>

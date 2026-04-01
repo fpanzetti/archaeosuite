@@ -239,11 +239,11 @@ export default function SchedaTombaPage() {
   function ArticolazioneSxDx({ label, baseName, soloUna = false, primaRiga = false }: { label: string; baseName: string; soloUna?: boolean; primaRiga?: boolean }) {
     return (
       <>
-        {primaRiga && (
+        {primaRiga && !soloUna && (
           <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
             <div style={{ flex: 1 }} />
             <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
-            {!soloUna && <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>}
+            <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
           </div>
         )}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '3px', padding: '2px 0', borderBottom: '0.5px solid #f0efe9' }}>
@@ -298,13 +298,13 @@ export default function SchedaTombaPage() {
           ← Elenco US
         </a>
         <span style={{ fontSize: '11px', color: '#c8c7be' }}>/</span>
-        <span style={{ fontSize: '11px', color: '#8a8a84' }}>⚱️ Tomba {form.numero_tomba as number}</span>
+        <span style={{ fontSize: '11px', color: '#8a8a84' }}>Tb {form.numero_tomba as number}</span>
       </div>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
         <div>
-          <h1 style={{ fontSize: '20px', fontWeight: '500' }}>⚱️ Tomba {form.numero_tomba as number}</h1>
+          <h1 style={{ fontSize: '20px', fontWeight: '500' }}>Tb {form.numero_tomba as number}</h1>
           <div style={{ fontSize: '11px', color: '#8a8a84', marginTop: '4px' }}>
             {nomeScavo}
             {ultimoSalvataggio && <span> · Salvato {ultimoSalvataggio.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</span>}
@@ -458,10 +458,12 @@ export default function SchedaTombaPage() {
         <div>
           <div style={card}>
             <div style={sectionTitle}>Caratteri deposizionali</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
               <RadioGroup label="Tipo di sepoltura" field="tipo_sepoltura" options={['Incinerazione', 'Inumazione']} />
-              <RadioGroup label="Numerosità" field="tipo_numerosita" options={['Singola', 'Bisoma', 'Multipla', 'Collettiva']} />
               <RadioGroup label="Tipo di deposizione" field="tipo_deposizione" options={['Primaria', 'Primaria rimaneggiata', 'Secondaria', 'Ridotta']} />
+            </div>
+            <div style={{ marginBottom: '10px' }}>
+              <RadioGroup label="" field="tipo_numerosita" options={['Singola', 'Bisoma', 'Multipla', 'Collettiva']} />
             </div>
             {(form.tipo_numerosita === 'Multipla' || form.tipo_numerosita === 'Collettiva') && (
               <div style={{ marginBottom: '10px' }}>
@@ -499,6 +501,10 @@ export default function SchedaTombaPage() {
               </div>
             </div>
             <div style={{ marginTop: '8px' }}>
+              <label style={lbl}>Altro</label>
+              <input style={inp} value={form.strutturali_altro as string ?? ''} onChange={e => set('strutturali_altro', e.target.value || null)} placeholder="Altre caratteristiche strutturali..." />
+            </div>
+            <div style={{ marginTop: '8px' }}>
               <label style={lbl}>Tipologia di copertura</label>
               <textarea style={{ ...inp, height: '64px', resize: 'none' } as React.CSSProperties}
                 value={form.tipologia_copertura as string ?? ''}
@@ -507,13 +513,19 @@ export default function SchedaTombaPage() {
           </div>
           <div style={card}>
             <div style={sectionTitle}>Elementi rituali</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
-              <RadioGroup label="Frammentazione ceramica rituale" field="frammentazione_ceramica" options={SI_NO} />
-              <RadioGroup label="Oggetti rituali" field="oggetti_rituali" options={SI_NO} />
-              <RadioGroup label="Organico pasto / ossa animali" field="organico_pasto" options={SI_NO} />
-              <RadioGroup label="Libagione" field="libagione" options={SI_NO} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 16px' }}>
+              <div>
+                <RadioGroup label="Frammentazione ceramica rituale" field="frammentazione_ceramica" options={SI_NO} />
+                <RadioGroup label="Organico pasto / ossa animali" field="organico_pasto" options={SI_NO} />
+              </div>
+              <div>
+                <RadioGroup label="Oggetti rituali" field="oggetti_rituali" options={SI_NO} />
+                <RadioGroup label="Libagione" field="libagione" options={SI_NO} />
+              </div>
+              <div>
+                <RadioGroup label="Connessione anatomica" field="connessione_anatomica" options={['sì', 'no', 'parziale']} />
+              </div>
             </div>
-            <RadioGroup label="Connessione anatomica" field="connessione_anatomica" options={['sì', 'no', 'parziale']} />
           </div>
         </div>
       )}
@@ -719,20 +731,22 @@ export default function SchedaTombaPage() {
         <div>
           <div style={card}>
             <div style={sectionTitle}>Effetti della decomposizione e della compressione o parete</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '4px 16px', marginBottom: '8px' }}>
-              <RadioGroup label="Appiattimento torace" field="appiattimento_torace" options={SI_NO} />
-              <RadioGroup label="Caduta sterno" field="caduta_sterno" options={SI_NO} />
-              <RadioGroup label="Cinto pelvico" field="cinto_pelvico" options={['Aperto', 'Chiuso', 'Semi-chiuso']} />
-              <RadioGroup label="Ginocchia" field="ginocchia" options={['Aperte', 'Unite', 'Semi-chiuse']} />
-            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 16px', marginBottom: '8px' }}>
-              <RadioGroup label="Caviglie" field="caviglie" options={['Aperte', 'Unite', 'Semi-chiuse']} />
-              <RadioGroup label="Verticalizzazione clavicola" field="verticalizzazione_clavicola" options={['SX', 'DX', 'Entrambe']} />
-              <RadioGroup label="Scapola obliqua" field="scapola_obliqua" options={['SX', 'DX', 'Entrambe']} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px', marginBottom: '8px' }}>
-              <RadioGroup label="Rotazione mediale omero" field="rotazione_mediale_omero" options={['SX', 'DX', 'Entrambe']} />
-              <RadioGroup label="Rotazione laterale femore" field="rotazione_laterale_femore" options={['SX', 'DX', 'Entrambe']} />
+              <div>
+                <RadioGroup label="Appiattimento torace" field="appiattimento_torace" options={SI_NO} />
+                <RadioGroup label="Caduta sterno" field="caduta_sterno" options={SI_NO} />
+                <RadioGroup label="Cinto pelvico" field="cinto_pelvico" options={['Aperto', 'Chiuso', 'Semi-chiuso']} />
+              </div>
+              <div>
+                <RadioGroup label="Ginocchia" field="ginocchia" options={['Aperte', 'Unite', 'Semi-chiuse']} />
+                <RadioGroup label="Caviglie" field="caviglie" options={['Aperte', 'Unite', 'Semi-chiuse']} />
+                <RadioGroup label="Verticalizzazione clavicola" field="verticalizzazione_clavicola" options={['SX', 'DX', 'Entrambe']} />
+              </div>
+              <div>
+                <RadioGroup label="Scapola obliqua" field="scapola_obliqua" options={['SX', 'DX', 'Entrambe']} />
+                <RadioGroup label="Rotazione mediale omero" field="rotazione_mediale_omero" options={['SX', 'DX', 'Entrambe']} />
+                <RadioGroup label="Rotazione laterale femore" field="rotazione_laterale_femore" options={['SX', 'DX', 'Entrambe']} />
+              </div>
             </div>
             <div style={{ marginBottom: '10px' }}>
               <label style={lbl}>Parte dello scheletro soggetta alla compressione o all&apos;effetto parete</label>
@@ -831,7 +845,7 @@ export default function SchedaTombaPage() {
             </div>
             <button onClick={aggiungiReperto}
               style={{ padding: '7px 14px', background: '#1a4a7a', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}>
-              + Aggiungi reperto
+              + Aggiungi RP
             </button>
           </div>
           {reperti.length === 0 ? (

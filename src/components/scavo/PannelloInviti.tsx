@@ -23,9 +23,10 @@ interface InvitoPendente {
 interface Props {
   scavoId: string
   scavoDenominazione: string
+  ruoloEsterno?: string
 }
 
-export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
+export default function PannelloInviti({ scavoId, scavoDenominazione, ruoloEsterno }: Props) {
   const [collaboratori, setCollaboratori] = useState<Collaboratore[]>([])
   const [email, setEmail] = useState('')
   const [ruolo, setRuolo] = useState('collaboratore')
@@ -54,7 +55,7 @@ export default function PannelloInviti({ scavoId, scavoDenominazione }: Props) {
       if (!accessi) return
 
       const mioAccesso = accessi.find(a => a.account_id === user?.id)
-      setRuoloCorrente(mioAccesso?.ruolo ?? null)
+      setRuoloCorrente(ruoloEsterno ?? mioAccesso?.ruolo ?? null)
 
       const ids = accessi.map(a => a.account_id)
       const { data: accounts } = await supabase

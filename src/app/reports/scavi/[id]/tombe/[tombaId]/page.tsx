@@ -290,11 +290,6 @@ export default function SchedaTombaPage() {
 
   return (
     <div style={{ padding: '24px', maxWidth: '900px' }}>
-      {toast && (
-        <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: '#1a1a1a', color: '#fff', padding: '10px 20px', borderRadius: '8px', fontSize: '12px', zIndex: 1000 }}>
-          {toast}
-        </div>
-      )}
 
       {/* Breadcrumb */}
       <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -315,7 +310,14 @@ export default function SchedaTombaPage() {
             {ultimoSalvataggio && <span> · Salvato {ultimoSalvataggio.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</span>}
           </div>
         </div>
-        <button style={btnSalva} onClick={salva}>{dirty ? 'Salva modifiche' : saved ? '✓ Salvato' : 'Salva'}</button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+          <button style={btnSalva} onClick={salva}>{dirty ? 'Salva modifiche' : saved ? '✓ Salvato' : 'Salva'}</button>
+          {toast && (
+            <div style={{ fontSize: '11px', color: '#1a6b4a', background: '#e8f4ef', border: '0.5px solid #a8d8b8', padding: '3px 10px', borderRadius: '6px' }}>
+              {toast}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tab navigazione step */}

@@ -143,12 +143,28 @@ export default function SchedaTombaPage() {
     )
   }
 
-  function ArticolazioneSxDx({ label, baseName }: { label: string; baseName: string }) {
+  function ArticolazioneSxDx({ label, baseName, soloUna = false }: { label: string; baseName: string; soloUna?: boolean }) {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '6px', alignItems: 'end', marginBottom: '6px' }}>
-        <div style={{ fontSize: '12px', color: '#555550', paddingBottom: '4px' }}>{label}</div>
-        <SelectField label="SX" field={`${baseName}_sx`} options={ARTIC_OPT} />
-        <SelectField label="DX" field={`${baseName}_dx`} options={ARTIC_OPT} />
+      <div style={{ display: 'grid', gridTemplateColumns: soloUna ? '2fr 1fr' : '2fr 1fr 1fr', gap: '8px', alignItems: 'center', marginBottom: '4px', padding: '3px 0', borderBottom: '0.5px solid #f0efe9' }}>
+        <div style={{ fontSize: '12px', color: '#555550' }}>{label}</div>
+        <div>
+          <select style={{ width: '100%', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
+            value={(form[`${baseName}_sx`] as string) ?? ''}
+            onChange={e => set(`${baseName}_sx`, e.target.value || null)}>
+            <option value="">—</option>
+            {ARTIC_OPT.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+        {!soloUna && (
+          <div>
+            <select style={{ width: '100%', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
+              value={(form[`${baseName}_dx`] as string) ?? ''}
+              onChange={e => set(`${baseName}_dx`, e.target.value || null)}>
+              <option value="">—</option>
+              {ARTIC_OPT.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+        )}
       </div>
     )
   }
@@ -156,10 +172,24 @@ export default function SchedaTombaPage() {
   function ArteSxDx({ label, baseName, femminile = false }: { label: string; baseName: string; femminile?: boolean }) {
     const opts = femminile ? ARTI_OPT_F : ARTI_OPT
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '6px', alignItems: 'end', marginBottom: '6px' }}>
-        <div style={{ fontSize: '12px', color: '#555550', paddingBottom: '4px' }}>{label}</div>
-        <SelectField label="SX" field={`${baseName}_sx`} options={opts} />
-        <SelectField label="DX" field={`${baseName}_dx`} options={opts} />
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px', alignItems: 'center', marginBottom: '4px', padding: '3px 0', borderBottom: '0.5px solid #f0efe9' }}>
+        <div style={{ fontSize: '12px', color: '#555550' }}>{label}</div>
+        <div>
+          <select style={{ width: '100%', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
+            value={(form[`${baseName}_sx`] as string) ?? ''}
+            onChange={e => set(`${baseName}_sx`, e.target.value || null)}>
+            <option value="">—</option>
+            {opts.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+        <div>
+          <select style={{ width: '100%', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
+            value={(form[`${baseName}_dx`] as string) ?? ''}
+            onChange={e => set(`${baseName}_dx`, e.target.value || null)}>
+            <option value="">—</option>
+            {opts.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
       </div>
     )
   }
@@ -340,18 +370,17 @@ export default function SchedaTombaPage() {
         <div>
           <div style={card}>
             <div style={sectionTitle}>Caratteri deposizionali</div>
-            <div style={grid2}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '10px' }}>
               <RadioGroup label="Tipo di sepoltura" field="tipo_sepoltura" options={['Incinerazione', 'Inumazione']} />
-  
+              <RadioGroup label="Numerosità" field="tipo_numerosita" options={['Singola', 'Bisoma', 'Multipla', 'Collettiva']} />
+              <RadioGroup label="Tipo di deposizione" field="tipo_deposizione" options={['Primaria', 'Primaria rimaneggiata', 'Secondaria', 'Ridotta']} />
             </div>
-            <RadioGroup label="" field="tipo_numerosita" options={['Singola', 'Bisoma', 'Multipla', 'Collettiva']} />
             {(form.tipo_numerosita === 'Multipla' || form.tipo_numerosita === 'Collettiva') && (
               <div style={{ marginBottom: '10px' }}>
                 <label style={lbl}>Numero di individui</label>
                 <input style={{ ...inp, width: '120px' }} type="number" value={form.numero_individui as number ?? ''} onChange={e => set('numero_individui', parseInt(e.target.value) || null)} />
               </div>
             )}
-            <RadioGroup label="Tipo di deposizione" field="tipo_deposizione" options={['Primaria', 'Primaria rimaneggiata', 'Secondaria', 'Ridotta']} />
             {form.tipo_deposizione === 'Primaria rimaneggiata' && (
               <div style={{ marginBottom: '10px' }}>
                 <label style={lbl}>Natura del rimaneggiamento</label>
@@ -361,21 +390,25 @@ export default function SchedaTombaPage() {
           </div>
           <div style={card}>
             <div style={sectionTitle}>Caratteristiche strutturali</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
-              {[
-                ['segnacolo', 'Segnacolo'],
-                ['cassone_muratura', 'Cassone in muratura'],
-                ['dromos', 'Dromos di scavo'],
-                ['tumulo', 'Tumulo'],
-                ['cassa', 'Cassa'],
-                ['circolo', 'Circolo'],
-                ['tronco', 'Tronco'],
-                ['cuscino', 'Cuscino'],
-                ['piano_deposizionale', 'Piano deposizionale'],
-                ['sudario', 'Sudario'],
-              ].map(([field, label]) => (
-                <RadioGroup key={field} label={label} field={field} options={SI_NO} />
-              ))}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '4px 16px' }}>
+              <div>
+                <RadioGroup label="Segnacolo" field="segnacolo" options={SI_NO} />
+                <RadioGroup label="Dromos di scavo" field="dromos" options={SI_NO} />
+                <RadioGroup label="Cassa" field="cassa" options={SI_NO} />
+              </div>
+              <div>
+                <RadioGroup label="Tronco" field="tronco" options={SI_NO} />
+                <RadioGroup label="Piano deposizionale" field="piano_deposizionale" options={SI_NO} />
+              </div>
+              <div>
+                <RadioGroup label="Cassone in muratura" field="cassone_muratura" options={SI_NO} />
+                <RadioGroup label="Tumulo" field="tumulo" options={SI_NO} />
+                <RadioGroup label="Circolo" field="circolo" options={SI_NO} />
+              </div>
+              <div>
+                <RadioGroup label="Cuscino" field="cuscino" options={SI_NO} />
+                <RadioGroup label="Sudario" field="sudario" options={SI_NO} />
+              </div>
             </div>
             <div style={{ marginTop: '8px' }}>
               <label style={lbl}>Tipologia di copertura</label>
@@ -490,18 +523,40 @@ export default function SchedaTombaPage() {
               <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>—</div>
               <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>—</div>
             </div>
-            {[
-              ['Temporo-mandibolare', 'temporo_mandibolare'],
-              ['Cranio-atlante', 'cranio_atlante'],
-              ['Atlante-epistrofeo', 'atlante_epistrofeo'],
-              ['Epistrofeo-C3', 'epistrofeo_c3'],
-            ].map(([label, field]) => (
-              <div key={field} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '6px', alignItems: 'end', marginBottom: '6px' }}>
-                <div style={{ fontSize: '12px', color: '#555550', paddingBottom: '4px' }}>{label}</div>
-                <SelectField label="—" field={field} options={ARTIC_OPT} />
-                <div />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', padding: '3px 0', borderBottom: '0.5px solid #f0efe9' }}>
+                  <div style={{ fontSize: '12px', color: '#555550', flex: 1 }}>Temporo-mandibolare</div>
+                  <select style={{ width: '140px', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
+                    value={(form.temporo_mandibolare as string) ?? ''} onChange={e => set('temporo_mandibolare', e.target.value || null)}>
+                    <option value="">—</option>{ARTIC_OPT.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', padding: '3px 0', borderBottom: '0.5px solid #f0efe9' }}>
+                  <div style={{ fontSize: '12px', color: '#555550', flex: 1 }}>Cranio-atlante</div>
+                  <select style={{ width: '140px', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
+                    value={(form.cranio_atlante as string) ?? ''} onChange={e => set('cranio_atlante', e.target.value || null)}>
+                    <option value="">—</option>{ARTIC_OPT.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
               </div>
-            ))}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', padding: '3px 0', borderBottom: '0.5px solid #f0efe9' }}>
+                  <div style={{ fontSize: '12px', color: '#555550', flex: 1 }}>Atlante-epistrofeo</div>
+                  <select style={{ width: '140px', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
+                    value={(form.atlante_epistrofeo as string) ?? ''} onChange={e => set('atlante_epistrofeo', e.target.value || null)}>
+                    <option value="">—</option>{ARTIC_OPT.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', padding: '3px 0', borderBottom: '0.5px solid #f0efe9' }}>
+                  <div style={{ fontSize: '12px', color: '#555550', flex: 1 }}>Epistrofeo-C3</div>
+                  <select style={{ width: '140px', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
+                    value={(form.epistrofeo_c3 as string) ?? ''} onChange={e => set('epistrofeo_c3', e.target.value || null)}>
+                    <option value="">—</option>{ARTIC_OPT.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
             <RadioGroup label="Mandibola" field="mandibola" options={['Aperta', 'Chiusa']} />
           </div>
           <div style={card}>
@@ -511,16 +566,19 @@ export default function SchedaTombaPage() {
               <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
               <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
             </div>
-            {[
-              ['Vertebre cervicali', 'vertebre_cervicali'],
-              ['Vertebre toraciche', 'vertebre_toraciche'],
-              ['Scapola-clavicola', 'scapola_clavicola'],
-              ['Scapola-omero', 'scapola_omero'],
-              ['Polso', 'polso'],
-              ['Metacarpo-Falange', 'metacarpo_falange'],
-              ['Rotula', 'rotula'],
-              ['Metatarso-Falange', 'metatarso_falange'],
-            ].map(([label, base]) => <ArticolazioneSxDx key={base} label={label} baseName={base} />)}
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px', marginBottom: '6px', padding: '0 0 4px' }}>
+              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>Articolazione</div>
+              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
+              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
+            </div>
+            <ArticolazioneSxDx label="Vertebre cervicali" baseName="vertebre_cervicali" soloUna={true} />
+            <ArticolazioneSxDx label="Vertebre toraciche" baseName="vertebre_toraciche" soloUna={true} />
+            <ArticolazioneSxDx label="Scapola-clavicola" baseName="scapola_clavicola" />
+            <ArticolazioneSxDx label="Scapola-omero" baseName="scapola_omero" />
+            <ArticolazioneSxDx label="Polso" baseName="polso" />
+            <ArticolazioneSxDx label="Metacarpo-Falange" baseName="metacarpo_falange" />
+            <ArticolazioneSxDx label="Rotula" baseName="rotula" />
+            <ArticolazioneSxDx label="Metatarso-Falange" baseName="metatarso_falange" />
           </div>
           <div style={card}>
             <div style={sectionTitle}>Articolazioni persistenti</div>
@@ -529,16 +587,19 @@ export default function SchedaTombaPage() {
               <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
               <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
             </div>
-            {[
-              ['Vertebre lombari', 'vertebre_lombari'],
-              ['Lombo-sacrale', 'lombo_sacrale'],
-              ['Sacro-iliaca', 'sacro_iliaca'],
-              ['Coxo-femorale', 'coxo_femorale'],
-              ['Gomito', 'gomito'],
-              ['Ginocchio', 'ginocchio'],
-              ['Caviglia', 'caviglia'],
-              ['Tarso', 'tarso'],
-            ].map(([label, base]) => <ArticolazioneSxDx key={base} label={label} baseName={base} />)}
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px', marginBottom: '6px', padding: '0 0 4px' }}>
+              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>Articolazione</div>
+              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
+              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
+            </div>
+            <ArticolazioneSxDx label="Vertebre lombari" baseName="vertebre_lombari" soloUna={true} />
+            <ArticolazioneSxDx label="Lombo-sacrale" baseName="lombo_sacrale" soloUna={true} />
+            <ArticolazioneSxDx label="Sacro-iliaca" baseName="sacro_iliaca" />
+            <ArticolazioneSxDx label="Coxo-femorale" baseName="coxo_femorale" />
+            <ArticolazioneSxDx label="Gomito" baseName="gomito" />
+            <ArticolazioneSxDx label="Ginocchio" baseName="ginocchio" />
+            <ArticolazioneSxDx label="Caviglia" baseName="caviglia" />
+            <ArticolazioneSxDx label="Tarso" baseName="tarso" />
           </div>
         </div>
       )}
@@ -548,7 +609,7 @@ export default function SchedaTombaPage() {
         <div>
           <div style={card}>
             <div style={sectionTitle}>Posizione degli arti</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '6px', marginBottom: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px', marginBottom: '6px', padding: '0 0 4px' }}>
               <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>Arto</div>
               <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
               <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
@@ -574,17 +635,21 @@ export default function SchedaTombaPage() {
         <div>
           <div style={card}>
             <div style={sectionTitle}>Effetti della decomposizione e della compressione o parete</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '4px 16px', marginBottom: '8px' }}>
               <RadioGroup label="Appiattimento torace" field="appiattimento_torace" options={SI_NO} />
-              <RadioGroup label="Caduta dello sterno" field="caduta_sterno" options={SI_NO} />
+              <RadioGroup label="Caduta sterno" field="caduta_sterno" options={SI_NO} />
+              <RadioGroup label="Cinto pelvico" field="cinto_pelvico" options={['Aperto', 'Chiuso', 'Semi-chiuso']} />
+              <RadioGroup label="Ginocchia" field="ginocchia" options={['Aperte', 'Unite', 'Semi-chiuse']} />
             </div>
-            <RadioGroup label="Cinto pelvico" field="cinto_pelvico" options={['Aperto', 'Chiuso', 'Semi-chiuso']} />
-            <RadioGroup label="Ginocchia" field="ginocchia" options={['Aperte', 'Unite', 'Semi-chiuse']} />
-            <RadioGroup label="Caviglie" field="caviglie" options={['Aperte', 'Unite', 'Semi-chiuse']} />
-            <RadioGroup label="Verticalizzazione della clavicola" field="verticalizzazione_clavicola" options={['SX', 'DX', 'Entrambe']} />
-            <RadioGroup label="Scapola obliqua" field="scapola_obliqua" options={['SX', 'DX', 'Entrambe']} />
-            <RadioGroup label="Rotazione mediale dell&apos;omero" field="rotazione_mediale_omero" options={['SX', 'DX', 'Entrambe']} />
-            <RadioGroup label="Rotazione laterale del femore" field="rotazione_laterale_femore" options={['SX', 'DX', 'Entrambe']} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 16px', marginBottom: '8px' }}>
+              <RadioGroup label="Caviglie" field="caviglie" options={['Aperte', 'Unite', 'Semi-chiuse']} />
+              <RadioGroup label="Verticalizzazione clavicola" field="verticalizzazione_clavicola" options={['SX', 'DX', 'Entrambe']} />
+              <RadioGroup label="Scapola obliqua" field="scapola_obliqua" options={['SX', 'DX', 'Entrambe']} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px', marginBottom: '8px' }}>
+              <RadioGroup label="Rotazione mediale omero" field="rotazione_mediale_omero" options={['SX', 'DX', 'Entrambe']} />
+              <RadioGroup label="Rotazione laterale femore" field="rotazione_laterale_femore" options={['SX', 'DX', 'Entrambe']} />
+            </div>
             <div style={{ marginBottom: '10px' }}>
               <label style={lbl}>Parte dello scheletro soggetta alla compressione o all&apos;effetto parete</label>
               <input style={inp} value={form.parte_scheletro_compressione as string ?? ''} onChange={e => set('parte_scheletro_compressione', e.target.value || null)} />

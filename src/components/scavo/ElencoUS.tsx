@@ -13,14 +13,25 @@ type US = {
   completata: boolean
 }
 
+type Tomba = {
+  id: string
+  numero_tomba: number | null
+  tipo_sepoltura: string | null
+  tipo_deposizione: string | null
+  datazione: string | null
+  stato_conservazione: string | null
+  completata: boolean
+}
+
 interface Props {
   scavoId: string
   usList: US[]
+  tombeList?: Tomba[]
 }
 
 type Filtro = 'tutti' | 'us' | 'funerario'
 
-export default function ElencoUS({ scavoId, usList }: Props) {
+export default function ElencoUS({ scavoId, usList, tombeList = [] }: Props) {
   const [filtro, setFiltro] = useState<Filtro>('tutti')
   const [modificaAttiva, setModificaAttiva] = useState(false)
   const [selezionate, setSelezionate] = useState<Set<string>>(new Set())
@@ -30,15 +41,11 @@ export default function ElencoUS({ scavoId, usList }: Props) {
   const supabase = createClient()
 
   // Per ora tutte le US sono tipo "us" — il tipo funerario arriverà dopo
-  const listeFiltrate = usList.filter(us => {
-    if (filtro === 'tutti') return true
-    if (filtro === 'us') return true // tutti per ora
-    if (filtro === 'funerario') return false // nessuno per ora
-    return true
-  })
+  const listeFiltrate = filtro === 'funerario' ? [] : usList
+  const tombeFiltrate = filtro === 'us' ? [] : tombeList
 
   const nUS = usList.length
-  const nFunerario = 0 // placeholder
+  const nFunerario = tombeList.length
 
   function toggleSelezione(id: string) {
     setSelezionate(prev => {
@@ -90,11 +97,11 @@ export default function ElencoUS({ scavoId, usList }: Props) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', paddingBottom: '8px', borderBottom: '0.5px solid #e8f0f8' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ fontSize: '11px', fontWeight: '500', color: '#1a4a7a' }}>
-            Unità stratigrafiche
+            Elenco schede
           </div>
           <div style={{ display: 'flex', gap: '4px' }}>
             <span style={{ fontSize: '10px', background: '#e8f0f8', color: '#1a4a7a', padding: '1px 6px', borderRadius: '8px' }}>
-              US {nUS}
+              {nUS + nFunerario}
             </span>
             <span style={{ fontSize: '10px', background: '#f0efe9', color: '#8a8a84', padding: '1px 6px', borderRadius: '8px' }}>
               ⚱️ {nFunerario}
@@ -136,10 +143,10 @@ export default function ElencoUS({ scavoId, usList }: Props) {
       )}
 
       {/* Lista */}
-      {listeFiltrate.length === 0 ? (
+      {listeFiltrate.length === 0 && tombeFiltrate.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '24px 0', color: '#8a8a84', fontSize: '12px' }}>
           <div style={{ fontSize: '24px', marginBottom: '8px' }}>⛏️</div>
-          {filtro === 'funerario' ? 'Nessuna scheda funeraria ancora' : 'Nessuna US ancora'}
+          {filtro === 'funerario' ? 'Nessuna scheda funeraria ancora' : filtro === 'us' ? 'Nessuna US ancora' : 'Nessuna scheda ancora'}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -187,6 +194,45 @@ export default function ElencoUS({ scavoId, usList }: Props) {
                   </span>
                 </div>
               </div>
+            )
+          })}
+          {tombeFiltrate.map(t => {
+            const perc = t.completata ? 100 : Math.round((['tipo_sepoltura','tipo_deposizione','datazione','stato_conservazione'].filter(c => {
+              const v = (t as unknown as Record<string,unknown>)[c]; return v !== null && v !== undefined && v !== ''
+            }).length / 4) * 100)
+            const colore = `hsl(${Math.round(perc * 1.2)}, 75%, 38%)`
+            return (
+              <Link key={t.id} href={`/reports/scavi/${scavoId}/tombe/${t.id}`} style={{ textDecoration: 'none' }}>
+                <div style={{ padding: '8px 10px', background: '#fdf8f0', borderRadius: '6px', border: '0.5px solid #e0dfd8' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a' }}>Tb {t.numero_tomba}</span>
+                        {t.tipo_sepoltura && (
+                          <span style={{ fontSize: '11px', background: '#f5e8f8', color: '#7a1a6b', padding: '1px 6px', borderRadius: '8px' }}>{t.tipo_sepoltura}</span>
+                        )}
+                        {t.datazione && (
+                          <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '1px 6px', borderRadius: '8px' }}>{t.datazione}</span>
+                        )}
+                      </div>
+                      {t.completata ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', padding: '2px 8px', background: '#e8f0f8', border: '1px solid #185FA5', borderRadius: '8px', width: 'fit-content' }}>
+                          <span style={{ fontSize: '11px' }}>✓</span>
+                          <span style={{ fontSize: '10px', fontWeight: '500', color: '#185FA5' }}>Completata</span>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
+                          <div style={{ width: '60px', height: '4px', background: '#e0dfd8', borderRadius: '2px', overflow: 'hidden' }}>
+                            <div style={{ width: `${perc}%`, height: '100%', background: colore, borderRadius: '2px' }} />
+                          </div>
+                          <span style={{ fontSize: '10px', color: colore, fontWeight: '500' }}>{perc}%</span>
+                        </div>
+                      )}
+                    </div>
+                    <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', flexShrink: 0, background: '#f5e8f8', color: '#7a1a6b' }}>Tomba</span>
+                  </div>
+                </div>
+              </Link>
             )
           })}
         </div>

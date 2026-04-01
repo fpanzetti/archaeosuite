@@ -39,6 +39,7 @@ export default function SchedaTombaPage() {
   const [nomeScavo, setNomeScavo] = useState('')
   const [reperti, setReperti] = useState<Reperto[]>([])
   const [fotoReperti, setFotoReperti] = useState<Record<string, FotoRP[]>>({})
+  const [ultimaUS, setUltimaUS] = useState<number | null>(null)
   const [dirty, setDirty] = useState(false)
   const [saved, setSaved] = useState(true)
   const [ultimoSalvataggio, setUltimoSalvataggio] = useState<Date | null>(null)
@@ -54,13 +55,15 @@ export default function SchedaTombaPage() {
 
   useEffect(() => {
     async function load() {
-      const [{ data: t }, { data: s }, { data: r }] = await Promise.all([
+      const [{ data: t }, { data: s }, { data: r }, { data: lastUS }] = await Promise.all([
         supabase.from('contesto_funerario').select('*').eq('id', tombaId).single(),
         supabase.from('scavo').select('denominazione, responsabile_campo').eq('id', scavoId).single(),
         supabase.from('reperto_funerario').select('*').eq('contesto_funerario_id', tombaId).order('rp_n'),
+        supabase.from('us').select('numero_us').eq('scavo_id', scavoId).order('numero_us', { ascending: false }).limit(1),
       ])
       if (t) { setTomba(t); setForm(t) }
       if (s) setNomeScavo(s.denominazione ?? '')
+      if (lastUS?.[0]) setUltimaUS(lastUS[0].numero_us)
       if (r) {
         setReperti(r)
         // Carica foto per ogni reperto
@@ -299,6 +302,11 @@ export default function SchedaTombaPage() {
         </a>
         <span style={{ fontSize: '11px', color: '#c8c7be' }}>/</span>
         <span style={{ fontSize: '11px', color: '#8a8a84' }}>Tb {form.numero_tomba as number}</span>
+        {ultimaUS !== null && (
+          <span style={{ fontSize: '10px', color: '#8a8a84', background: '#f0efe9', padding: '2px 8px', borderRadius: '8px', marginLeft: 'auto' }}>
+            Ultima US creata: {ultimaUS}
+          </span>
+        )}
       </div>
 
       {/* Header */}

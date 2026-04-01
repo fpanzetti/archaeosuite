@@ -4,7 +4,6 @@ import Link from 'next/link'
 import PannelloInviti from '@/components/scavo/PannelloInviti'
 import AggiuntaUS from '@/components/scavo/AggiuntaUS'
 import ElencoUS from '@/components/scavo/ElencoUS'
-import ElencoTombe from '@/components/scavo/ElencoTombe'
 
 export default async function ScavoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -25,6 +24,12 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
     .select('id, numero_us, tipo, descrizione, stato, completata')
     .eq('scavo_id', id)
     .order('numero_us', { ascending: true })
+
+  const { data: tombeList } = await supabase
+    .from('contesto_funerario')
+    .select('id, numero_tomba, tipo_sepoltura, tipo_deposizione, datazione, stato_conservazione, completata')
+    .eq('scavo_id', id)
+    .order('numero_tomba', { ascending: true })
 
   const nome = [scavo.comune, scavo.provincia ? `(${scavo.provincia})` : '', scavo.localita]
     .filter(Boolean).join(' ')
@@ -104,13 +109,7 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
         </div>
 
         <div>
-          <ElencoUS scavoId={id} usList={usList ?? []} />
-          <div style={{ marginTop: '24px' }}>
-            <div style={{ fontSize: '11px', fontWeight: '600', color: '#8a8a84', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
-              Contesti funerari
-            </div>
-            <ElencoTombe scavoId={id} />
-          </div>
+          <ElencoUS scavoId={id} usList={usList ?? []} tombeList={tombeList ?? []} />
         </div>
       </div>
     </div>

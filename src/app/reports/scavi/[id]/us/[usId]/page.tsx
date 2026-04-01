@@ -459,11 +459,16 @@ export default function SchedaUSPage() {
 
   return (
     <div style={{ padding: '24px', maxWidth: '900px' }}>
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <a href={`/reports/scavi/${scavoId}`}
           style={{ fontSize: '11px', color: '#1a4a7a', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px' }}>
           ← Elenco US
         </a>
+        {allUS.length > 0 && (
+          <span style={{ fontSize: '10px', color: '#8a8a84', background: '#f0efe9', padding: '2px 8px', borderRadius: '8px' }}>
+            Ultima US creata: {Math.max(...allUS.map(u => u.numero_us), us.numero_us)}
+          </span>
+        )}
       </div>
       {toast && (
         <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: '#1a1a1a', color: '#fff', padding: '10px 20px', borderRadius: '8px', fontSize: '12px', zIndex: 1000 }}>

@@ -28,11 +28,12 @@ interface Props {
   scavoId: string
   usList: US[]
   tombeList?: Tomba[]
+  ruolo?: string
 }
 
 type Filtro = 'tutti' | 'us' | 'funerario'
 
-export default function ElencoUS({ scavoId, usList, tombeList = [] }: Props) {
+export default function ElencoUS({ scavoId, usList, tombeList = [], ruolo = 'editor' }: Props) {
   const [filtro, setFiltro] = useState<Filtro>('tutti')
   const [ricerca, setRicerca] = useState('')
   const [modificaAttiva, setModificaAttiva] = useState(false)
@@ -116,10 +117,12 @@ export default function ElencoUS({ scavoId, usList, tombeList = [] }: Props) {
             </span>
           </div>
         </div>
-        <button onClick={() => { setModificaAttiva(v => !v); setSelezionate(new Set()) }}
-          style={{ fontSize: '11px', color: modificaAttiva ? '#c00' : '#1a4a7a', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
-          {modificaAttiva ? 'Annulla' : 'Modifica'}
-        </button>
+        {ruolo === 'editor' && (
+          <button onClick={() => { setModificaAttiva(v => !v); setSelezionate(new Set()) }}
+            style={{ fontSize: '11px', color: modificaAttiva ? '#c00' : '#1a4a7a', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
+            {modificaAttiva ? 'Annulla' : 'Modifica'}
+          </button>
+        )}
       </div>
 
       {/* Ricerca */}

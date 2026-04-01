@@ -31,6 +31,16 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
     .eq('scavo_id', id)
     .order('numero_tomba', { ascending: true })
 
+  // Ruolo dell'utente corrente su questo scavo
+  const { data: accessoCorrente } = await supabase
+    .from('accesso_scavo')
+    .select('ruolo')
+    .eq('scavo_id', id)
+    .eq('account_id', user.id)
+    .single()
+  // Il responsabile dello scavo è sempre editor anche senza accesso_scavo
+  const ruoloCorrente = accessoCorrente?.ruolo ?? (scavo.responsabile_id === user.id ? 'editor' : 'visualizzatore')
+
   const nome = [scavo.comune, scavo.provincia ? `(${scavo.provincia})` : '', scavo.localita]
     .filter(Boolean).join(' ')
 
@@ -76,7 +86,7 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
               Modifica
             </button>
           </Link>
-          <AggiuntaUS scavoId={id} />
+          {ruoloCorrente !== 'visualizzatore' && <AggiuntaUS scavoId={id} />}
         </div>
       </div>
 
@@ -105,11 +115,11 @@ export default async function ScavoPage({ params }: { params: Promise<{ id: stri
               {scavo.note && <div style={{ marginTop: '6px', padding: '6px 8px', background: '#f8f7f4', borderRadius: '4px', lineHeight: '1.5' }}><span style={{ color: '#8a8a84' }}>Note: </span>{scavo.note}</div>}
             </div>
           </div>
-          <PannelloInviti scavoId={id} scavoDenominazione={nome} />
+          <PannelloInviti scavoId={id} scavoDenominazione={nome} ruoloEsterno={ruoloCorrente} />
         </div>
 
         <div>
-          <ElencoUS scavoId={id} usList={usList ?? []} tombeList={tombeList ?? []} />
+          <ElencoUS scavoId={id} usList={usList ?? []} tombeList={tombeList ?? []} ruolo={ruoloCorrente} />
         </div>
       </div>
     </div>

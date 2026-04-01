@@ -19,11 +19,12 @@ interface Foto {
 interface Props {
   scavoId: string
   usId?: string
+  contestoFunerarioId?: string
   aggiornamento?: number
   tipo?: string
 }
 
-export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Props) {
+export default function GalleriaFoto({ scavoId, usId, contestoFunerarioId, aggiornamento, tipo }: Props) {
   const [foto, setFoto] = useState<Foto[]>([])
   const [fotoAperta, setFotoAperta] = useState<Foto | null>(null)
   const [editingDidascalia, setEditingDidascalia] = useState(false)
@@ -39,13 +40,14 @@ export default function GalleriaFoto({ scavoId, usId, aggiornamento, tipo }: Pro
       setLoading(true)
       let query = supabase.from('foto').select('*').eq('scavo_id', scavoId).order('created_at', { ascending: true })
       if (usId) query = query.eq('us_id', usId)
+      if (contestoFunerarioId) query = query.eq('contesto_funerario_id', contestoFunerarioId)
       if (tipo) query = query.eq('tipo', tipo)
       const { data } = await query
       setFoto(data ?? [])
       setLoading(false)
     }
     carica()
-  }, [scavoId, usId, aggiornamento, tipo])
+  }, [scavoId, usId, contestoFunerarioId, aggiornamento, tipo])
 
   function apriLightbox(f: Foto) {
     setFotoAperta(f)

@@ -719,11 +719,11 @@ export default function SchedaTombaPage() {
         <div>
           <div style={card}>
             <div style={sectionTitle}>Foto deposizione funeraria</div>
-            <UploadFoto scavoId={scavoId} tipo="foto"
+            <UploadFoto scavoId={scavoId} contestoFunerarioId={tombaId} tipo="foto"
               responsabileCampo={form.archeologo as string ?? undefined}
               onFotoAggiunta={() => setAggFoto(n => n + 1)} />
             <div style={{ marginTop: '16px' }}>
-              <GalleriaFoto scavoId={scavoId} aggiornamento={aggFoto} tipo="foto" />
+              <GalleriaFoto scavoId={scavoId} contestoFunerarioId={tombaId} aggiornamento={aggFoto} tipo="foto" />
             </div>
           </div>
         </div>

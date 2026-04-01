@@ -18,6 +18,7 @@ interface Foto {
 interface Props {
   scavoId: string
   usId?: string
+  contestoFunerarioId?: string
   tipo?: string
   responsabileCampo?: string
   onFotoAggiunta?: (foto: Foto) => void
@@ -105,7 +106,7 @@ const LABEL_TIPO: Record<string, string> = {
   altro: 'altro documento',
 }
 
-export default function UploadFoto({ scavoId, usId, tipo: tipoProp, responsabileCampo, onFotoAggiunta }: Props) {
+export default function UploadFoto({ scavoId, usId, contestoFunerarioId, tipo: tipoProp, responsabileCampo, onFotoAggiunta }: Props) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const [didascalia, setDidascalia] = useState('')
@@ -150,7 +151,7 @@ export default function UploadFoto({ scavoId, usId, tipo: tipoProp, responsabile
 
       // ID file: scavoId_usId_timestamp
       const timestamp = Date.now()
-      const usSegment = usId ?? 'scavo'
+      const usSegment = usId ?? (contestoFunerarioId ? `tomba_${contestoFunerarioId}` : 'scavo')
       const fileId = `${scavoId}_${usSegment}_${timestamp}`
       const pathMain = `${scavoId}/${usSegment}/${fileId}.jpg`
       const pathThumb = `${scavoId}/${usSegment}/${fileId}_thumb.jpg`
@@ -166,6 +167,7 @@ export default function UploadFoto({ scavoId, usId, tipo: tipoProp, responsabile
       const { data: foto, error: eDb } = await supabase.from('foto').insert({
         scavo_id: scavoId,
         us_id: usId ?? null,
+        contesto_funerario_id: contestoFunerarioId ?? null,
         url: urlMain.publicUrl,
         url_thumb: urlThumb.publicUrl,
         nome_file: fileId,

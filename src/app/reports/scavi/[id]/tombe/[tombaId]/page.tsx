@@ -49,6 +49,22 @@ export default function SchedaTombaPage() {
   const supabase = createClient()
   const autosaveRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Pre-popola archeologo dall'account se vuoto
+  useEffect(() => {
+    async function prepopolaArcheologo() {
+      if (form.archeologo) return
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: account } = await supabase
+        .from('account').select('nome, cognome').eq('id', user.id).single()
+      if (account?.nome || account?.cognome) {
+        const nome = [account.nome, account.cognome].filter(Boolean).join(' ')
+        setForm(prev => ({ ...prev, archeologo: prev.archeologo || nome }))
+      }
+    }
+    prepopolaArcheologo()
+  }, [])
+
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(''), 2500)

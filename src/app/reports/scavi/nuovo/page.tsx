@@ -59,6 +59,23 @@ function NuovoScavoForm() {
           }))
         }
       }
+      // Pre-popola direttore_scientifico dall'account utente (solo se non già ereditato dal progetto)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: account } = await supabase
+          .from('account')
+          .select('nome, cognome')
+          .eq('id', user.id)
+          .single()
+        if (account?.nome || account?.cognome) {
+          const nomeCompleto = [account.nome, account.cognome].filter(Boolean).join(' ')
+          setForm(prev => ({
+            ...prev,
+            direttore_scientifico: prev.direttore_scientifico || nomeCompleto,
+          }))
+        }
+      }
+
       const [{ data: th }, { data: sb }, { data: pv }] = await Promise.all([
         supabase.from('thesaurus').select('*').order('ordine'),
         supabase.from('sabap').select('*').order('nome'),

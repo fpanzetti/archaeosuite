@@ -141,6 +141,22 @@ export default function SchedaUSPage() {
   const [aggFoto, setAggFoto] = useState(0)
   const [tabAllegati, setTabAllegati] = useState<TipoAllegato>('foto')
   const svgRef = useRef<SVGSVGElement>(null)
+
+  // Pre-popola responsabile_campo dall'account se vuoto
+  useEffect(() => {
+    async function prepopolaResponsabile() {
+      if (form.responsabile_campo) return
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: account } = await supabase
+        .from('account').select('nome, cognome').eq('id', user.id).single()
+      if (account?.nome || account?.cognome) {
+        const nome = [account.nome, account.cognome].filter(Boolean).join(' ')
+        setForm(prev => ({ ...prev, responsabile_campo: prev.responsabile_campo || nome }))
+      }
+    }
+    prepopolaResponsabile()
+  }, [])
   const router = useRouter()
   const supabase = createClient()
 

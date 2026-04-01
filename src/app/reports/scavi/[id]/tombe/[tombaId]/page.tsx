@@ -143,53 +143,48 @@ export default function SchedaTombaPage() {
     )
   }
 
-  function ArticolazioneSxDx({ label, baseName, soloUna = false }: { label: string; baseName: string; soloUna?: boolean }) {
+  const selStile: React.CSSProperties = { width: '100px', padding: '4px 6px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }
+
+  function ArticolazioneSxDx({ label, baseName, soloUna = false, primaRiga = false }: { label: string; baseName: string; soloUna?: boolean; primaRiga?: boolean }) {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: soloUna ? '2fr 1fr' : '2fr 1fr 1fr', gap: '8px', alignItems: 'center', marginBottom: '4px', padding: '3px 0', borderBottom: '0.5px solid #f0efe9' }}>
-        <div style={{ fontSize: '12px', color: '#555550' }}>{label}</div>
-        <div>
-          <select style={{ width: '100%', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
-            value={(form[`${baseName}_sx`] as string) ?? ''}
-            onChange={e => set(`${baseName}_sx`, e.target.value || null)}>
+      <>
+        {primaRiga && (
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
+            <div style={{ flex: 1 }} />
+            <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
+            {!soloUna && <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>}
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '3px', padding: '2px 0', borderBottom: '0.5px solid #f0efe9' }}>
+          <div style={{ flex: 1, fontSize: '12px', color: '#555550' }}>{label}</div>
+          <select style={selStile} value={(form[`${baseName}_sx`] as string) ?? ''} onChange={e => set(`${baseName}_sx`, e.target.value || null)}>
             <option value="">—</option>
             {ARTIC_OPT.map(o => <option key={o} value={o}>{o}</option>)}
           </select>
-        </div>
-        {!soloUna && (
-          <div>
-            <select style={{ width: '100%', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
-              value={(form[`${baseName}_dx`] as string) ?? ''}
-              onChange={e => set(`${baseName}_dx`, e.target.value || null)}>
+          {!soloUna && (
+            <select style={selStile} value={(form[`${baseName}_dx`] as string) ?? ''} onChange={e => set(`${baseName}_dx`, e.target.value || null)}>
               <option value="">—</option>
               {ARTIC_OPT.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </>
     )
   }
 
   function ArteSxDx({ label, baseName, femminile = false }: { label: string; baseName: string; femminile?: boolean }) {
     const opts = femminile ? ARTI_OPT_F : ARTI_OPT
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px', alignItems: 'center', marginBottom: '4px', padding: '3px 0', borderBottom: '0.5px solid #f0efe9' }}>
-        <div style={{ fontSize: '12px', color: '#555550' }}>{label}</div>
-        <div>
-          <select style={{ width: '100%', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
-            value={(form[`${baseName}_sx`] as string) ?? ''}
-            onChange={e => set(`${baseName}_sx`, e.target.value || null)}>
-            <option value="">—</option>
-            {opts.map(o => <option key={o} value={o}>{o}</option>)}
-          </select>
-        </div>
-        <div>
-          <select style={{ width: '100%', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
-            value={(form[`${baseName}_dx`] as string) ?? ''}
-            onChange={e => set(`${baseName}_dx`, e.target.value || null)}>
-            <option value="">—</option>
-            {opts.map(o => <option key={o} value={o}>{o}</option>)}
-          </select>
-        </div>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '3px', padding: '2px 0', borderBottom: '0.5px solid #f0efe9' }}>
+        <div style={{ flex: 1, fontSize: '12px', color: '#555550' }}>{label}</div>
+        <select style={selStile} value={(form[`${baseName}_sx`] as string) ?? ''} onChange={e => set(`${baseName}_sx`, e.target.value || null)}>
+          <option value="">—</option>
+          {opts.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <select style={selStile} value={(form[`${baseName}_dx`] as string) ?? ''} onChange={e => set(`${baseName}_dx`, e.target.value || null)}>
+          <option value="">—</option>
+          {opts.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
       </div>
     )
   }
@@ -560,46 +555,30 @@ export default function SchedaTombaPage() {
             <RadioGroup label="Mandibola" field="mandibola" options={['Aperta', 'Chiusa']} />
           </div>
           <div style={card}>
-            <div style={sectionTitle}>Articolazioni labili</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '6px', marginBottom: '8px' }}>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>Articolazione</div>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 32px' }}>
+              <div>
+                <div style={sectionTitle}>Articolazioni labili</div>
+                <ArticolazioneSxDx label="Vertebre cervicali" baseName="vertebre_cervicali" soloUna={true} primaRiga={true} />
+                <ArticolazioneSxDx label="Vertebre toraciche" baseName="vertebre_toraciche" soloUna={true} />
+                <ArticolazioneSxDx label="Scapola-clavicola" baseName="scapola_clavicola" primaRiga={true} />
+                <ArticolazioneSxDx label="Scapola-omero" baseName="scapola_omero" />
+                <ArticolazioneSxDx label="Polso" baseName="polso" />
+                <ArticolazioneSxDx label="Metacarpo-Falange" baseName="metacarpo_falange" />
+                <ArticolazioneSxDx label="Rotula" baseName="rotula" />
+                <ArticolazioneSxDx label="Metatarso-Falange" baseName="metatarso_falange" />
+              </div>
+              <div>
+                <div style={sectionTitle}>Articolazioni persistenti</div>
+                <ArticolazioneSxDx label="Vertebre lombari" baseName="vertebre_lombari" soloUna={true} primaRiga={true} />
+                <ArticolazioneSxDx label="Lombo-sacrale" baseName="lombo_sacrale" soloUna={true} />
+                <ArticolazioneSxDx label="Sacro-iliaca" baseName="sacro_iliaca" primaRiga={true} />
+                <ArticolazioneSxDx label="Coxo-femorale" baseName="coxo_femorale" />
+                <ArticolazioneSxDx label="Gomito" baseName="gomito" />
+                <ArticolazioneSxDx label="Ginocchio" baseName="ginocchio" />
+                <ArticolazioneSxDx label="Caviglia" baseName="caviglia" />
+                <ArticolazioneSxDx label="Tarso" baseName="tarso" />
+              </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px', marginBottom: '6px', padding: '0 0 4px' }}>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>Articolazione</div>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
-            </div>
-            <ArticolazioneSxDx label="Vertebre cervicali" baseName="vertebre_cervicali" soloUna={true} />
-            <ArticolazioneSxDx label="Vertebre toraciche" baseName="vertebre_toraciche" soloUna={true} />
-            <ArticolazioneSxDx label="Scapola-clavicola" baseName="scapola_clavicola" />
-            <ArticolazioneSxDx label="Scapola-omero" baseName="scapola_omero" />
-            <ArticolazioneSxDx label="Polso" baseName="polso" />
-            <ArticolazioneSxDx label="Metacarpo-Falange" baseName="metacarpo_falange" />
-            <ArticolazioneSxDx label="Rotula" baseName="rotula" />
-            <ArticolazioneSxDx label="Metatarso-Falange" baseName="metatarso_falange" />
-          </div>
-          <div style={card}>
-            <div style={sectionTitle}>Articolazioni persistenti</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '6px', marginBottom: '8px' }}>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>Articolazione</div>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px', marginBottom: '6px', padding: '0 0 4px' }}>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>Articolazione</div>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
-            </div>
-            <ArticolazioneSxDx label="Vertebre lombari" baseName="vertebre_lombari" soloUna={true} />
-            <ArticolazioneSxDx label="Lombo-sacrale" baseName="lombo_sacrale" soloUna={true} />
-            <ArticolazioneSxDx label="Sacro-iliaca" baseName="sacro_iliaca" />
-            <ArticolazioneSxDx label="Coxo-femorale" baseName="coxo_femorale" />
-            <ArticolazioneSxDx label="Gomito" baseName="gomito" />
-            <ArticolazioneSxDx label="Ginocchio" baseName="ginocchio" />
-            <ArticolazioneSxDx label="Caviglia" baseName="caviglia" />
-            <ArticolazioneSxDx label="Tarso" baseName="tarso" />
           </div>
         </div>
       )}
@@ -613,6 +592,16 @@ export default function SchedaTombaPage() {
               <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>Arto</div>
               <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
               <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
+              <div style={{ flex: 1 }} />
+              <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
+              <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
+              <div style={{ flex: 1 }} />
+              <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
+              <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
             </div>
             <ArteSxDx label="Omero" baseName="omero" />
             <ArteSxDx label="Avambraccio" baseName="avambraccio" />

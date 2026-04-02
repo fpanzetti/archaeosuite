@@ -221,6 +221,7 @@ Scheda di contesto funerario (ArchaeoTombs).
 | misure_ossa | JSONB | [{osso, lato, valore}] |
 | alterazioni_scheletriche | TEXT | |
 | stato_conservazione | TEXT | Ottimo/Buono/Discreto/Cattivo/Pessimo |
+| completata | BOOLEAN | default false |
 | consolidanti_collanti | TEXT | |
 | descrizione | TEXT | |
 | created_at | TIMESTAMPTZ | |

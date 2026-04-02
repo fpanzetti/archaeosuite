@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import AssegnaProgetto from '@/components/scavo/AssegnaProgetto'
 import BadgeTeam from '@/components/scavo/BadgeTeam'
+import GestioneProgetti from '@/components/scavo/GestioneProgetti'
 
 export default async function ReportsPage({
   searchParams,
@@ -179,6 +180,11 @@ export default async function ReportsPage({
                           style={{ fontSize: '11px', color: '#1a4a7a', textDecoration: 'none', padding: '2px 8px', border: '0.5px solid #1a4a7a40', borderRadius: '4px' }}>
                           + Scavo
                         </Link>
+                        <GestioneProgetti
+                          progettoId={progetto.id}
+                          committente={progetto.committente ?? 'Progetto senza nome'}
+                          numScavi={scaviProgetto.length}
+                        />
                       </div>
                     </div>
                   </div>

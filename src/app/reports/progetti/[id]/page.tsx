@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import EliminaProgetto from '@/components/scavo/EliminaProgetto'
 
 export default async function ProgettoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -55,7 +56,12 @@ export default async function ProgettoPage({ params }: { params: Promise<{ id: s
             <p style={{ fontSize: '13px', color: '#555550', marginTop: '4px' }}>{progetto.datazione_contesto}</p>
           )}
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <EliminaProgetto
+            progettoId={id}
+            committente={progetto.committente ?? 'Progetto senza nome'}
+            numScavi={scavi?.length ?? 0}
+          />
           <Link href={`/reports/scavi/nuovo?progetto_id=${id}`}>
             <button style={{ padding: '7px 14px', background: '#1a4a7a', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}>
               + Nuovo scavo

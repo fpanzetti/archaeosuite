@@ -1,9 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import AssegnaProgetto from '@/components/scavo/AssegnaProgetto'
-import BadgeTeam from '@/components/scavo/BadgeTeam'
-import GestioneProgetti from '@/components/scavo/GestioneProgetti'
+import DragDropScaviList from '@/components/scavo/DragDropScaviList'
 
 export default async function ReportsPage({
   searchParams,
@@ -62,12 +60,6 @@ export default async function ReportsPage({
     if (!scaviPerProgetto[s.progetto_id]) scaviPerProgetto[s.progetto_id] = []
     scaviPerProgetto[s.progetto_id].push(s)
   })
-
-  const statoInfo = (s: string) => {
-    if (s === 'in_corso') return { label: 'In corso', bg: '#e8f0f8', color: '#1a4a7a' }
-    if (s === 'in_elaborazione') return { label: 'In elaborazione', bg: '#fdf3e0', color: '#8a5c0a' }
-    return { label: 'Archiviato', bg: '#f0efe9', color: '#8a8a84' }
-  }
 
   const totaleScavi = tuttiScavi?.length ?? 0
   const inCorso = tuttiScavi?.filter(s => s.stato === 'in_corso').length ?? 0
@@ -143,93 +135,7 @@ export default async function ReportsPage({
         </div>
       </form>
 
-      {/* Sezione Progetti */}
-      {progetti && progetti.length > 0 && (
-        <div style={{ marginBottom: '28px' }}>
-          <div style={{ fontSize: '11px', fontWeight: '600', color: '#8a8a84', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
-            Progetti
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {progetti.map(progetto => {
-              const scaviProgetto = scaviPerProgetto[progetto.id] ?? []
-              const statoP = statoInfo(progetto.stato ?? 'in_corso')
-              return (
-                <div key={progetto.id} style={{ background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '10px', overflow: 'hidden' }}>
-                  {/* Header progetto */}
-                  <div style={{ padding: '14px 16px', borderBottom: scaviProgetto.length > 0 ? '0.5px solid #f0efe9' : 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '11px' }}>📁</span>
-                          <Link href={`/reports/progetti/${progetto.id}`} style={{ textDecoration: 'none' }}>
-                            <span style={{ fontSize: '14px', fontWeight: '500', color: '#1a1a1a' }}>
-                              {progetto.committente ?? 'Progetto senza nome'}
-                            </span>
-                          </Link>
-                          <span style={{ fontSize: '11px', background: statoP.bg, color: statoP.color, padding: '1px 6px', borderRadius: '8px' }}>{statoP.label}</span>
-                        </div>
-                        <div style={{ fontSize: '12px', color: '#8a8a84' }}>
-                          {[progetto.tipologia_intervento, progetto.datazione_contesto].filter(Boolean).join(' · ')}
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '2px 8px', borderRadius: '10px' }}>
-                          {scaviProgetto.length} scavi
-                        </span>
-                        <Link href={`/reports/scavi/nuovo?progetto_id=${progetto.id}`}
-                          style={{ fontSize: '11px', color: '#1a4a7a', textDecoration: 'none', padding: '2px 8px', border: '0.5px solid #1a4a7a40', borderRadius: '4px' }}>
-                          + Scavo
-                        </Link>
-                        <GestioneProgetti
-                          progettoId={progetto.id}
-                          committente={progetto.committente ?? 'Progetto senza nome'}
-                          numScavi={scaviProgetto.length}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  {/* Scavi del progetto */}
-                  {scaviProgetto.length > 0 && (
-                    <div style={{ padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: '6px', background: '#fafaf8' }}>
-                      {scaviProgetto.map(scavo => {
-                        const info = statoInfo(scavo.stato ?? 'archiviato')
-                        const numUS = (scavo.us as unknown as { count: number }[])?.[0]?.count ?? 0
-                        return (
-                          <Link key={scavo.id} href={`/reports/scavi/${scavo.id}`} style={{ textDecoration: 'none' }}>
-                            <div style={{ padding: '10px 12px', background: '#f8f7f4', borderRadius: '6px', border: '0.5px solid #e0dfd8' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <div style={{ flex: 1 }}>
-                                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a', marginBottom: '3px' }}>{scavo.denominazione}</div>
-                                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '11px', background: info.bg, color: info.color, padding: '1px 6px', borderRadius: '8px' }}>{info.label}</span>
-                                    <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '1px 6px', borderRadius: '8px' }}>{numUS} US</span>
-                                    {(collaboratoriPerScavo[scavo.id] ?? []).length > 0 && (
-                                      <BadgeTeam collaboratori={collaboratoriPerScavo[scavo.id]} />
-                                    )}
-                                  </div>
-                                </div>
-                                <div style={{ fontSize: '12px', color: '#c8c7be', marginLeft: '12px' }}>→</div>
-                              </div>
-                            </div>
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  )}
-                  {scaviProgetto.length === 0 && (
-                    <div style={{ padding: '12px 16px', fontSize: '12px', color: '#c8c7be', background: '#fafaf8' }}>
-                      Nessuno scavo ancora —{' '}
-                      <Link href={`/reports/scavi/nuovo?progetto_id=${progetto.id}`} style={{ color: '#1a4a7a' }}>creane uno</Link>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Sezione Scavi standalone — gestita da componente Client */}
+      {/* Sezione Progetti + Scavi standalone — gestite da componente Client con drag & drop */}
       {scaviStandalone.length === 0 && (!progetti || progetti.length === 0) ? (
         <div style={{ textAlign: 'center', padding: '48px 0', color: '#8a8a84' }}>
           <div style={{ fontSize: '32px', marginBottom: '12px' }}>⛏️</div>
@@ -245,20 +151,34 @@ export default async function ReportsPage({
           )}
         </div>
       ) : (
-        <AssegnaProgetto
-          scavi={scaviStandalone.map(s => ({
+        <DragDropScaviList
+          progetti={(progetti ?? []).map(p => ({
+            id: p.id,
+            committente: p.committente ?? null,
+            stato: p.stato ?? null,
+            tipologia_intervento: p.tipologia_intervento ?? null,
+            datazione_contesto: p.datazione_contesto ?? null,
+          }))}
+          scaviPerProgetto={Object.fromEntries(
+            Object.entries(scaviPerProgetto).map(([pid, scavi]) => [
+              pid,
+              scavi.map(s => ({
+                id: s.id,
+                denominazione: s.denominazione ?? '',
+                stato: s.stato ?? null,
+                tipologia_intervento: s.tipologia_intervento ?? null,
+                us: (s.us as unknown as { count: number }[]) ?? [],
+              })),
+            ])
+          )}
+          scaviStandalone={scaviStandalone.map(s => ({
             id: s.id,
             denominazione: s.denominazione ?? '',
             stato: s.stato ?? null,
             tipologia_intervento: s.tipologia_intervento ?? null,
             us: (s.us as unknown as { count: number }[]) ?? [],
-            collaboratori: collaboratoriPerScavo[s.id] ?? [],
           }))}
-          progetti={(progetti ?? []).map(p => ({
-            id: p.id,
-            committente: p.committente ?? null,
-            denominazione: p.denominazione ?? null,
-          }))}
+          collaboratoriPerScavo={collaboratoriPerScavo}
         />
       )}
     </div>

@@ -109,11 +109,15 @@ export default function ElencoUS({ scavoId, usList, tombeList = [], ruolo = 'edi
             Elenco schede
           </div>
           <div style={{ display: 'flex', gap: '4px' }}>
-            <span style={{ fontSize: '10px', background: '#e8f0f8', color: '#1a4a7a', padding: '1px 6px', borderRadius: '8px' }}>
+            <span style={{ fontSize: '10px', background: '#e8f0f8', color: '#1a4a7a', padding: '1px 6px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/stratigrafia.svg" alt="US" style={{ width: '12px', height: '12px', display: 'block', opacity: 0.7 }} />
               {nUS + nFunerario}
             </span>
-            <span style={{ fontSize: '10px', background: '#f0efe9', color: '#8a8a84', padding: '1px 6px', borderRadius: '8px' }}>
-              ⚱️ {nFunerario}
+            <span style={{ fontSize: '10px', background: '#f0efe9', color: '#8a8a84', padding: '1px 6px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/tomba.svg" alt="Funerario" style={{ width: '12px', height: '12px', display: 'block' }} />
+              {nFunerario}
             </span>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { creaTomba, getProssimoNumeroTomba } from './actions'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 export default function NuovaTombaPage() {
   const params = useParams()
@@ -56,18 +57,20 @@ export default function NuovaTombaPage() {
     if (result?.error) { setError(result.error); setLoading(false) }
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '7px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '12px', fontFamily: 'inherit' }
-  const lbl: React.CSSProperties = { display: 'block', fontSize: '11px', color: '#8a8a84', marginBottom: '4px', fontWeight: '500' }
-  const req: React.CSSProperties = { display: 'block', fontSize: '11px', color: '#1a4a7a', marginBottom: '4px', fontWeight: '500' }
-  const card: React.CSSProperties = { background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '10px', padding: '20px', marginBottom: '12px' }
+  const { p } = useTema()
+
+  const inp: React.CSSProperties = { width: '100%', padding: '7px 10px', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', background: p.bgInput, color: p.textPrimary, fontSize: '12px', fontFamily: 'inherit' }
+  const lbl: React.CSSProperties = { display: 'block', fontSize: '11px', color: p.textMuted, marginBottom: '4px', fontWeight: '500' }
+  const req: React.CSSProperties = { display: 'block', fontSize: '11px', color: p.accentBlue, marginBottom: '4px', fontWeight: '500' }
+  const card: React.CSSProperties = { background: p.bgCard, border: `0.5px solid ${p.border}`, borderRadius: '10px', padding: '20px', marginBottom: '12px' }
   const grid2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }
-  const sect: React.CSSProperties = { fontSize: '11px', fontWeight: '500', color: '#1a4a7a', marginBottom: '14px', paddingBottom: '8px', borderBottom: '0.5px solid #e8f0f8' }
+  const sect: React.CSSProperties = { fontSize: '11px', fontWeight: '500', color: p.accentBlue, marginBottom: '14px', paddingBottom: '8px', borderBottom: `0.5px solid ${p.accentBlueBg}` }
 
   return (
     <div style={{ padding: '24px', maxWidth: '760px' }}>
-      <div style={{ fontSize: '11px', color: '#8a8a84', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ fontSize: '11px', color: p.textMuted, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <a href={`/reports/scavi/${scavoId}`}
-          style={{ color: '#1a4a7a', textDecoration: 'none', padding: '4px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px' }}>
+          style={{ color: p.accentBlue, textDecoration: 'none', padding: '4px 10px', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px' }}>
           ← {nomeScavo || 'Scavo'}
         </a>
         <span style={{ color: '#c8c7be' }}>/</span>
@@ -75,8 +78,8 @@ export default function NuovaTombaPage() {
       </div>
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '20px', fontWeight: '500' }}>⚱️ Nuovo contesto funerario</h1>
-        <p style={{ fontSize: '12px', color: '#8a8a84', marginTop: '4px' }}>
-          I campi in <span style={{ color: '#1a4a7a', fontWeight: '500' }}>blu</span> sono obbligatori
+        <p style={{ fontSize: '12px', color: p.textMuted, marginTop: '4px' }}>
+          I campi in <span style={{ color: p.accentBlue, fontWeight: '500' }}>blu</span> sono obbligatori
         </p>
       </div>
 
@@ -132,10 +135,10 @@ export default function NuovaTombaPage() {
           </div>
         </div>
 
-        {error && <p style={{ fontSize: '12px', color: '#c00', marginBottom: '12px' }}>{error}</p>}
+        {error && <p style={{ fontSize: '12px', color: p.accentRed, marginBottom: '12px' }}>{error}</p>}
         <div style={{ display: 'flex', gap: '8px' }}>
           <button type="button" onClick={() => router.push(`/reports/scavi/${scavoId}`)}
-            style={{ flex: 1, padding: '10px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
+            style={{ flex: 1, padding: '10px', background: p.bgInput, color: p.textSecondary, border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
             Annulla
           </button>
           <button type="submit" disabled={loading}

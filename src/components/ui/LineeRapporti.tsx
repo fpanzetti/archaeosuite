@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef } from 'react'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 interface Colonna {
   key: string
@@ -15,8 +16,9 @@ interface Props {
 
 export default function LineeRapporti({ rapporti, colonne }: Props) {
   const svgRef = useRef<SVGSVGElement>(null)
+  const { p, tema } = useTema()
 
-  function disegna() {
+  function disegna(colorePost: string, coloreCont: string, coloreAnt: string) {
     const svg = svgRef.current
     if (!svg) return
     const container = svg.parentElement
@@ -40,9 +42,9 @@ export default function LineeRapporti({ rapporti, colonne }: Props) {
     const usY = usRect.top - containerRect.top + usRect.height / 2
 
     const categorie = [
-      { chiavi: colonne.filter(c => c.post).map(c => c.post!), colore: '#185FA5' },
-      { chiavi: colonne.filter(c => c.cont).map(c => c.cont!), colore: '#1a6b4a' },
-      { chiavi: colonne.filter(c => c.ant).map(c => c.ant!), colore: '#8a5c0a' },
+      { chiavi: colonne.filter(c => c.post).map(c => c.post!), colore: colorePost },
+      { chiavi: colonne.filter(c => c.cont).map(c => c.cont!), colore: coloreCont },
+      { chiavi: colonne.filter(c => c.ant).map(c => c.ant!), colore: coloreAnt },
     ]
 
     categorie.forEach(({ chiavi, colore }) => {
@@ -97,21 +99,25 @@ export default function LineeRapporti({ rapporti, colonne }: Props) {
   }
 
   useEffect(() => {
+    const colorePost = p.accentBlue
+    const coloreCont = p.accentGreen
+    const coloreAnt = p.accentAmber
+
     // Primo disegno dopo mount — piccolo delay per DOM pronto
-    const t = setTimeout(disegna, 100)
+    const t = setTimeout(() => disegna(colorePost, coloreCont, coloreAnt), 100)
 
     // Ridisegna al resize del contenitore
     const container = svgRef.current?.parentElement
     if (!container) return () => clearTimeout(t)
 
-    const observer = new ResizeObserver(() => disegna())
+    const observer = new ResizeObserver(() => disegna(colorePost, coloreCont, coloreAnt))
     observer.observe(container)
 
     return () => {
       clearTimeout(t)
       observer.disconnect()
     }
-  }, [rapporti, colonne])
+  }, [rapporti, colonne, tema])
 
   return (
     <svg ref={svgRef}

@@ -36,6 +36,11 @@ export interface Palette {
   accentAmber: string
   accentAmberBg: string
 
+  // Accenti rosso (errori / azioni distruttive)
+  accentRed: string
+  accentRedBg: string
+  accentRedBorder: string
+
   // Dimensioni accessibilità outdoor
   minTouchSize: string  // min height pulsanti
   fontSizeMin: string   // font-size minimo
@@ -68,6 +73,10 @@ const palettaDefault: Palette = {
   accentAmber: '#8a5c0a',
   accentAmberBg: '#fdf3e0',
 
+  accentRed: '#c00',
+  accentRedBg: '#fff8f8',
+  accentRedBorder: '#e88',
+
   minTouchSize: '32px',
   fontSizeMin: '12px',
 }
@@ -99,6 +108,10 @@ const palettaOutdoor: Palette = {
   accentAmber: '#f0a030',
   accentAmberBg: '#2a1800',
 
+  accentRed: '#ff4444',
+  accentRedBg: '#2a0000',
+  accentRedBorder: '#cc2222',
+
   minTouchSize: '56px',
   fontSizeMin: '13px',
 }
@@ -123,12 +136,22 @@ const ThemeContext = createContext<ThemeContextType>({
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [tema, setTemaState] = useState<NomeTema>('default')
 
+  // Legge tema salvato all'avvio
   useEffect(() => {
     const saved = localStorage.getItem('archaeosuite-tema') as NomeTema | null
     if (saved === 'outdoor' || saved === 'default') {
       setTemaState(saved)
     }
   }, [])
+
+  // Sincronizza body background e color con il tema attivo
+  useEffect(() => {
+    const pal = palettes[tema]
+    document.body.style.background = pal.bgApp
+    document.body.style.color = pal.textPrimary
+    // Attributo data-theme per eventuali override CSS
+    document.documentElement.setAttribute('data-theme', tema)
+  }, [tema])
 
   function setTema(t: NomeTema) {
     setTemaState(t)

@@ -1,5 +1,9 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
+/* Colori base — vengono sovrascritti da ThemeProvider via JS */
 body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; line-height: 1.5; background: #f8f7f4; color: #1a1a1a; }
+/* Tema outdoor — override CSS via attributo data-theme su <html> */
+[data-theme="outdoor"] body { background: #000; color: #fff; }
+[data-theme="outdoor"] .foto-thumb { border-color: #444; }
 
 /* GalleriaFoto hover */
 .foto-thumb {

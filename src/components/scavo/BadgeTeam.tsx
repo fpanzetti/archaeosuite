@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 type Collaboratore = { id: string; nome: string | null; cognome: string | null }
 
@@ -13,12 +14,13 @@ function iniziali(c: Collaboratore) {
 
 export default function BadgeTeam({ collaboratori }: { collaboratori: Collaboratore[] }) {
   const [aperto, setAperto] = useState<string | null>(null)
+  const { p } = useTema()
 
   if (collaboratori.length === 0) return null
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '2px', position: 'relative' }}>
-      <span style={{ fontSize: '10px', color: '#8a8a84', marginRight: '2px' }}>Team:</span>
+      <span style={{ fontSize: '10px', color: p.textMuted, marginRight: '2px' }}>Team:</span>
       {collaboratori.map((c, i) => {
         const colore = COLORI[i % COLORI.length]
         const isAperto = aperto === c.id
@@ -32,7 +34,7 @@ export default function BadgeTeam({ collaboratori }: { collaboratori: Collaborat
                 fontSize: '9px', fontWeight: '600',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', userSelect: 'none',
-                border: '1.5px solid #fff',
+                border: `1.5px solid ${p.bgCard}`,
                 marginLeft: i > 0 ? '-6px' : '0',
                 zIndex: i,
                 position: 'relative',
@@ -43,7 +45,7 @@ export default function BadgeTeam({ collaboratori }: { collaboratori: Collaborat
             {isAperto && (
               <div style={{
                 position: 'absolute', bottom: '28px', left: '50%', transform: 'translateX(-50%)',
-                background: '#1a1a1a', color: '#fff', borderRadius: '6px',
+                background: p.textPrimary, color: p.bgCard, borderRadius: '6px',
                 padding: '6px 10px', fontSize: '11px', whiteSpace: 'nowrap',
                 zIndex: 1000, pointerEvents: 'none',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
@@ -51,7 +53,7 @@ export default function BadgeTeam({ collaboratori }: { collaboratori: Collaborat
                 {[c.nome, c.cognome].filter(Boolean).join(' ') || 'Utente'}
                 <div style={{
                   position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
-                  border: '4px solid transparent', borderTopColor: '#1a1a1a',
+                  border: '4px solid transparent', borderTopColor: p.textPrimary,
                 }} />
               </div>
             )}

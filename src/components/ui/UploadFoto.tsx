@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 interface Foto {
   id: string
@@ -115,6 +116,7 @@ export default function UploadFoto({ scavoId, usId, contestoFunerarioId, tipo: t
   const [errore, setErrore] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
+  const { p } = useTema()
 
   const tipoEffettivo = tipoProp ?? 'foto'
   const labelTipo = LABEL_TIPO[tipoEffettivo] ?? tipoEffettivo
@@ -196,11 +198,11 @@ export default function UploadFoto({ scavoId, usId, contestoFunerarioId, tipo: t
 
   const inp: React.CSSProperties = {
     width: '100%', padding: '7px 10px',
-    border: '0.5px solid #c8c7be', borderRadius: '6px',
-    background: '#f8f7f4', color: '#1a1a1a',
+    border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px',
+    background: p.bgInput, color: p.textPrimary,
     fontSize: '12px', fontFamily: 'inherit',
   }
-  const lbl: React.CSSProperties = { display: 'block', fontSize: '11px', color: '#8a8a84', marginBottom: '4px', fontWeight: '500' }
+  const lbl: React.CSSProperties = { display: 'block', fontSize: '11px', color: p.textMuted, marginBottom: '4px', fontWeight: '500' }
 
   const labelUpload = tipoEffettivo === 'foto' ? '📷 Aggiungi foto'
     : tipoEffettivo === 'rilievo' ? '📐 Aggiungi rilievo'
@@ -208,24 +210,24 @@ export default function UploadFoto({ scavoId, usId, contestoFunerarioId, tipo: t
     : 'Aggiungi allegato'
 
   return (
-    <div style={{ background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '10px', padding: '16px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '500', color: '#1a4a7a', marginBottom: '12px', paddingBottom: '8px', borderBottom: '0.5px solid #e8f0f8' }}>
+    <div style={{ background: p.bgCard, border: `0.5px solid ${p.border}`, borderRadius: '10px', padding: '16px' }}>
+      <div style={{ fontSize: '11px', fontWeight: '500', color: p.accentBlue, marginBottom: '12px', paddingBottom: '8px', borderBottom: `0.5px solid ${p.accentBlueBg}` }}>
         {labelUpload}
       </div>
       {!preview ? (
         <div onClick={() => inputRef.current?.click()}
-          style={{ border: '1.5px dashed #c8c7be', borderRadius: '8px', padding: '24px', textAlign: 'center', cursor: 'pointer', background: '#f8f7f4' }}>
+          style={{ border: `1.5px dashed ${p.borderStrong}`, borderRadius: '8px', padding: '24px', textAlign: 'center', cursor: 'pointer', background: p.bgInput }}>
           <div style={{ fontSize: '24px', marginBottom: '8px' }}>
             {tipoEffettivo === 'foto' ? '📷' : tipoEffettivo === 'rilievo' ? '📐' : '📎'}
           </div>
-          <div style={{ fontSize: '12px', color: '#8a8a84' }}>Clicca per selezionare {tipoEffettivo === 'foto' ? 'una foto' : tipoEffettivo === 'rilievo' ? 'un rilievo' : 'un documento'}</div>
-          <div style={{ fontSize: '11px', color: '#c8c7be', marginTop: '4px' }}>JPG, PNG, WEBP, PDF — max 10MB</div>
+          <div style={{ fontSize: '12px', color: p.textMuted }}>Clicca per selezionare {tipoEffettivo === 'foto' ? 'una foto' : tipoEffettivo === 'rilievo' ? 'un rilievo' : 'un documento'}</div>
+          <div style={{ fontSize: '11px', color: p.borderStrong, marginTop: '4px' }}>JPG, PNG, WEBP, PDF — max 10MB</div>
           <input ref={inputRef} type="file" accept="image/*,application/pdf" onChange={onFileChange} style={{ display: 'none' }} />
         </div>
       ) : (
         <div>
           <img src={preview} alt="anteprima"
-            style={{ width: '100%', maxHeight: '240px', objectFit: 'contain', background: '#f0efe9', borderRadius: '6px', marginBottom: '10px' }} />
+            style={{ width: '100%', maxHeight: '240px', objectFit: 'contain', background: p.bgBadgeNeutro, borderRadius: '6px', marginBottom: '10px' }} />
           <div style={{ marginBottom: '8px' }}>
             <label style={lbl}>Didascalia</label>
             <input style={inp} value={didascalia} onChange={e => setDidascalia(e.target.value)} placeholder="Descrizione opzionale..." />
@@ -237,16 +239,16 @@ export default function UploadFoto({ scavoId, usId, contestoFunerarioId, tipo: t
                 <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
                   <button type="button" onClick={() => setAutore(responsabileCampo)}
                     style={{ padding: '5px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
-                      background: autore === responsabileCampo ? '#e8f0f8' : '#f8f7f4',
-                      color: autore === responsabileCampo ? '#1a4a7a' : '#555550',
-                      border: autore === responsabileCampo ? '0.5px solid #1a4a7a' : '0.5px solid #c8c7be' }}>
+                      background: autore === responsabileCampo ? p.accentBlueBg : p.bgInput,
+                      color: autore === responsabileCampo ? p.accentBlue : p.textSecondary,
+                      border: autore === responsabileCampo ? `0.5px solid ${p.accentBlue}` : `0.5px solid ${p.borderStrong}` }}>
                     {responsabileCampo}
                   </button>
                   <button type="button" onClick={() => setAutore('')}
                     style={{ padding: '5px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
-                      background: autore !== responsabileCampo ? '#e8f0f8' : '#f8f7f4',
-                      color: autore !== responsabileCampo ? '#1a4a7a' : '#555550',
-                      border: autore !== responsabileCampo ? '0.5px solid #1a4a7a' : '0.5px solid #c8c7be' }}>
+                      background: autore !== responsabileCampo ? p.accentBlueBg : p.bgInput,
+                      color: autore !== responsabileCampo ? p.accentBlue : p.textSecondary,
+                      border: autore !== responsabileCampo ? `0.5px solid ${p.accentBlue}` : `0.5px solid ${p.borderStrong}` }}>
                     Altro
                   </button>
                 </div>
@@ -258,17 +260,17 @@ export default function UploadFoto({ scavoId, usId, contestoFunerarioId, tipo: t
               <input style={inp} value={autore} onChange={e => setAutore(e.target.value)} placeholder="Nome e cognome..." />
             )}
           </div>
-          <div style={{ marginBottom: '8px', padding: '6px 10px', background: '#f8f7f4', borderRadius: '6px', fontSize: '11px', color: '#8a8a84' }}>
-            Tipo: <strong style={{ color: '#1a4a7a' }}>{labelTipo}</strong>
+          <div style={{ marginBottom: '8px', padding: '6px 10px', background: p.bgInput, borderRadius: '6px', fontSize: '11px', color: p.textMuted }}>
+            Tipo: <strong style={{ color: p.accentBlue }}>{labelTipo}</strong>
           </div>
-          {errore && <p style={{ fontSize: '11px', color: '#c00', marginBottom: '8px' }}>{errore}</p>}
+          {errore && <p style={{ fontSize: '11px', color: p.accentRed, marginBottom: '8px' }}>{errore}</p>}
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={() => { setPreview(null); setFileSelezionato(null) }}
-              style={{ flex: 1, padding: '8px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
+              style={{ flex: 1, padding: '8px', background: p.bgInput, color: p.textSecondary, border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
               Annulla
             </button>
             <button onClick={upload} disabled={uploading}
-              style={{ flex: 2, padding: '8px', background: uploading ? '#f0efe9' : '#1a4a7a', color: uploading ? '#8a8a84' : '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: uploading ? 'default' : 'pointer' }}>
+              style={{ flex: 2, padding: '8px', background: uploading ? p.bgBadgeNeutro : p.accentBlue, color: uploading ? p.textMuted : '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: uploading ? 'default' : 'pointer' }}>
               {uploading ? 'Caricamento...' : `Carica ${labelTipo}`}
             </button>
           </div>

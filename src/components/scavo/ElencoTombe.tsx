@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 interface Tomba {
   id: string
@@ -28,6 +29,7 @@ export default function ElencoTombe({ scavoId }: Props) {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const supabase = createClient()
+  const { p } = useTema()
 
   useEffect(() => {
     async function carica() {
@@ -43,10 +45,10 @@ export default function ElencoTombe({ scavoId }: Props) {
     carica()
   }, [scavoId])
 
-  if (loading) return <div style={{ fontSize: '12px', color: '#8a8a84', padding: '8px 0' }}>Caricamento tombe...</div>
+  if (loading) return <div style={{ fontSize: '12px', color: p.textMuted, padding: '8px 0' }}>Caricamento tombe...</div>
 
   if (tombe.length === 0) return (
-    <div style={{ textAlign: 'center', padding: '20px', color: '#8a8a84', fontSize: '12px', background: '#f8f7f4', borderRadius: '8px', border: '0.5px dashed #c8c7be' }}>
+    <div style={{ textAlign: 'center', padding: '20px', color: p.textMuted, fontSize: '12px', background: p.bgInput, borderRadius: '8px', border: `0.5px dashed ${p.borderStrong}` }}>
       Nessun contesto funerario ancora
     </div>
   )
@@ -74,41 +76,41 @@ export default function ElencoTombe({ scavoId }: Props) {
         return (
         <div key={t.id}
           onClick={() => router.push(`/reports/scavi/${scavoId}/tombe/${t.id}`)}
-          style={{ padding: '10px 14px', background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          style={{ padding: '10px 14px', background: p.bgCard, border: `0.5px solid ${p.border}`, borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a', marginBottom: '3px' }}>
+            <div style={{ fontSize: '13px', fontWeight: '500', color: p.textPrimary, marginBottom: '3px' }}>
               Tb {t.numero_tomba}
-              {t.settore && <span style={{ fontSize: '11px', color: '#8a8a84', marginLeft: '8px' }}>Settore {t.settore}</span>}
+              {t.settore && <span style={{ fontSize: '11px', color: p.textMuted, marginLeft: '8px' }}>Settore {t.settore}</span>}
             </div>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
               {t.tipo_sepoltura && (
-                <span style={{ fontSize: '11px', background: '#f5e8f8', color: '#7a1a6b', padding: '1px 6px', borderRadius: '8px' }}>{t.tipo_sepoltura}</span>
+                <span style={{ fontSize: '11px', background: p.accentBlueBg, color: p.accentBlue, padding: '1px 6px', borderRadius: '8px' }}>{t.tipo_sepoltura}</span>
               )}
               {t.tipo_deposizione && (
-                <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '1px 6px', borderRadius: '8px' }}>{t.tipo_deposizione}</span>
+                <span style={{ fontSize: '11px', background: p.bgBadgeNeutro, color: p.textSecondary, padding: '1px 6px', borderRadius: '8px' }}>{t.tipo_deposizione}</span>
               )}
               {t.datazione && (
-                <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '1px 6px', borderRadius: '8px' }}>{t.datazione}</span>
+                <span style={{ fontSize: '11px', background: p.bgBadgeNeutro, color: p.textSecondary, padding: '1px 6px', borderRadius: '8px' }}>{t.datazione}</span>
               )}
               {t.stato_conservazione && (
-                <span style={{ fontSize: '11px', background: '#f0efe9', color: '#555550', padding: '1px 6px', borderRadius: '8px' }}>{t.stato_conservazione}</span>
+                <span style={{ fontSize: '11px', background: p.bgBadgeNeutro, color: p.textSecondary, padding: '1px 6px', borderRadius: '8px' }}>{t.stato_conservazione}</span>
               )}
             </div>
             {t.completata ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '2px 8px', background: '#e8f0f8', border: '1px solid #185FA5', borderRadius: '8px', width: 'fit-content' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '2px 8px', background: p.accentBlueBg, border: `1px solid ${p.accentBlue}`, borderRadius: '8px', width: 'fit-content' }}>
                 <span style={{ fontSize: '11px' }}>✓</span>
-                <span style={{ fontSize: '10px', fontWeight: '500', color: '#185FA5' }}>Completata</span>
+                <span style={{ fontSize: '10px', fontWeight: '500', color: p.accentBlue }}>Completata</span>
               </div>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <div style={{ width: '60px', height: '4px', background: '#e0dfd8', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ width: '60px', height: '4px', background: p.border, borderRadius: '2px', overflow: 'hidden' }}>
                   <div style={{ width: `${perc}%`, height: '100%', background: colore, borderRadius: '2px' }} />
                 </div>
                 <span style={{ fontSize: '10px', color: colore, fontWeight: '500' }}>{perc}%</span>
               </div>
             )}
           </div>
-          <div style={{ fontSize: '12px', color: '#c8c7be', marginLeft: '12px' }}>→</div>
+          <div style={{ fontSize: '12px', color: p.borderStrong, marginLeft: '12px' }}>→</div>
         </div>
         )
       })}

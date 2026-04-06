@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import { creaScavo } from '../actions'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 type Opt = { value: string; label: string }
 type Sabap = { id: string; nome: string; regione: string }
@@ -93,11 +94,11 @@ function NuovoScavoForm() {
 
   useEffect(() => {
     if (form.regione) {
-      setProvinceFiltrate(province.filter(p => p.regione === form.regione).map(p => ({ value: p.sigla, label: `${p.nome} (${p.sigla})` })))
+      setProvinceFiltrate(province.filter(prov => prov.regione === form.regione).map(prov => ({ value: prov.sigla, label: `${prov.nome} (${prov.sigla})` })))
       setSabapFiltrate(sabapList.filter(s => s.regione === form.regione).map(s => ({ value: s.nome, label: s.nome })))
       setForm(prev => ({ ...prev, provincia: '', soprintendenza: '' }))
     } else {
-      setProvinceFiltrate(province.map(p => ({ value: p.sigla, label: `${p.nome} (${p.sigla})` })))
+      setProvinceFiltrate(province.map(prov => ({ value: prov.sigla, label: `${prov.nome} (${prov.sigla})` })))
       setSabapFiltrate(sabapList.map(s => ({ value: s.nome, label: s.nome })))
     }
   }, [form.regione, sabapList, province])
@@ -127,21 +128,23 @@ function NuovoScavoForm() {
     if (result?.error) { setError(result.error); setLoading(false) }
   }
 
-  const inp: React.CSSProperties = { width:'100%', padding:'7px 10px', border:'0.5px solid #c8c7be', borderRadius:'6px', background:'#f8f7f4', color:'#1a1a1a', fontSize:'12px', fontFamily:'inherit' }
-  const lbl: React.CSSProperties = { display:'block', fontSize:'11px', color:'#8a8a84', marginBottom:'4px', fontWeight:'500' }
-  const req: React.CSSProperties = { display:'block', fontSize:'11px', color:'#1a4a7a', marginBottom:'4px', fontWeight:'500' }
-  const card: React.CSSProperties = { background:'#fff', border:'0.5px solid #e0dfd8', borderRadius:'10px', padding:'20px', marginBottom:'12px' }
+  const { p } = useTema()
+
+  const inp: React.CSSProperties = { width:'100%', padding:'7px 10px', border:`0.5px solid ${p.borderStrong}`, borderRadius:'6px', background:p.bgInput, color:p.textPrimary, fontSize:'12px', fontFamily:'inherit' }
+  const lbl: React.CSSProperties = { display:'block', fontSize:'11px', color:p.textMuted, marginBottom:'4px', fontWeight:'500' }
+  const req: React.CSSProperties = { display:'block', fontSize:'11px', color:p.accentBlue, marginBottom:'4px', fontWeight:'500' }
+  const card: React.CSSProperties = { background:p.bgCard, border:`0.5px solid ${p.border}`, borderRadius:'10px', padding:'20px', marginBottom:'12px' }
   const grid2: React.CSSProperties = { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'12px' }
   const grid3: React.CSSProperties = { display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'10px', marginBottom:'12px' }
-  const sect: React.CSSProperties = { fontSize:'11px', fontWeight:'500', color:'#1a4a7a', marginBottom:'14px', paddingBottom:'8px', borderBottom:'0.5px solid #e8f0f8' }
+  const sect: React.CSSProperties = { fontSize:'11px', fontWeight:'500', color:p.accentBlue, marginBottom:'14px', paddingBottom:'8px', borderBottom:`0.5px solid ${p.accentBlueBg}` }
 
   return (
     <div style={{ padding:'24px', maxWidth:'760px' }}>
       <div style={{ marginBottom:'24px' }}>
-        <div style={{ fontSize:'11px', color:'#8a8a84', marginBottom:'6px' }}>{progettoId ? <span style={{color:'#1a4a7a', cursor:'pointer'}} onClick={() => router.push(`/reports/progetti/${progettoId}`)}>← Progetto</span> : 'ArchaeoReports / Scavi'}</div>
+        <div style={{ fontSize:'11px', color:p.textMuted, marginBottom:'6px' }}>{progettoId ? <span style={{color:p.accentBlue, cursor:'pointer'}} onClick={() => router.push(`/reports/progetti/${progettoId}`)}>← Progetto</span> : 'ArchaeoReports / Scavi'}</div>
         <h1 style={{ fontSize:'20px', fontWeight:'500' }}>Nuovo scavo</h1>
-        <p style={{ fontSize:'12px', color:'#8a8a84', marginTop:'4px' }}>
-          I campi in <span style={{ color:'#1a4a7a', fontWeight:'500' }}>blu</span> sono obbligatori
+        <p style={{ fontSize:'12px', color:p.textMuted, marginTop:'4px' }}>
+          I campi in <span style={{ color:p.accentBlue, fontWeight:'500' }}>blu</span> sono obbligatori
         </p>
       </div>
       <form onSubmit={handleSubmit}>
@@ -258,11 +261,11 @@ function NuovoScavoForm() {
           </div>
         </div>
 
-        {error && <p style={{ fontSize:'12px', color:'#c00', marginBottom:'12px' }}>{error}</p>}
+        {error && <p style={{ fontSize:'12px', color:p.accentRed, marginBottom:'12px' }}>{error}</p>}
 
         <div style={{ display:'flex', gap:'8px' }}>
           <button type="button" onClick={() => router.push('/reports')}
-            style={{ flex:1, padding:'10px', background:'#f8f7f4', color:'#555550', border:'0.5px solid #c8c7be', borderRadius:'6px', fontSize:'12px', cursor:'pointer' }}>
+            style={{ flex:1, padding:'10px', background:p.bgInput, color:p.textSecondary, border:`0.5px solid ${p.borderStrong}`, borderRadius:'6px', fontSize:'12px', cursor:'pointer' }}>
             Annulla
           </button>
           <button type="submit" disabled={loading}
@@ -278,7 +281,7 @@ function NuovoScavoForm() {
 
 export default function NuovoScavoPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '24px', color: '#8a8a84', fontSize: '12px' }}>Caricamento...</div>}>
+    <Suspense fallback={<div style={{ padding: '24px', color: '#888', fontSize: '12px' }}>Caricamento...</div>}>
       <NuovoScavoForm />
     </Suspense>
   )

@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { eliminaProgetto } from '@/app/reports/progetti/actions'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 interface Props {
   progettoId: string
@@ -15,6 +16,7 @@ export default function EliminaProgetto({ progettoId, committente, numScavi }: P
   const [eliminando, setEliminando] = useState(false)
   const [errore, setErrore] = useState('')
   const router = useRouter()
+  const { p } = useTema()
 
   async function elimina() {
     setEliminando(true)
@@ -32,19 +34,19 @@ export default function EliminaProgetto({ progettoId, committente, numScavi }: P
         {!modalita ? (
           <button
             onClick={() => setModalita(true)}
-            style={{ padding: '7px 14px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
+            style={{ padding: '7px 14px', background: p.bgPage, color: p.textSecondary, border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
             Modifica
           </button>
         ) : (
           <>
             <button
               onClick={() => setMostraConferma(true)}
-              style={{ padding: '7px 14px', background: '#fff8f8', color: '#c00', border: '0.5px solid #e88', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', background: p.accentRedBg, color: p.accentRed, border: `0.5px solid ${p.accentRedBorder}`, borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
               Elimina progetto
             </button>
             <button
               onClick={() => setModalita(false)}
-              style={{ padding: '7px 14px', background: '#f8f7f4', color: '#8a8a84', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', background: p.bgPage, color: p.textMuted, border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
               Annulla
             </button>
           </>
@@ -53,32 +55,32 @@ export default function EliminaProgetto({ progettoId, committente, numScavi }: P
 
       {mostraConferma && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#fff', borderRadius: '12px', padding: '24px', maxWidth: '400px', width: '100%' }}>
-            <div style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a1a', marginBottom: '8px' }}>
+          <div style={{ background: p.bgCard, borderRadius: '12px', padding: '24px', maxWidth: '400px', width: '100%' }}>
+            <div style={{ fontSize: '16px', fontWeight: '500', color: p.textPrimary, marginBottom: '8px' }}>
               Elimina progetto
             </div>
-            <div style={{ fontSize: '13px', color: '#555550', marginBottom: '8px' }}>
+            <div style={{ fontSize: '13px', color: p.textSecondary, marginBottom: '8px' }}>
               Stai per eliminare il progetto <strong>{committente}</strong>.
             </div>
             {numScavi > 0 && (
-              <div style={{ fontSize: '12px', color: '#8a5c0a', background: '#fdf3e0', padding: '8px 12px', borderRadius: '6px', marginBottom: '12px' }}>
+              <div style={{ fontSize: '12px', color: p.accentAmber, background: p.accentAmberBg, padding: '8px 12px', borderRadius: '6px', marginBottom: '12px' }}>
                 ⚠️ {numScavi} scavo{numScavi > 1 ? 'i' : ''} collegato{numScavi > 1 ? 'i' : ''} diventerà{numScavi > 1 ? 'nno' : ''} standalone.
               </div>
             )}
-            <div style={{ fontSize: '12px', color: '#8a8a84', marginBottom: '20px' }}>
+            <div style={{ fontSize: '12px', color: p.textMuted, marginBottom: '20px' }}>
               Questa azione è irreversibile.
             </div>
-            {errore && <div style={{ fontSize: '12px', color: '#c00', marginBottom: '12px' }}>{errore}</div>}
+            {errore && <div style={{ fontSize: '12px', color: p.accentRed, marginBottom: '12px' }}>{errore}</div>}
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
                 onClick={() => { setMostraConferma(false); setErrore('') }}
-                style={{ flex: 1, padding: '9px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
+                style={{ flex: 1, padding: '9px', background: p.bgPage, color: p.textSecondary, border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
                 Annulla
               </button>
               <button
                 onClick={elimina}
                 disabled={eliminando}
-                style={{ flex: 1, padding: '9px', background: '#c00', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: eliminando ? 'default' : 'pointer' }}>
+                style={{ flex: 1, padding: '9px', background: p.accentRed, color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: eliminando ? 'default' : 'pointer' }}>
                 {eliminando ? 'Eliminazione...' : 'Elimina'}
               </button>
             </div>

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import SearchableSelect from '@/components/ui/SearchableSelect'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 type Opt = { value: string; label: string }
 
@@ -59,28 +60,30 @@ export default function NuovaUSPage() {
     router.push(`/reports/scavi/${scavoId}`)
   }
 
-  const inp: React.CSSProperties = { width:'100%', padding:'7px 10px', border:'0.5px solid #c8c7be', borderRadius:'6px', background:'#f8f7f4', color:'#1a1a1a', fontSize:'12px', fontFamily:'inherit' }
-  const lbl: React.CSSProperties = { display:'block', fontSize:'11px', color:'#8a8a84', marginBottom:'4px', fontWeight:'500' }
-  const req: React.CSSProperties = { display:'block', fontSize:'11px', color:'#1a4a7a', marginBottom:'4px', fontWeight:'500' }
+  const { p } = useTema()
+
+  const inp: React.CSSProperties = { width:'100%', padding:'7px 10px', border:`0.5px solid ${p.borderStrong}`, borderRadius:'6px', background:p.bgInput, color:p.textPrimary, fontSize:'12px', fontFamily:'inherit' }
+  const lbl: React.CSSProperties = { display:'block', fontSize:'11px', color:p.textMuted, marginBottom:'4px', fontWeight:'500' }
+  const req: React.CSSProperties = { display:'block', fontSize:'11px', color:p.accentBlue, marginBottom:'4px', fontWeight:'500' }
 
   return (
     <div style={{ padding:'24px', maxWidth:'560px' }}>
       <div style={{ marginBottom:'24px' }}>
-        <div style={{ fontSize:'11px', color:'#8a8a84', marginBottom:'6px' }}>
+        <div style={{ fontSize:'11px', color:p.textMuted, marginBottom:'6px' }}>
           ArchaeoReports / Scavi / <span
-            style={{ color:'#1a4a7a', cursor:'pointer' }}
+            style={{ color:p.accentBlue, cursor:'pointer' }}
             onClick={() => router.push(`/reports/scavi/${scavoId}`)}>
             Scavo
           </span>
         </div>
         <h1 style={{ fontSize:'20px', fontWeight:'500' }}>Nuova Unità Stratigrafica</h1>
-        <p style={{ fontSize:'12px', color:'#8a8a84', marginTop:'4px' }}>
-          I campi in <span style={{ color:'#1a4a7a', fontWeight:'500' }}>blu</span> sono obbligatori
+        <p style={{ fontSize:'12px', color:p.textMuted, marginTop:'4px' }}>
+          I campi in <span style={{ color:p.accentBlue, fontWeight:'500' }}>blu</span> sono obbligatori
         </p>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ background:'#fff', border:'0.5px solid #e0dfd8', borderRadius:'10px', padding:'20px', marginBottom:'12px' }}>
+        <div style={{ background:p.bgCard, border:`0.5px solid ${p.border}`, borderRadius:'10px', padding:'20px', marginBottom:'12px' }}>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 2fr', gap:'10px', marginBottom:'12px' }}>
             <div>
               <label style={req}>Numero US *</label>
@@ -127,12 +130,12 @@ export default function NuovaUSPage() {
           )}
         </div>
 
-        {error && <p style={{ fontSize:'12px', color:'#c00', marginBottom:'12px' }}>{error}</p>}
+        {error && <p style={{ fontSize:'12px', color:p.accentRed, marginBottom:'12px' }}>{error}</p>}
 
         <div style={{ display:'flex', gap:'8px' }}>
           <button type="button"
             onClick={() => router.push(`/reports/scavi/${scavoId}`)}
-            style={{ flex:1, padding:'10px', background:'#f8f7f4', color:'#555550', border:'0.5px solid #c8c7be', borderRadius:'6px', fontSize:'12px', cursor:'pointer' }}>
+            style={{ flex:1, padding:'10px', background:p.bgInput, color:p.textSecondary, border:`0.5px solid ${p.borderStrong}`, borderRadius:'6px', fontSize:'12px', cursor:'pointer' }}>
             Annulla
           </button>
           <button type="submit" disabled={loading}

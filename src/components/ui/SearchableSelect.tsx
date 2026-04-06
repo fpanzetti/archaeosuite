@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 interface Option { value: string; label: string }
 
@@ -17,6 +18,7 @@ export default function SearchableSelect({ options, value, onChange, onNewValue,
   const [query, setQuery] = useState('')
   const ref = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { p } = useTema()
 
   const selected = options.find(o => o.value === value)
   const displayValue = selected ? selected.label : (allowFreeText && value ? value : '')
@@ -37,8 +39,15 @@ export default function SearchableSelect({ options, value, onChange, onNewValue,
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
+  // FIX ID-75: quando l'utente clicca sul campo con un valore già selezionato,
+  // il campo diventa editabile mostrando il valore corrente come query
   function handleFocus() {
-    setQuery('')   // reset query ma mostra tutti i valori
+    if (value && !open) {
+      // Pre-popola la query con il valore attuale così l'utente può modificarlo inline
+      setQuery(displayValue)
+    } else {
+      setQuery('')
+    }
     setOpen(true)
   }
 
@@ -66,8 +75,8 @@ export default function SearchableSelect({ options, value, onChange, onNewValue,
     padding: '7px 10px',
     border: 'none',
     background: 'transparent',
-    color: '#1a1a1a',
-    fontSize: '12px',
+    color: p.textPrimary,
+    fontSize: p.fontSizeMin,
     cursor: 'text',
     outline: 'none',
     fontFamily: 'inherit',
@@ -80,8 +89,8 @@ export default function SearchableSelect({ options, value, onChange, onNewValue,
     <div ref={ref} style={{ position: 'relative' }}>
       <div style={{
         display: 'flex', alignItems: 'center',
-        border: '0.5px solid #c8c7be', borderRadius: '6px',
-        background: '#f8f7f4', overflow: 'hidden',
+        border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px',
+        background: p.bgInput, overflow: 'hidden',
       }}>
         <input
           ref={inputRef}
@@ -93,7 +102,7 @@ export default function SearchableSelect({ options, value, onChange, onNewValue,
         />
         {value && (
           <button type="button" onMouseDown={handleClear}
-            style={{ padding: '0 8px', background: 'none', border: 'none', color: '#8a8a84', cursor: 'pointer', fontSize: '16px', lineHeight: 1, flexShrink: 0 }}
+            style={{ padding: '0 8px', background: 'none', border: 'none', color: p.textMuted, cursor: 'pointer', fontSize: '16px', lineHeight: 1, flexShrink: 0 }}
             title="Cancella">
             ×
           </button>
@@ -103,37 +112,37 @@ export default function SearchableSelect({ options, value, onChange, onNewValue,
       {open && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
-          background: '#fff', border: '0.5px solid #c8c7be', borderRadius: '6px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: '200px', overflowY: 'auto',
+          background: p.bgCard, border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)', maxHeight: '200px', overflowY: 'auto',
           marginTop: '2px',
         }}>
           {/* Opzione "Usa valore digitato" per testo libero nuovo */}
           {allowFreeText && queryIsNew && (
             <div
-              style={{ padding: '8px 10px', fontSize: '12px', color: '#1a4a7a', cursor: 'pointer', borderBottom: '0.5px solid #f0efe9', background: '#f8fcff' }}
+              style={{ padding: '8px 10px', fontSize: '12px', color: p.accentBlue, cursor: 'pointer', borderBottom: `0.5px solid ${p.border}`, background: p.accentBlueBg }}
               onMouseDown={() => selectValue(query, true)}>
               Usa &quot;{query}&quot;
             </div>
           )}
           {filtered.length === 0 && !allowFreeText && (
-            <div style={{ padding: '8px 10px', fontSize: '12px', color: '#8a8a84' }}>Nessun risultato</div>
+            <div style={{ padding: '8px 10px', fontSize: '12px', color: p.textMuted }}>Nessun risultato</div>
           )}
           {filtered.length === 0 && allowFreeText && query && !queryIsNew && (
-            <div style={{ padding: '8px 10px', fontSize: '12px', color: '#8a8a84' }}>{value}</div>
+            <div style={{ padding: '8px 10px', fontSize: '12px', color: p.textMuted }}>{value}</div>
           )}
           {filtered.map(o => (
             <div key={o.value}
               style={{
                 padding: '8px 10px', fontSize: '12px', cursor: 'pointer',
-                background: o.value === value ? '#e8f0f8' : 'transparent',
-                color: o.value === value ? '#1a4a7a' : '#1a1a1a',
+                background: o.value === value ? p.accentBlueBg : 'transparent',
+                color: o.value === value ? p.accentBlue : p.textPrimary,
               }}
               onMouseDown={() => selectValue(o.value)}>
               {o.label}
             </div>
           ))}
           {filtered.length === 0 && allowFreeText && !query && (
-            <div style={{ padding: '8px 10px', fontSize: '12px', color: '#c8c7be' }}>
+            <div style={{ padding: '8px 10px', fontSize: '12px', color: p.border }}>
               Digita per cercare o inserire un nuovo valore
             </div>
           )}

@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 interface Foto {
   id: string
@@ -34,6 +35,7 @@ export default function GalleriaFoto({ scavoId, usId, contestoFunerarioId, aggio
   const [salvando, setSalvando] = useState(false)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+  const { p } = useTema()
 
   useEffect(() => {
     async function carica() {
@@ -88,18 +90,17 @@ export default function GalleriaFoto({ scavoId, usId, contestoFunerarioId, aggio
     setEditingAutore(false)
   }
 
-  // Messaggi stato vuoto corretti
   const msgVuoto = tipo === 'foto' ? 'Nessuna foto'
     : tipo === 'rilievo' ? 'Nessun rilievo'
     : tipo === 'altro' ? 'Nessun altro documento'
     : 'Nessun allegato'
 
-  const inp: React.CSSProperties = { width: '100%', padding: '6px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '12px', fontFamily: 'inherit' }
-  const lbl: React.CSSProperties = { display: 'block', fontSize: '11px', color: '#8a8a84', marginBottom: '3px', fontWeight: '500' }
+  const inp: React.CSSProperties = { width: '100%', padding: '6px 10px', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', background: p.bgInput, color: p.textPrimary, fontSize: '12px', fontFamily: 'inherit' }
+  const lbl: React.CSSProperties = { display: 'block', fontSize: '11px', color: p.textMuted, marginBottom: '3px', fontWeight: '500' }
 
-  if (loading) return <div style={{ fontSize: '12px', color: '#8a8a84', padding: '12px 0' }}>Caricamento...</div>
+  if (loading) return <div style={{ fontSize: '12px', color: p.textMuted, padding: '12px 0' }}>Caricamento...</div>
   if (foto.length === 0) return (
-    <div style={{ textAlign: 'center', padding: '24px', color: '#8a8a84', fontSize: '12px', background: '#f8f7f4', borderRadius: '8px', border: '0.5px dashed #c8c7be' }}>
+    <div style={{ textAlign: 'center', padding: '24px', color: p.textMuted, fontSize: '12px', background: p.bgInput, borderRadius: '8px', border: `0.5px dashed ${p.borderStrong}` }}>
       {msgVuoto}
     </div>
   )
@@ -126,11 +127,11 @@ export default function GalleriaFoto({ scavoId, usId, contestoFunerarioId, aggio
 
       {/* Legenda badge */}
       <div style={{ display: 'flex', gap: '12px', marginTop: '8px', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#8a8a84' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: p.textMuted }}>
           <span style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '0 4px', borderRadius: '3px', fontSize: '10px' }}>✎</span>
           Ha una didascalia
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#8a8a84' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: p.textMuted }}>
           <span style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '0 4px', borderRadius: '3px', fontSize: '10px' }}>👤</span>
           Autore presente
         </div>
@@ -141,7 +142,7 @@ export default function GalleriaFoto({ scavoId, usId, contestoFunerarioId, aggio
         <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
           onClick={() => { setFotoAperta(null); setEditingDidascalia(false); setEditingAutore(false) }}>
-          <div style={{ maxWidth: '800px', width: '100%', background: '#fff', borderRadius: '12px', overflow: 'hidden' }}
+          <div style={{ maxWidth: '800px', width: '100%', background: p.bgCard, borderRadius: '12px', overflow: 'hidden' }}
             onClick={e => e.stopPropagation()}>
             <img src={fotoAperta.url} alt={fotoAperta.didascalia ?? ''}
               style={{ width: '100%', maxHeight: '500px', objectFit: 'contain', background: '#1a1a1a' }} />
@@ -157,21 +158,21 @@ export default function GalleriaFoto({ scavoId, usId, contestoFunerarioId, aggio
                       onKeyDown={e => { if (e.key === 'Enter') salvaDidascalia(); if (e.key === 'Escape') setEditingDidascalia(false) }}
                       placeholder="Aggiungi una didascalia..." />
                     <button onClick={salvaDidascalia} disabled={salvando}
-                      style={{ padding: '5px 12px', background: '#1a4a7a', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
+                      style={{ padding: '5px 12px', background: p.accentBlue, color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
                       {salvando ? '...' : 'Salva'}
                     </button>
                     <button onClick={() => setEditingDidascalia(false)}
-                      style={{ padding: '5px 10px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
+                      style={{ padding: '5px 10px', background: p.bgPage, color: p.textSecondary, border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
                       Annulla
                     </button>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '12px', color: fotoAperta.didascalia ? '#1a1a1a' : '#c8c7be' }}>
+                    <span style={{ fontSize: '12px', color: fotoAperta.didascalia ? p.textPrimary : p.border }}>
                       {fotoAperta.didascalia ?? 'Nessuna didascalia'}
                     </span>
                     <button onClick={() => setEditingDidascalia(true)}
-                      style={{ padding: '2px 8px', background: 'none', border: '0.5px solid #c8c7be', borderRadius: '4px', fontSize: '11px', color: '#8a8a84', cursor: 'pointer' }}>
+                      style={{ padding: '2px 8px', background: 'none', border: `0.5px solid ${p.borderStrong}`, borderRadius: '4px', fontSize: '11px', color: p.textMuted, cursor: 'pointer' }}>
                       ✎ {fotoAperta.didascalia ? 'Modifica' : 'Aggiungi'}
                     </button>
                   </div>
@@ -188,21 +189,21 @@ export default function GalleriaFoto({ scavoId, usId, contestoFunerarioId, aggio
                       onKeyDown={e => { if (e.key === 'Enter') salvaAutore(); if (e.key === 'Escape') setEditingAutore(false) }}
                       placeholder="Nome e cognome..." />
                     <button onClick={salvaAutore} disabled={salvando}
-                      style={{ padding: '5px 12px', background: '#1a4a7a', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
+                      style={{ padding: '5px 12px', background: p.accentBlue, color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
                       {salvando ? '...' : 'Salva'}
                     </button>
                     <button onClick={() => setEditingAutore(false)}
-                      style={{ padding: '5px 10px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
+                      style={{ padding: '5px 10px', background: p.bgPage, color: p.textSecondary, border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
                       Annulla
                     </button>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '12px', color: fotoAperta.autore ? '#1a1a1a' : '#c8c7be' }}>
+                    <span style={{ fontSize: '12px', color: fotoAperta.autore ? p.textPrimary : p.border }}>
                       {fotoAperta.autore ?? 'Nessun autore'}
                     </span>
                     <button onClick={() => setEditingAutore(true)}
-                      style={{ padding: '2px 8px', background: 'none', border: '0.5px solid #c8c7be', borderRadius: '4px', fontSize: '11px', color: '#8a8a84', cursor: 'pointer' }}>
+                      style={{ padding: '2px 8px', background: 'none', border: `0.5px solid ${p.borderStrong}`, borderRadius: '4px', fontSize: '11px', color: p.textMuted, cursor: 'pointer' }}>
                       ✎ {fotoAperta.autore ? 'Modifica' : 'Aggiungi'}
                     </button>
                   </div>
@@ -211,7 +212,7 @@ export default function GalleriaFoto({ scavoId, usId, contestoFunerarioId, aggio
 
               {/* Metadati e azioni */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: '11px', color: '#8a8a84', display: 'flex', gap: '12px' }}>
+                <div style={{ fontSize: '11px', color: p.textMuted, display: 'flex', gap: '12px' }}>
                   {fotoAperta.tipo && <span>{fotoAperta.tipo}</span>}
                   {fotoAperta.data_scatto && <span>{new Date(fotoAperta.data_scatto).toLocaleDateString('it-IT')}</span>}
                   {fotoAperta.larghezza && fotoAperta.altezza && <span>{fotoAperta.larghezza}×{fotoAperta.altezza}px</span>}
@@ -219,15 +220,15 @@ export default function GalleriaFoto({ scavoId, usId, contestoFunerarioId, aggio
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <a href={fotoAperta.url} download target="_blank" rel="noreferrer"
-                    style={{ padding: '5px 10px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '11px', textDecoration: 'none' }}>
+                    style={{ padding: '5px 10px', background: p.bgPage, color: p.textSecondary, border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', fontSize: '11px', textDecoration: 'none' }}>
                     Scarica
                   </a>
                   <button onClick={() => eliminaFoto(fotoAperta.id, fotoAperta.url)}
-                    style={{ padding: '5px 10px', background: '#fff8f8', color: '#c00', border: '0.5px solid #e88', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
+                    style={{ padding: '5px 10px', background: p.accentRedBg, color: p.accentRed, border: `0.5px solid ${p.accentRedBorder}`, borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
                     Elimina
                   </button>
                   <button onClick={() => { setFotoAperta(null); setEditingDidascalia(false); setEditingAutore(false) }}
-                    style={{ padding: '5px 10px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
+                    style={{ padding: '5px 10px', background: p.bgPage, color: p.textSecondary, border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
                     Chiudi
                   </button>
                 </div>

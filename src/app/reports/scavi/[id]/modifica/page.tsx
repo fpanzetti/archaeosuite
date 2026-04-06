@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import SearchableSelect from '@/components/ui/SearchableSelect'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 type Opt = { value: string; label: string }
 type Sabap = { id: string; nome: string; regione: string }
@@ -80,10 +81,10 @@ export default function ModificaScavoPage() {
 
   useEffect(() => {
     if (form.regione) {
-      setProvinceFiltrate(province.filter(p => p.regione === form.regione).map(p => ({ value: p.sigla, label: `${p.nome} (${p.sigla})` })))
+      setProvinceFiltrate(province.filter(prov => prov.regione === form.regione).map(prov => ({ value: prov.sigla, label: `${prov.nome} (${prov.sigla})` })))
       setSabapFiltrate(sabapList.filter(s => s.regione === form.regione).map(s => ({ value: s.nome, label: s.nome })))
     } else {
-      setProvinceFiltrate(province.map(p => ({ value: p.sigla, label: `${p.nome} (${p.sigla})` })))
+      setProvinceFiltrate(province.map(prov => ({ value: prov.sigla, label: `${prov.nome} (${prov.sigla})` })))
       setSabapFiltrate(sabapList.map(s => ({ value: s.nome, label: s.nome })))
     }
   }, [form.regione, sabapList, province])
@@ -117,23 +118,25 @@ export default function ModificaScavoPage() {
     router.push(`/reports/scavi/${id}`)
   }
 
-  const inp: React.CSSProperties = { width:'100%', padding:'7px 10px', border:'0.5px solid #c8c7be', borderRadius:'6px', background:'#f8f7f4', color:'#1a1a1a', fontSize:'12px', fontFamily:'inherit' }
-  const lbl: React.CSSProperties = { display:'block', fontSize:'11px', color:'#8a8a84', marginBottom:'4px', fontWeight:'500' }
-  const req: React.CSSProperties = { display:'block', fontSize:'11px', color:'#1a4a7a', marginBottom:'4px', fontWeight:'500' }
-  const card: React.CSSProperties = { background:'#fff', border:'0.5px solid #e0dfd8', borderRadius:'10px', padding:'20px', marginBottom:'12px' }
+  const { p } = useTema()
+
+  const inp: React.CSSProperties = { width:'100%', padding:'7px 10px', border:`0.5px solid ${p.borderStrong}`, borderRadius:'6px', background:p.bgInput, color:p.textPrimary, fontSize:'12px', fontFamily:'inherit' }
+  const lbl: React.CSSProperties = { display:'block', fontSize:'11px', color:p.textMuted, marginBottom:'4px', fontWeight:'500' }
+  const req: React.CSSProperties = { display:'block', fontSize:'11px', color:p.accentBlue, marginBottom:'4px', fontWeight:'500' }
+  const card: React.CSSProperties = { background:p.bgCard, border:`0.5px solid ${p.border}`, borderRadius:'10px', padding:'20px', marginBottom:'12px' }
   const grid2: React.CSSProperties = { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'12px' }
   const grid3: React.CSSProperties = { display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'10px', marginBottom:'12px' }
-  const sect: React.CSSProperties = { fontSize:'11px', fontWeight:'500', color:'#1a4a7a', marginBottom:'14px', paddingBottom:'8px', borderBottom:'0.5px solid #e8f0f8' }
+  const sect: React.CSSProperties = { fontSize:'11px', fontWeight:'500', color:p.accentBlue, marginBottom:'14px', paddingBottom:'8px', borderBottom:`0.5px solid ${p.accentBlueBg}` }
 
-  if (caricamento) return <div style={{ padding:'24px', color:'#8a8a84', fontSize:'12px' }}>Caricamento...</div>
+  if (caricamento) return <div style={{ padding:'24px', color:p.textMuted, fontSize:'12px' }}>Caricamento...</div>
 
   return (
     <div style={{ padding:'24px', maxWidth:'760px' }}>
       <div style={{ marginBottom:'24px' }}>
-        <div style={{ fontSize:'11px', color:'#8a8a84', marginBottom:'6px' }}>
-          <span style={{ color:'#1a4a7a', cursor:'pointer' }} onClick={() => router.push('/reports')}>Scavi</span>
+        <div style={{ fontSize:'11px', color:p.textMuted, marginBottom:'6px' }}>
+          <span style={{ color:p.accentBlue, cursor:'pointer' }} onClick={() => router.push('/reports')}>Scavi</span>
           {' / '}
-          <span style={{ color:'#1a4a7a', cursor:'pointer' }} onClick={() => router.push(`/reports/scavi/${id}`)}>Scavo</span>
+          <span style={{ color:p.accentBlue, cursor:'pointer' }} onClick={() => router.push(`/reports/scavi/${id}`)}>Scavo</span>
           {' / '}Modifica
         </div>
         <h1 style={{ fontSize:'20px', fontWeight:'500' }}>Modifica scavo</h1>
@@ -143,15 +146,15 @@ export default function ModificaScavoPage() {
           <div style={sect}>Stato</div>
           <div style={{ display:'flex', gap:'8px' }}>
             {[
-              { value:'in_corso', label:'In corso', bg:'#e8f0f8', color:'#1a4a7a' },
-              { value:'in_elaborazione', label:'In elaborazione', bg:'#fdf3e0', color:'#8a5c0a' },
-              { value:'archiviato', label:'Archiviato', bg:'#f0efe9', color:'#8a8a84' },
+              { value:'in_corso', label:'In corso', bg:'#e8f0f8', color:p.accentBlue },
+              { value:'in_elaborazione', label:'In elaborazione', bg:'#fdf3e0', color:p.accentAmber },
+              { value:'archiviato', label:'Archiviato', bg:'#f0efe9', color:p.textMuted },
             ].map(s => (
               <button key={s.value} type="button" onClick={() => set('stato', s.value)}
                 style={{ padding:'7px 16px', borderRadius:'20px', fontSize:'12px', cursor:'pointer',
                   background: form.stato === s.value ? s.bg : '#f8f7f4',
                   color: form.stato === s.value ? s.color : '#8a8a84',
-                  border: form.stato === s.value ? `1.5px solid ${s.color}` : '0.5px solid #c8c7be',
+                  border: form.stato === s.value ? `1.5px solid ${s.color}` : `0.5px solid ${p.borderStrong}`,
                   fontWeight: form.stato === s.value ? '500' : '400' }}>
                 {s.label}
               </button>
@@ -232,10 +235,10 @@ export default function ModificaScavoPage() {
           <div><label style={lbl}>Note</label>
             <textarea style={{ ...inp, height:'72px', resize:'none' } as React.CSSProperties} value={form.note} onChange={e => set('note', e.target.value)} /></div>
         </div>
-        {error && <p style={{ fontSize:'12px', color:'#c00', marginBottom:'12px' }}>{error}</p>}
+        {error && <p style={{ fontSize:'12px', color:p.accentRed, marginBottom:'12px' }}>{error}</p>}
         <div style={{ display:'flex', gap:'8px' }}>
           <button type="button" onClick={() => router.push(`/reports/scavi/${id}`)}
-            style={{ flex:1, padding:'10px', background:'#f8f7f4', color:'#555550', border:'0.5px solid #c8c7be', borderRadius:'6px', fontSize:'12px', cursor:'pointer' }}>
+            style={{ flex:1, padding:'10px', background:p.bgInput, color:p.textSecondary, border:`0.5px solid ${p.borderStrong}`, borderRadius:'6px', fontSize:'12px', cursor:'pointer' }}>
             Annulla
           </button>
           <button type="submit" disabled={loading}

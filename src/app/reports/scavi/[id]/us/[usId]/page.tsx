@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import UploadFoto from '@/components/ui/UploadFoto'
 import GalleriaFoto from '@/components/ui/GalleriaFoto'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 type Opt = { value: string; label: string }
 type USBase = { id: string; numero_us: number; tipo: string | null; descrizione: string | null }
@@ -393,15 +394,17 @@ export default function SchedaUSPage() {
   }
 
   // Stili
-  const inp: React.CSSProperties = { width: '100%', padding: '7px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '12px', fontFamily: 'inherit' }
-  const lbl: React.CSSProperties = { display: 'block', fontSize: '11px', color: '#8a8a84', marginBottom: '4px', fontWeight: '500' }
-  const lblBlue: React.CSSProperties = { ...lbl, color: '#1a4a7a' }
+  const { p } = useTema()
+
+  const inp: React.CSSProperties = { width: '100%', padding: '7px 10px', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', background: p.bgInput, color: p.textPrimary, fontSize: '12px', fontFamily: 'inherit' }
+  const lbl: React.CSSProperties = { display: 'block', fontSize: '11px', color: p.textMuted, marginBottom: '4px', fontWeight: '500' }
+  const lblBlue: React.CSSProperties = { ...lbl, color: p.accentBlue }
   const grid2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }
   const grid3: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '12px' }
-  const card: React.CSSProperties = { background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '10px', padding: '20px', marginBottom: '12px' }
-  const sectionTitle: React.CSSProperties = { fontSize: '11px', fontWeight: '600', color: '#8a8a84', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', paddingBottom: '6px', borderBottom: '0.5px solid #e0dfd8' }
-  const infoRow: React.CSSProperties = { padding: '6px 10px', background: '#f8f7f4', borderRadius: '6px', fontSize: '12px', color: '#555550', marginBottom: '8px' }
-  const infoLabel: React.CSSProperties = { fontSize: '10px', color: '#8a8a84', display: 'block', marginBottom: '2px' }
+  const card: React.CSSProperties = { background: p.bgCard, border: `0.5px solid ${p.border}`, borderRadius: '10px', padding: '20px', marginBottom: '12px' }
+  const sectionTitle: React.CSSProperties = { fontSize: '11px', fontWeight: '600', color: p.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', paddingBottom: '6px', borderBottom: `0.5px solid ${p.border}` }
+  const infoRow: React.CSSProperties = { padding: '6px 10px', background: p.bgInput, borderRadius: '6px', fontSize: '12px', color: p.textSecondary, marginBottom: '8px' }
+  const infoLabel: React.CSSProperties = { fontSize: '10px', color: p.textMuted, display: 'block', marginBottom: '2px' }
 
   function RadioGroup({ label, field, options }: { label: string; field: string; options: string[] }) {
     const val = (form as Record<string, unknown>)[field] as string | null
@@ -414,7 +417,7 @@ export default function SchedaUSPage() {
               style={{ padding: '5px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                 background: val === opt ? '#e8f0f8' : '#f8f7f4',
                 color: val === opt ? '#1a4a7a' : '#555550',
-                border: val === opt ? '0.5px solid #1a4a7a' : '0.5px solid #c8c7be',
+                border: val === opt ? '0.5px solid #1a4a7a' : `0.5px solid ${p.borderStrong}`,
                 fontWeight: val === opt ? '500' : '400' }}>
               {opt}
             </button>
@@ -454,16 +457,16 @@ export default function SchedaUSPage() {
             <input autoFocus type="number" min="1" value={inputValore}
               onChange={e => setInputValore(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') aggiungiRapporto(tipoKey); if (e.key === 'Escape') { setInputAttivo(null); setInputValore('') } }}
-              style={{ width: '60px', padding: '3px 6px', border: `1px solid ${coloreRiga}`, borderRadius: '4px', background: '#fff', fontSize: '11px' }}
+              style={{ width: '60px', padding: '3px 6px', border: `1px solid ${coloreRiga}`, borderRadius: '4px', background: p.bgCard, fontSize: '11px' }}
               placeholder="US n." />
             <button onClick={() => aggiungiRapporto(tipoKey)}
               style={{ padding: '3px 7px', background: coloreRiga, color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>✓</button>
             <button onClick={() => { setInputAttivo(null); setInputValore('') }}
-              style={{ padding: '3px 6px', background: '#f0efe9', color: '#888', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>✗</button>
+              style={{ padding: '3px 6px', background: p.bgBadgeNeutro, color: '#888', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>✗</button>
           </div>
         ) : (
           <button onClick={() => { setInputAttivo(tipoKey); setInputValore('') }}
-            style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#fff', border: `1px dashed ${coloreRiga}80`, borderRadius: '4px', fontSize: '11px', color: coloreRiga, cursor: 'pointer', width: '100%', justifyContent: 'center' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: p.bgCard, border: `1px dashed ${coloreRiga}80`, borderRadius: '4px', fontSize: '11px', color: coloreRiga, cursor: 'pointer', width: '100%', justifyContent: 'center' }}>
             <span style={{ fontSize: '14px', lineHeight: '1' }}>+</span> aggiungi US
           </button>
         )}
@@ -471,17 +474,17 @@ export default function SchedaUSPage() {
     )
   }
 
-  if (!us) return <div style={{ padding: '24px', color: '#8a8a84', fontSize: '12px' }}>Caricamento...</div>
+  if (!us) return <div style={{ padding: '24px', color: p.textMuted, fontSize: '12px' }}>Caricamento...</div>
 
   return (
     <div style={{ padding: '24px', maxWidth: '900px' }}>
       <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <a href={`/reports/scavi/${scavoId}`}
-          style={{ fontSize: '11px', color: '#1a4a7a', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px' }}>
+          style={{ fontSize: '11px', color: p.accentBlue, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px' }}>
           ← Elenco US
         </a>
         {allUS.length > 0 && (
-          <span style={{ fontSize: '10px', color: '#8a8a84', background: '#f0efe9', padding: '2px 8px', borderRadius: '8px' }}>
+          <span style={{ fontSize: '10px', color: p.textMuted, background: p.bgBadgeNeutro, padding: '2px 8px', borderRadius: '8px' }}>
             Ultima US creata: {Math.max(...allUS.map(u => u.numero_us), us.numero_us)}
           </span>
         )}
@@ -493,10 +496,10 @@ export default function SchedaUSPage() {
       )}
 
       {/* Breadcrumb */}
-      <div style={{ fontSize: '11px', color: '#8a8a84', marginBottom: '16px' }}>
-        <span style={{ color: '#1a4a7a', cursor: 'pointer' }} onClick={() => router.push('/reports')}>Scavi</span>
+      <div style={{ fontSize: '11px', color: p.textMuted, marginBottom: '16px' }}>
+        <span style={{ color: p.accentBlue, cursor: 'pointer' }} onClick={() => router.push('/reports')}>Scavi</span>
         {' / '}
-        <span style={{ color: '#1a4a7a', cursor: 'pointer' }} onClick={() => router.push(`/reports/scavi/${scavoId}`)}>{nomeScavo || 'Scavo'}</span>
+        <span style={{ color: p.accentBlue, cursor: 'pointer' }} onClick={() => router.push(`/reports/scavi/${scavoId}`)}>{nomeScavo || 'Scavo'}</span>
         {' / '}US {us.numero_us}
       </div>
 
@@ -505,7 +508,7 @@ export default function SchedaUSPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div>
             <h1 style={{ fontSize: '22px', fontWeight: '500', margin: 0 }}>US {us.numero_us}{form.descrizione ? ` — ${form.descrizione}` : ''}</h1>
-            {us.tipo && <p style={{ fontSize: '12px', color: '#555550', marginTop: '2px', marginBottom: 0 }}>{us.tipo}</p>}
+            {us.tipo && <p style={{ fontSize: '12px', color: p.textSecondary, marginTop: '2px', marginBottom: 0 }}>{us.tipo}</p>}
           </div>
 
         </div>
@@ -514,7 +517,7 @@ export default function SchedaUSPage() {
             style={{ padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: 'pointer',
               background: completata ? '#e8f4ef' : '#f8f7f4',
               color: completata ? '#1a6b4a' : '#8a8a84',
-              border: completata ? '1.5px solid #1a6b4a' : '0.5px solid #c8c7be' }}>
+              border: completata ? '1.5px solid #1a6b4a' : `0.5px solid ${p.borderStrong}` }}>
             {completata ? '✓ Completata' : 'Segna come completata'}
           </button>
           <button onClick={salva} disabled={saving || (!dirty && !saved)}
@@ -527,14 +530,14 @@ export default function SchedaUSPage() {
           </button>
         </div>
         {ultimoSalvataggio && (
-          <div style={{ fontSize: '10px', color: '#8a8a84', textAlign: 'right', marginTop: '4px' }}>
+          <div style={{ fontSize: '10px', color: p.textMuted, textAlign: 'right', marginTop: '4px' }}>
             {'Ultimo salvataggio il ' + ultimoSalvataggio.toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' alle ore ' + ultimoSalvataggio.toLocaleTimeString('it-IT')}
           </div>
         )}
       </div>
 
       {/* Tab step */}
-      <div style={{ display: 'flex', gap: '2px', marginBottom: '20px', background: '#f0efe9', borderRadius: '8px', padding: '4px' }}>
+      <div style={{ display: 'flex', gap: '2px', marginBottom: '20px', background: p.bgBadgeNeutro, borderRadius: '8px', padding: '4px' }}>
         {STEP_LABELS.map((label, i) => (
           <button key={i} onClick={() => setStep(i)}
             style={{ flex: 1, padding: '7px 4px', border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer',
@@ -727,7 +730,7 @@ export default function SchedaUSPage() {
       {/* ── STEP 3: RAPPORTI STRATIGRAFICI ── */}
       {step === 3 && (
         <div style={card}>
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', padding: '8px 12px', background: '#f8f7f4', borderRadius: '6px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', padding: '8px 12px', background: p.bgInput, borderRadius: '6px', flexWrap: 'wrap' }}>
             {[
               { bg: '#e8f0f8', border: '#185FA5', label: 'posteriorità' },
               { bg: '#e8f4ef', border: '#1a6b4a', label: 'contemporaneità' },
@@ -735,7 +738,7 @@ export default function SchedaUSPage() {
               { bg: '#cfe2ff', border: '#185FA5', label: 'US documentata' },
               { bg: '#fff3cd', border: '#f0a500', label: 'US vuota ⚠' },
             ].map(l => (
-              <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#555550' }}>
+              <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: p.textSecondary }}>
                 <div style={{ width: '14px', height: '14px', borderRadius: '3px', background: l.bg, border: `1px solid ${l.border}` }} />
                 {l.label}
               </div>
@@ -746,9 +749,9 @@ export default function SchedaUSPage() {
             <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '4px' }}>
               <thead>
                 <tr>
-                  <th style={{ width: '80px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'left', padding: '4px 8px' }}>Categoria</th>
+                  <th style={{ width: '80px', fontSize: '10px', color: p.textMuted, fontWeight: '500', textAlign: 'left', padding: '4px 8px' }}>Categoria</th>
                   {COLONNE.map(col => (
-                    <th key={col.key} style={{ fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center', padding: '4px 4px' }}>
+                    <th key={col.key} style={{ fontSize: '10px', color: p.textMuted, fontWeight: '500', textAlign: 'center', padding: '4px 4px' }}>
                       {col.post_label ?? col.cont_label}
                     </th>
                   ))}
@@ -756,13 +759,13 @@ export default function SchedaUSPage() {
               </thead>
               <tbody>
                 <tr>
-                  <td style={{ fontSize: '10px', fontWeight: '500', color: '#1a4a7a', padding: '4px 8px', verticalAlign: 'middle' }}>
+                  <td style={{ fontSize: '10px', fontWeight: '500', color: p.accentBlue, padding: '4px 8px', verticalAlign: 'middle' }}>
                     <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontSize: '10px' }}>Posteriorità ↑</div>
                   </td>
                   {COLONNE.map(col => (
                     <td key={col.key} style={{ padding: '2px', verticalAlign: 'top' }}>
                       {col.post ? <CellaRapporto tipoKey={col.post} label={col.post_label!} riga="post" />
-                        : <div style={{ height: '80px', background: '#f8f7f4', borderRadius: '6px', border: '0.5px solid #e0dfd8' }} />}
+                        : <div style={{ height: '80px', background: p.bgInput, borderRadius: '6px', border: `0.5px solid ${p.border}` }} />}
                     </td>
                   ))}
                 </tr>
@@ -770,31 +773,31 @@ export default function SchedaUSPage() {
                   <td style={{ padding: '4px 8px' }} />
                   <td colSpan={COLONNE.length} style={{ padding: '6px 2px' }}>
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
-                      <div id="us-corrente-center" style={{ padding: '8px 32px', background: '#fef9e7', border: '2px solid #f0a500', borderRadius: '8px', fontSize: '13px', fontWeight: '500', color: '#8a5c0a', textAlign: 'center' }}>
+                      <div id="us-corrente-center" style={{ padding: '8px 32px', background: '#fef9e7', border: '2px solid #f0a500', borderRadius: '8px', fontSize: '13px', fontWeight: '500', color: p.accentAmber, textAlign: 'center' }}>
                         US {us.numero_us}{us.tipo ? ` — ${us.tipo}` : ''}
                       </div>
                     </div>
                   </td>
                 </tr>
                 <tr>
-                  <td style={{ fontSize: '10px', fontWeight: '500', color: '#1a6b4a', padding: '4px 8px', verticalAlign: 'middle' }}>
+                  <td style={{ fontSize: '10px', fontWeight: '500', color: p.accentGreen, padding: '4px 8px', verticalAlign: 'middle' }}>
                     <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontSize: '10px' }}>Contemporan. →</div>
                   </td>
                   {COLONNE.map(col => (
                     <td key={col.key} style={{ padding: '2px', verticalAlign: 'top' }}>
                       {col.cont ? <CellaRapporto tipoKey={col.cont} label={col.cont_label!} riga="cont" />
-                        : <div style={{ height: '80px', background: '#f8f7f4', borderRadius: '6px', border: '0.5px solid #e0dfd8' }} />}
+                        : <div style={{ height: '80px', background: p.bgInput, borderRadius: '6px', border: `0.5px solid ${p.border}` }} />}
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td style={{ fontSize: '10px', fontWeight: '500', color: '#8a5c0a', padding: '4px 8px', verticalAlign: 'middle' }}>
+                  <td style={{ fontSize: '10px', fontWeight: '500', color: p.accentAmber, padding: '4px 8px', verticalAlign: 'middle' }}>
                     <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontSize: '10px' }}>Anteriorità ↓</div>
                   </td>
                   {COLONNE.map(col => (
                     <td key={col.key} style={{ padding: '2px', verticalAlign: 'top' }}>
                       {col.ant ? <CellaRapporto tipoKey={col.ant} label={col.ant_label!} riga="ant" />
-                        : <div style={{ height: '80px', background: '#f8f7f4', borderRadius: '6px', border: '0.5px solid #e0dfd8' }} />}
+                        : <div style={{ height: '80px', background: p.bgInput, borderRadius: '6px', border: `0.5px solid ${p.border}` }} />}
                     </td>
                   ))}
                 </tr>
@@ -827,14 +830,14 @@ export default function SchedaUSPage() {
 
           {/* Allegati grafici */}
           <div style={card}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '6px', borderBottom: '0.5px solid #e0dfd8' }}>
-              <span style={{ fontSize: '11px', fontWeight: '600', color: '#8a8a84', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Allegati grafici</span>
-              <span style={{ fontSize: '10px', color: '#8a8a84', background: '#f0efe9', padding: '1px 7px', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '6px', borderBottom: `0.5px solid ${p.border}` }}>
+              <span style={{ fontSize: '11px', fontWeight: '600', color: p.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Allegati grafici</span>
+              <span style={{ fontSize: '10px', color: p.textMuted, background: p.bgBadgeNeutro, padding: '1px 7px', borderRadius: '8px' }}>
                 💡 Passa con il mouse sopra una miniatura per visualizzare la didascalia
               </span>
             </div>
             {/* Tab tipo allegato */}
-            <div style={{ display: 'flex', gap: '2px', marginBottom: '16px', background: '#f0efe9', borderRadius: '6px', padding: '3px' }}>
+            <div style={{ display: 'flex', gap: '2px', marginBottom: '16px', background: p.bgBadgeNeutro, borderRadius: '6px', padding: '3px' }}>
               {TIPO_ALLEGATO.map(t => (
                 <button key={t} onClick={() => setTabAllegati(t)}
                   style={{ flex: 1, padding: '6px 4px', border: 'none', borderRadius: '5px', fontSize: '11px', cursor: 'pointer', textTransform: 'capitalize',
@@ -899,8 +902,8 @@ export default function SchedaUSPage() {
           <div style={sectionTitle}>Tabella materiali</div>
           <div style={{ textAlign: 'center', padding: '32px 0' }}>
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>📦</div>
-            <p style={{ fontSize: '14px', color: '#555550', marginBottom: '8px' }}>In sviluppo</p>
-            <p style={{ fontSize: '12px', color: '#8a8a84' }}>
+            <p style={{ fontSize: '14px', color: p.textSecondary, marginBottom: '8px' }}>In sviluppo</p>
+            <p style={{ fontSize: '12px', color: p.textMuted }}>
               La tabella materiali per US {us.numero_us} sarà disponibile a breve
             </p>
           </div>
@@ -911,7 +914,7 @@ export default function SchedaUSPage() {
       <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
         {step > 0 && (
           <button onClick={() => setStep(s => s - 1)}
-            style={{ flex: 1, padding: '10px', background: '#f8f7f4', color: '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
+            style={{ flex: 1, padding: '10px', background: p.bgInput, color: p.textSecondary, border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
             ← {STEP_LABELS[step - 1]}
           </button>
         )}

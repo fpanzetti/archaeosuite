@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import GalleriaFoto from '@/components/ui/GalleriaFoto'
 import UploadFoto from '@/components/ui/UploadFoto'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 const ORIENTAMENTI = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO']
 const ARTI_OPT = ['Disteso', 'Assente', 'Dislocato']
@@ -251,7 +252,7 @@ export default function SchedaTombaPage() {
             placeholder="N. US" />
         </div>
         {aperto && (
-          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: '150px', overflowY: 'auto', background: '#fff', border: '0.5px solid #c8c7be', borderRadius: '6px', zIndex: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: '150px', overflowY: 'auto', background: p.bgCard, border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', zIndex: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
             {filtrate.slice(0, 10).map(u => (
               <div key={u.id} onMouseDown={() => { set(field, String(u.numero_us)); creaOSelezionaUS(u.numero_us); setAperto(false) }}
                 style={{ padding: '6px 10px', fontSize: '12px', cursor: 'pointer', borderBottom: '0.5px solid #f0efe9' }}>
@@ -259,7 +260,7 @@ export default function SchedaTombaPage() {
               </div>
             ))}
             <div onMouseDown={() => { set(field, String(prossimoNumero)); creaOSelezionaUS(prossimoNumero); setAperto(false) }}
-              style={{ padding: '6px 10px', fontSize: '12px', cursor: 'pointer', color: '#1a4a7a', fontWeight: '500' }}>
+              style={{ padding: '6px 10px', fontSize: '12px', cursor: 'pointer', color: p.accentBlue, fontWeight: '500' }}>
               + Crea US {prossimoNumero}
             </div>
           </div>
@@ -269,12 +270,14 @@ export default function SchedaTombaPage() {
   }
 
   // Stili
-  const inp: React.CSSProperties = { width: '100%', padding: '7px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '12px', fontFamily: 'inherit' }
-  const lbl: React.CSSProperties = { display: 'block', fontSize: '11px', color: '#8a8a84', marginBottom: '4px', fontWeight: '500' }
-  const card: React.CSSProperties = { background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '10px', padding: '20px', marginBottom: '12px' }
+  const { p } = useTema()
+
+  const inp: React.CSSProperties = { width: '100%', padding: '7px 10px', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', background: p.bgInput, color: p.textPrimary, fontSize: '12px', fontFamily: 'inherit' }
+  const lbl: React.CSSProperties = { display: 'block', fontSize: '11px', color: p.textMuted, marginBottom: '4px', fontWeight: '500' }
+  const card: React.CSSProperties = { background: p.bgCard, border: `0.5px solid ${p.border}`, borderRadius: '10px', padding: '20px', marginBottom: '12px' }
   const grid2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }
   const grid3: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '12px' }
-  const sectionTitle: React.CSSProperties = { fontSize: '11px', fontWeight: '500', color: '#1a4a7a', marginBottom: '12px', paddingBottom: '6px', borderBottom: '0.5px solid #e0dfd8' }
+  const sectionTitle: React.CSSProperties = { fontSize: '11px', fontWeight: '500', color: p.accentBlue, marginBottom: '12px', paddingBottom: '6px', borderBottom: `0.5px solid ${p.border}` }
 
   function RadioGroup({ label, field, options }: { label: string; field: string; options: string[] }) {
     const val = form[field] as string | null
@@ -287,7 +290,7 @@ export default function SchedaTombaPage() {
               style={{ padding: '5px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                 background: val === opt ? '#e8f0f8' : '#f8f7f4',
                 color: val === opt ? '#1a4a7a' : '#555550',
-                border: val === opt ? '0.5px solid #1a4a7a' : '0.5px solid #c8c7be',
+                border: val === opt ? '0.5px solid #1a4a7a' : `0.5px solid ${p.borderStrong}`,
                 fontWeight: val === opt ? '500' : '400' }}>
               {opt}
             </button>
@@ -310,7 +313,7 @@ export default function SchedaTombaPage() {
     )
   }
 
-  const selStile: React.CSSProperties = { width: '100px', padding: '4px 6px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }
+  const selStile: React.CSSProperties = { width: '100px', padding: '4px 6px', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', background: p.bgInput, color: p.textPrimary, fontSize: '11px', fontFamily: 'inherit' }
 
   function ArticolazioneSxDx({ label, baseName, soloUna = false, primaRiga = false }: { label: string; baseName: string; soloUna?: boolean; primaRiga?: boolean }) {
     return (
@@ -318,12 +321,12 @@ export default function SchedaTombaPage() {
         {primaRiga && !soloUna && (
           <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
             <div style={{ flex: 1 }} />
-            <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
-            <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
+            <div style={{ width: '100px', fontSize: '10px', color: p.textMuted, fontWeight: '500', textAlign: 'center' }}>SX</div>
+            <div style={{ width: '100px', fontSize: '10px', color: p.textMuted, fontWeight: '500', textAlign: 'center' }}>DX</div>
           </div>
         )}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '3px', padding: '2px 0', borderBottom: '0.5px solid #f0efe9' }}>
-          <div style={{ flex: 1, fontSize: '12px', color: '#555550' }}>{label}</div>
+          <div style={{ flex: 1, fontSize: '12px', color: p.textSecondary }}>{label}</div>
           <select style={selStile} value={(form[`${baseName}_sx`] as string) ?? ''} onChange={e => set(`${baseName}_sx`, e.target.value || null)}>
             <option value="">—</option>
             {ARTIC_OPT.map(o => <option key={o} value={o}>{o}</option>)}
@@ -343,7 +346,7 @@ export default function SchedaTombaPage() {
     const opts = femminile ? ARTI_OPT_F : ARTI_OPT
     return (
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '3px', padding: '2px 0', borderBottom: '0.5px solid #f0efe9' }}>
-        <div style={{ flex: 1, fontSize: '12px', color: '#555550' }}>{label}</div>
+        <div style={{ flex: 1, fontSize: '12px', color: p.textSecondary }}>{label}</div>
         <select style={selStile} value={(form[`${baseName}_sx`] as string) ?? ''} onChange={e => set(`${baseName}_sx`, e.target.value || null)}>
           <option value="">—</option>
           {opts.map(o => <option key={o} value={o}>{o}</option>)}
@@ -356,7 +359,7 @@ export default function SchedaTombaPage() {
     )
   }
 
-  if (!tomba) return <div style={{ padding: '24px', fontSize: '12px', color: '#8a8a84' }}>Caricamento...</div>
+  if (!tomba) return <div style={{ padding: '24px', fontSize: '12px', color: p.textMuted }}>Caricamento...</div>
 
   const btnSalva: React.CSSProperties = {
     padding: '6px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '500', cursor: 'pointer', border: 'none',
@@ -370,13 +373,13 @@ export default function SchedaTombaPage() {
       {/* Breadcrumb */}
       <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <a href={`/reports/scavi/${scavoId}`}
-          style={{ fontSize: '11px', color: '#1a4a7a', textDecoration: 'none', padding: '4px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px' }}>
+          style={{ fontSize: '11px', color: p.accentBlue, textDecoration: 'none', padding: '4px 10px', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px' }}>
           ← Elenco US
         </a>
         <span style={{ fontSize: '11px', color: '#c8c7be' }}>/</span>
-        <span style={{ fontSize: '11px', color: '#8a8a84' }}>Tb {form.numero_tomba as number}</span>
+        <span style={{ fontSize: '11px', color: p.textMuted }}>Tb {form.numero_tomba as number}</span>
         {ultimaUS !== null && (
-          <span style={{ fontSize: '10px', color: '#8a8a84', background: '#f0efe9', padding: '2px 8px', borderRadius: '8px', marginLeft: 'auto' }}>
+          <span style={{ fontSize: '10px', color: p.textMuted, background: p.bgBadgeNeutro, padding: '2px 8px', borderRadius: '8px', marginLeft: 'auto' }}>
             Ultima US creata: {ultimaUS}
           </span>
         )}
@@ -386,7 +389,7 @@ export default function SchedaTombaPage() {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
         <div>
           <h1 style={{ fontSize: '20px', fontWeight: '500' }}>Tb {form.numero_tomba as number}</h1>
-          <div style={{ fontSize: '11px', color: '#8a8a84', marginTop: '4px' }}>
+          <div style={{ fontSize: '11px', color: p.textMuted, marginTop: '4px' }}>
             {nomeScavo}
             {ultimoSalvataggio && <span> · Salvato {ultimoSalvataggio.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</span>}
           </div>
@@ -394,7 +397,7 @@ export default function SchedaTombaPage() {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
           <button style={btnSalva} onClick={salva}>{dirty ? 'Salva modifiche' : saved ? '✓ Salvato' : 'Salva'}</button>
           {toast && (
-            <div style={{ fontSize: '11px', color: '#1a6b4a', background: '#e8f4ef', border: '0.5px solid #a8d8b8', padding: '3px 10px', borderRadius: '6px' }}>
+            <div style={{ fontSize: '11px', color: p.accentGreen, background: p.accentGreenBg, border: '0.5px solid #a8d8b8', padding: '3px 10px', borderRadius: '6px' }}>
               {toast}
             </div>
           )}
@@ -408,7 +411,7 @@ export default function SchedaTombaPage() {
             style={{ padding: '5px 10px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer',
               background: step === i ? '#1a4a7a' : '#f8f7f4',
               color: step === i ? '#fff' : '#555550',
-              border: step === i ? 'none' : '0.5px solid #c8c7be',
+              border: step === i ? 'none' : `0.5px solid ${p.borderStrong}`,
               fontWeight: step === i ? '500' : '400' }}>
             {label}
           </button>
@@ -510,7 +513,7 @@ export default function SchedaTombaPage() {
                       style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer',
                         background: form.nucleo_sepolcrale === v ? '#e8f0f8' : '#f8f7f4',
                         color: form.nucleo_sepolcrale === v ? '#1a4a7a' : '#555550',
-                        border: form.nucleo_sepolcrale === v ? '0.5px solid #1a4a7a' : '0.5px solid #c8c7be' }}>
+                        border: form.nucleo_sepolcrale === v ? '0.5px solid #1a4a7a' : `0.5px solid ${p.borderStrong}` }}>
                       {v}
                     </button>
                   ))}
@@ -618,7 +621,7 @@ export default function SchedaTombaPage() {
                   style={{ padding: '6px 14px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                     background: form.eta_morte === v ? '#e8f0f8' : '#f8f7f4',
                     color: form.eta_morte === v ? '#1a4a7a' : '#555550',
-                    border: form.eta_morte === v ? '0.5px solid #1a4a7a' : '0.5px solid #c8c7be' }}>
+                    border: form.eta_morte === v ? '0.5px solid #1a4a7a' : `0.5px solid ${p.borderStrong}` }}>
                   {v}
                 </button>
               ))}
@@ -635,7 +638,7 @@ export default function SchedaTombaPage() {
                       style={{ padding: '5px 10px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                         background: form.sesso_antropologico === v ? '#e8f0f8' : '#f8f7f4',
                         color: form.sesso_antropologico === v ? '#1a4a7a' : '#555550',
-                        border: form.sesso_antropologico === v ? '0.5px solid #1a4a7a' : '0.5px solid #c8c7be' }}>
+                        border: form.sesso_antropologico === v ? '0.5px solid #1a4a7a' : `0.5px solid ${p.borderStrong}` }}>
                       {v}
                     </button>
                   ))}
@@ -649,7 +652,7 @@ export default function SchedaTombaPage() {
                       style={{ padding: '5px 10px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                         background: form.sesso_archeologico === v ? '#e8f0f8' : '#f8f7f4',
                         color: form.sesso_archeologico === v ? '#1a4a7a' : '#555550',
-                        border: form.sesso_archeologico === v ? '0.5px solid #1a4a7a' : '0.5px solid #c8c7be' }}>
+                        border: form.sesso_archeologico === v ? '0.5px solid #1a4a7a' : `0.5px solid ${p.borderStrong}` }}>
                       {v}
                     </button>
                   ))}
@@ -675,7 +678,7 @@ export default function SchedaTombaPage() {
                       style={{ padding: '5px 10px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                         background: form.posizione_scheletro === v ? '#e8f0f8' : '#f8f7f4',
                         color: form.posizione_scheletro === v ? '#1a4a7a' : '#555550',
-                        border: form.posizione_scheletro === v ? '0.5px solid #1a4a7a' : '0.5px solid #c8c7be' }}>
+                        border: form.posizione_scheletro === v ? '0.5px solid #1a4a7a' : `0.5px solid ${p.borderStrong}` }}>
                       {v}
                     </button>
                   ))}
@@ -696,22 +699,22 @@ export default function SchedaTombaPage() {
               <input style={inp} value={form.posizione_cranio as string ?? ''} onChange={e => set('posizione_cranio', e.target.value || null)} placeholder="Es. ruotato a dx" />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '6px', marginBottom: '4px' }}>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>Connessione</div>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>—</div>
-              <div style={{ fontSize: '11px', color: '#8a8a84', fontWeight: '500' }}>—</div>
+              <div style={{ fontSize: '11px', color: p.textMuted, fontWeight: '500' }}>Connessione</div>
+              <div style={{ fontSize: '11px', color: p.textMuted, fontWeight: '500' }}>—</div>
+              <div style={{ fontSize: '11px', color: p.textMuted, fontWeight: '500' }}>—</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', padding: '3px 0', borderBottom: '0.5px solid #f0efe9' }}>
-                  <div style={{ fontSize: '12px', color: '#555550', flex: 1 }}>Temporo-mandibolare</div>
-                  <select style={{ width: '140px', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
+                  <div style={{ fontSize: '12px', color: p.textSecondary, flex: 1 }}>Temporo-mandibolare</div>
+                  <select style={{ width: '140px', padding: '5px 8px', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', background: p.bgInput, color: p.textPrimary, fontSize: '11px', fontFamily: 'inherit' }}
                     value={(form.temporo_mandibolare as string) ?? ''} onChange={e => set('temporo_mandibolare', e.target.value || null)}>
                     <option value="">—</option>{ARTIC_OPT.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', padding: '3px 0', borderBottom: '0.5px solid #f0efe9' }}>
-                  <div style={{ fontSize: '12px', color: '#555550', flex: 1 }}>Cranio-atlante</div>
-                  <select style={{ width: '140px', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
+                  <div style={{ fontSize: '12px', color: p.textSecondary, flex: 1 }}>Cranio-atlante</div>
+                  <select style={{ width: '140px', padding: '5px 8px', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', background: p.bgInput, color: p.textPrimary, fontSize: '11px', fontFamily: 'inherit' }}
                     value={(form.cranio_atlante as string) ?? ''} onChange={e => set('cranio_atlante', e.target.value || null)}>
                     <option value="">—</option>{ARTIC_OPT.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
@@ -719,15 +722,15 @@ export default function SchedaTombaPage() {
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', padding: '3px 0', borderBottom: '0.5px solid #f0efe9' }}>
-                  <div style={{ fontSize: '12px', color: '#555550', flex: 1 }}>Atlante-epistrofeo</div>
-                  <select style={{ width: '140px', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
+                  <div style={{ fontSize: '12px', color: p.textSecondary, flex: 1 }}>Atlante-epistrofeo</div>
+                  <select style={{ width: '140px', padding: '5px 8px', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', background: p.bgInput, color: p.textPrimary, fontSize: '11px', fontFamily: 'inherit' }}
                     value={(form.atlante_epistrofeo as string) ?? ''} onChange={e => set('atlante_epistrofeo', e.target.value || null)}>
                     <option value="">—</option>{ARTIC_OPT.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', padding: '3px 0', borderBottom: '0.5px solid #f0efe9' }}>
-                  <div style={{ fontSize: '12px', color: '#555550', flex: 1 }}>Epistrofeo-C3</div>
-                  <select style={{ width: '140px', padding: '5px 8px', border: '0.5px solid #c8c7be', borderRadius: '6px', background: '#f8f7f4', color: '#1a1a1a', fontSize: '11px', fontFamily: 'inherit' }}
+                  <div style={{ fontSize: '12px', color: p.textSecondary, flex: 1 }}>Epistrofeo-C3</div>
+                  <select style={{ width: '140px', padding: '5px 8px', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', background: p.bgInput, color: p.textPrimary, fontSize: '11px', fontFamily: 'inherit' }}
                     value={(form.epistrofeo_c3 as string) ?? ''} onChange={e => set('epistrofeo_c3', e.target.value || null)}>
                     <option value="">—</option>{ARTIC_OPT.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
@@ -774,8 +777,8 @@ export default function SchedaTombaPage() {
                 <div style={sectionTitle}>Arti superiori</div>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
                   <div style={{ flex: 1 }} />
-                  <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
-                  <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
+                  <div style={{ width: '100px', fontSize: '10px', color: p.textMuted, fontWeight: '500', textAlign: 'center' }}>SX</div>
+                  <div style={{ width: '100px', fontSize: '10px', color: p.textMuted, fontWeight: '500', textAlign: 'center' }}>DX</div>
                 </div>
                 <ArteSxDx label="Omero" baseName="omero" />
                 <ArteSxDx label="Avambraccio" baseName="avambraccio" />
@@ -785,8 +788,8 @@ export default function SchedaTombaPage() {
                 <div style={sectionTitle}>Arti inferiori</div>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
                   <div style={{ flex: 1 }} />
-                  <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>SX</div>
-                  <div style={{ width: '100px', fontSize: '10px', color: '#8a8a84', fontWeight: '500', textAlign: 'center' }}>DX</div>
+                  <div style={{ width: '100px', fontSize: '10px', color: p.textMuted, fontWeight: '500', textAlign: 'center' }}>SX</div>
+                  <div style={{ width: '100px', fontSize: '10px', color: p.textMuted, fontWeight: '500', textAlign: 'center' }}>DX</div>
                 </div>
                 <ArteSxDx label="Femore" baseName="femore" />
                 <ArteSxDx label="Tibia" baseName="tibia" femminile />
@@ -857,7 +860,7 @@ export default function SchedaTombaPage() {
                     style={{ padding: '5px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
                       background: form.lunghezza_scheletro_determinabile === v ? '#e8f0f8' : '#f8f7f4',
                       color: form.lunghezza_scheletro_determinabile === v ? '#1a4a7a' : '#555550',
-                      border: form.lunghezza_scheletro_determinabile === v ? '0.5px solid #1a4a7a' : '0.5px solid #c8c7be' }}>
+                      border: form.lunghezza_scheletro_determinabile === v ? '0.5px solid #1a4a7a' : `0.5px solid ${p.borderStrong}` }}>
                     {v}
                   </button>
                 ))}
@@ -917,7 +920,7 @@ export default function SchedaTombaPage() {
       {step === 10 && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a' }}>
+            <div style={{ fontSize: '13px', fontWeight: '500', color: p.textPrimary }}>
               Reperti all&apos;interno della tomba ({reperti.length})
             </div>
             <button onClick={aggiungiReperto}
@@ -926,13 +929,13 @@ export default function SchedaTombaPage() {
             </button>
           </div>
           {reperti.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '32px', color: '#8a8a84', fontSize: '12px', background: '#f8f7f4', borderRadius: '10px', border: '0.5px dashed #c8c7be' }}>
+            <div style={{ textAlign: 'center', padding: '32px', color: p.textMuted, fontSize: '12px', background: p.bgInput, borderRadius: '10px', border: `0.5px dashed ${p.borderStrong}` }}>
               Nessun reperto ancora — aggiungi il primo
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {reperti.map(r => (
-                <div key={r.id} style={{ background: '#fff', border: '0.5px solid #e0dfd8', borderRadius: '10px', padding: '16px' }}>
+                <div key={r.id} style={{ background: p.bgCard, border: `0.5px solid ${p.border}`, borderRadius: '10px', padding: '16px' }}>
                   <div style={{ display: 'flex', gap: '16px' }}>
                     {/* Colonna foto a sinistra */}
                     <div style={{ width: '120px', flexShrink: 0 }}>
@@ -940,7 +943,7 @@ export default function SchedaTombaPage() {
                         <div style={{ position: 'relative', cursor: 'pointer' }}>
                           <img src={(fotoReperti[r.id][0].url_thumb ?? fotoReperti[r.id][0].url)}
                             alt={`RP ${r.rp_n}`}
-                            style={{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '6px', border: '0.5px solid #e0dfd8' }} />
+                            style={{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '6px', border: `0.5px solid ${p.border}` }} />
                           {fotoReperti[r.id].length > 1 && (
                             <div style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '10px', padding: '1px 6px', borderRadius: '10px' }}>
                               {fotoReperti[r.id].length}
@@ -950,7 +953,7 @@ export default function SchedaTombaPage() {
                           <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
                             {fotoReperti[r.id].map(f => (
                               <div key={f.id} style={{ position: 'relative' }}>
-                                <img src={f.url_thumb ?? f.url} alt="" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '3px', border: '0.5px solid #e0dfd8' }} />
+                                <img src={f.url_thumb ?? f.url} alt="" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '3px', border: `0.5px solid ${p.border}` }} />
                                 <span onClick={() => eliminaFotoRP(r.id, f.id, f.url)}
                                   style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#c00', color: '#fff', width: '14px', height: '14px', borderRadius: '50%', fontSize: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', lineHeight: '1' }}>×</span>
                               </div>
@@ -958,11 +961,11 @@ export default function SchedaTombaPage() {
                           </div>
                         </div>
                       ) : (
-                        <div style={{ width: '120px', height: '90px', background: '#f8f7f4', borderRadius: '6px', border: '0.5px dashed #c8c7be', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c8c7be', fontSize: '11px' }}>
+                        <div style={{ width: '120px', height: '90px', background: p.bgInput, borderRadius: '6px', border: `0.5px dashed ${p.borderStrong}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c8c7be', fontSize: '11px' }}>
                           Nessuna foto
                         </div>
                       )}
-                      <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginTop: '6px', padding: '4px 0', background: '#f8f7f4', border: '0.5px solid #c8c7be', borderRadius: '4px', fontSize: '10px', color: '#1a4a7a', cursor: 'pointer' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginTop: '6px', padding: '4px 0', background: p.bgInput, border: `0.5px solid ${p.borderStrong}`, borderRadius: '4px', fontSize: '10px', color: p.accentBlue, cursor: 'pointer' }}>
                         📷 Aggiungi
                         <input type="file" accept="image/*" style={{ display: 'none' }}
                           onChange={e => { const f = e.target.files?.[0]; if (f) uploadFotoRP(r.id, f); e.target.value = '' }} />
@@ -971,9 +974,9 @@ export default function SchedaTombaPage() {
                     {/* Colonna dati a destra */}
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                        <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a4a7a' }}>RP {r.rp_n}</div>
+                        <div style={{ fontSize: '13px', fontWeight: '500', color: p.accentBlue }}>RP {r.rp_n}</div>
                         <button onClick={() => eliminaReperto(r.id)}
-                          style={{ padding: '3px 8px', background: 'none', border: '0.5px solid #e88', color: '#c00', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+                          style={{ padding: '3px 8px', background: 'none', border: '0.5px solid #e88', color: p.accentRed, borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
                           Elimina
                         </button>
                       </div>
@@ -1002,11 +1005,11 @@ export default function SchedaTombaPage() {
       {/* Navigazione step */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
         <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}
-          style={{ padding: '8px 16px', background: '#f8f7f4', color: step === 0 ? '#c8c7be' : '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '12px', cursor: step === 0 ? 'default' : 'pointer' }}>
+          style={{ padding: '8px 16px', background: p.bgInput, color: step === 0 ? '#c8c7be' : '#555550', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', fontSize: '12px', cursor: step === 0 ? 'default' : 'pointer' }}>
           ← Precedente
         </button>
         <button onClick={() => setStep(s => Math.min(STEP_LABELS.length - 1, s + 1))} disabled={step === STEP_LABELS.length - 1}
-          style={{ padding: '8px 16px', background: '#f8f7f4', color: step === STEP_LABELS.length - 1 ? '#c8c7be' : '#555550', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '12px', cursor: step === STEP_LABELS.length - 1 ? 'default' : 'pointer' }}>
+          style={{ padding: '8px 16px', background: p.bgInput, color: step === STEP_LABELS.length - 1 ? '#c8c7be' : '#555550', border: `0.5px solid ${p.borderStrong}`, borderRadius: '6px', fontSize: '12px', cursor: step === STEP_LABELS.length - 1 ? 'default' : 'pointer' }}>
           Successivo →
         </button>
       </div>

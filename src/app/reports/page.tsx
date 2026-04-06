@@ -69,7 +69,7 @@ export default async function ReportsPage({
 
 
   return (
-    <div style={{ padding: '24px', maxWidth: '900px' }}>
+    <div style={{ padding: '24px', maxWidth: '1200px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div>

@@ -36,7 +36,7 @@ export default async function ProgettoPage({ params }: { params: Promise<{ id: s
       {/* Breadcrumb + torna */}
       <div style={{ fontSize: '11px', color: '#8a8a84', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <Link href="/reports" style={{ color: '#1a4a7a', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 10px', border: '0.5px solid #c8c7be', borderRadius: '6px', fontSize: '11px' }}>
-          ← Elenco scavi
+          ← Elenco attività
         </Link>
         <span style={{ color: '#c8c7be' }}>/</span>
         <span>{progetto.committente ?? 'Progetto'}</span>

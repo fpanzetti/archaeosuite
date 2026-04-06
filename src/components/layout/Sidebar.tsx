@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useTema } from '@/lib/theme/ThemeContext'
 
 const modules = [
   { href: '/reports', label: 'ArchaeoReports', icon: '📋', active: true },
@@ -16,6 +17,7 @@ export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+  const { tema, setTema } = useTema()
   const [utente, setUtente] = useState<{ nome: string; cognome: string; email: string; professione: string } | null>(null)
 
   useEffect(() => {
@@ -53,7 +55,29 @@ export default function Sidebar() {
   return (
     <div style={{ width: '220px', minWidth: '220px', borderRight: '0.5px solid #e0dfd8', padding: '12px 8px', background: '#fff', display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0 }}>
       <div style={{ padding: '8px 10px 20px', borderBottom: '0.5px solid #e0dfd8', marginBottom: '8px' }}>
-        <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a6b4a' }}>ArchaeoSuite</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a6b4a' }}>ArchaeoSuite</div>
+          <button
+            onClick={() => setTema(tema === 'default' ? 'outdoor' : 'default')}
+            title={tema === 'default' ? 'Attiva tema outdoor' : 'Torna al tema standard'}
+            style={{
+              background: tema === 'outdoor' ? '#f0a030' : 'transparent',
+              border: tema === 'outdoor' ? 'none' : '0.5px solid #e0dfd8',
+              borderRadius: '6px',
+              width: '26px',
+              height: '26px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontSize: '13px',
+              padding: 0,
+              flexShrink: 0,
+            }}
+          >
+            {tema === 'outdoor' ? '🌑' : '☀️'}
+          </button>
+        </div>
         <div style={{ fontSize: '10px', color: '#8a8a84', marginTop: '2px' }}>v0.1 beta</div>
       </div>
       <Link href="/dashboard" style={{ textDecoration: 'none' }}>

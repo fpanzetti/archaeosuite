@@ -34,7 +34,9 @@ export default function AggiuntaUS({ scavoId }: Props) {
             style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', fontSize: '12px', color: p.textPrimary, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px' }}
             onMouseEnter={e => (e.currentTarget.style.background = p.bgHighlight)}
             onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-            <span>⛏️</span> US
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icons/stratigrafia.svg" alt="US" style={{ width: '16px', height: '16px', display: 'block', opacity: 0.8 }} />
+            US
           </button>
           <div style={{ borderTop: `0.5px solid ${p.bgBadgeNeutro}` }} />
           <button onClick={async () => {
@@ -58,7 +60,9 @@ export default function AggiuntaUS({ scavoId }: Props) {
             style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', fontSize: '12px', color: p.textPrimary, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px' }}
             onMouseEnter={e => (e.currentTarget.style.background = p.bgHighlight)}
             onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-            <span>⚱️</span> Contesto funerario
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icons/tomba.svg" alt="Contesto funerario" style={{ width: '16px', height: '16px', display: 'block', opacity: 0.8 }} />
+            Contesto funerario
           </button>
         </div>
       )}

@@ -145,11 +145,15 @@ export default function ElencoUS({ scavoId, usList, tombeList = [], ruolo = 'edi
 
       {/* Filtri */}
       <div style={{ display: 'flex', gap: '2px', marginBottom: '12px', background: p.bgBadgeNeutro, borderRadius: '6px', padding: '3px' }}>
-        {([['tutti', 'Tutte'], ['us', 'US'], ['funerario', '⚱️ Funerario']] as [Filtro, string][]).map(([val, label]) => (
+        {([['tutti', 'Tutte', null], ['us', 'US', '/icons/stratigrafia.svg'], ['funerario', 'Funerario', '/icons/tomba.svg']] as [Filtro, string, string | null][]).map(([val, label, icon]) => (
           <button key={val} onClick={() => setFiltro(val)}
-            style={{ flex: 1, padding: '5px 4px', border: 'none', borderRadius: '5px', fontSize: '11px', cursor: 'pointer',
+            style={{ flex: 1, padding: '5px 4px', border: 'none', borderRadius: '5px', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
               fontWeight: filtro === val ? '500' : '400', background: filtro === val ? p.bgCard : 'transparent',
               color: filtro === val ? p.accentBlue : p.textMuted, boxShadow: filtro === val ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
+            {icon && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={icon} alt={label} style={{ width: '12px', height: '12px', display: 'block', opacity: 0.7 }} />
+            )}
             {label}
           </button>
         ))}

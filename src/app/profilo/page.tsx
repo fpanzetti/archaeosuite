@@ -89,6 +89,10 @@ export default function ProfiloPage() {
 
   return (
     <div style={{ padding:'24px', maxWidth:'680px' }}>
+      <button onClick={() => router.back()}
+        style={{ padding:'6px 12px', marginBottom:'20px', background:p.bgInput, color:p.textSecondary, border:`0.5px solid ${p.borderStrong}`, borderRadius:'6px', fontSize:'12px', fontWeight:'500', cursor:'pointer', display:'flex', alignItems:'center', gap:'6px' }}>
+        <span style={{ fontSize:'14px' }}>←</span> Indietro
+      </button>
       <div style={{ display:'flex', alignItems:'center', gap:'16px', marginBottom:'24px' }}>
         <div style={{ width:'48px', height:'48px', borderRadius:'50%', background:p.accentBlueBg, color:p.accentBlue, fontSize:'18px', fontWeight:'600', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{iniziali}</div>
         <div>

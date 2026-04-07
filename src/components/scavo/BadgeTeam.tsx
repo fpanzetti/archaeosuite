@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useTema } from '@/lib/theme/ThemeContext'
 
-type Collaboratore = { id: string; nome: string | null; cognome: string | null }
+type Collaboratore = { id: string; nome: string | null; cognome: string | null; avatar_url?: string | null }
 
 const COLORI = ['#1a4a7a', '#1a6b4a', '#8a5c0a', '#7a1a6b', '#4a1a6b', '#1a6b6b']
 
@@ -30,7 +30,7 @@ export default function BadgeTeam({ collaboratori }: { collaboratori: Collaborat
               onClick={e => { e.preventDefault(); e.stopPropagation(); setAperto(isAperto ? null : c.id) }}
               style={{
                 width: '22px', height: '22px', borderRadius: '50%',
-                background: colore, color: '#fff',
+                background: c.avatar_url ? 'none' : colore, color: '#fff',
                 fontSize: '9px', fontWeight: '600',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', userSelect: 'none',
@@ -38,9 +38,13 @@ export default function BadgeTeam({ collaboratori }: { collaboratori: Collaborat
                 marginLeft: i > 0 ? '-6px' : '0',
                 zIndex: i,
                 position: 'relative',
+                overflow: 'hidden',
               }}
             >
-              {iniziali(c)}
+              {c.avatar_url
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img src={c.avatar_url} alt={iniziali(c)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : iniziali(c)}
             </div>
             {isAperto && (
               <div style={{

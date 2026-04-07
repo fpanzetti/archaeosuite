@@ -18,7 +18,7 @@ export default function Sidebar() {
   const router = useRouter()
   const supabase = createClient()
   const { tema, setTema, p } = useTema()
-  const [utente, setUtente] = useState<{ nome: string; cognome: string; email: string; professione: string } | null>(null)
+  const [utente, setUtente] = useState<{ nome: string; cognome: string; email: string; professione: string; avatarUrl: string } | null>(null)
 
   useEffect(() => {
     async function loadUtente() {
@@ -26,7 +26,7 @@ export default function Sidebar() {
       if (!user) return
       const { data: account } = await supabase
         .from('account')
-        .select('nome, cognome, professione')
+        .select('nome, cognome, professione, avatar_url')
         .eq('id', user.id)
         .single()
       setUtente({
@@ -34,6 +34,7 @@ export default function Sidebar() {
         cognome: account?.cognome ?? '',
         email: user.email ?? '',
         professione: account?.professione ?? '',
+        avatarUrl: account?.avatar_url ?? '',
       })
     }
     loadUtente()
@@ -103,8 +104,11 @@ export default function Sidebar() {
         {utente && (
           <Link href="/profilo" style={{ textDecoration: 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 10px', marginBottom: '4px', borderRadius: '6px', background: pathname === '/profilo' ? p.accentBlueBg : 'transparent' }}>
-              <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: p.accentBlueBg, color: p.accentBlue, fontSize: '11px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                {iniziali}
+              <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: utente.avatarUrl ? 'none' : p.accentBlueBg, color: p.accentBlue, fontSize: '11px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                {utente.avatarUrl
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={utente.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : iniziali}
               </div>
               <div style={{ overflow: 'hidden' }}>
                 <div style={{ fontSize: '12px', fontWeight: '500', color: p.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

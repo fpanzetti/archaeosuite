@@ -34,13 +34,13 @@ export default async function ReportsPage({
   const { data: accessi } = scaviIds.length > 0
     ? await supabase
         .from('accesso_scavo')
-        .select('scavo_id, account(id, nome, cognome)')
+        .select('scavo_id, account(id, nome, cognome, avatar_url)')
         .in('scavo_id', scaviIds)
         .neq('account_id', user.id)
     : { data: [] }
 
   // Mappa scavoId → collaboratori
-  type Collaboratore = { id: string; nome: string | null; cognome: string | null }
+  type Collaboratore = { id: string; nome: string | null; cognome: string | null; avatar_url?: string | null }
   const collaboratoriPerScavo: Record<string, Collaboratore[]> = {}
   accessi?.forEach((a: { scavo_id: string; account: Collaboratore | Collaboratore[] }) => {
     const acc = Array.isArray(a.account) ? a.account[0] : a.account

@@ -10,6 +10,7 @@ interface Collaboratore {
   account: {
     nome: string
     cognome: string
+    avatar_url?: string | null
   } | null
 }
 
@@ -62,7 +63,7 @@ export default function PannelloInviti({ scavoId, scavoDenominazione, ruoloEster
       const ids = accessi.map(a => a.account_id)
       const { data: accounts } = await supabase
         .from('account')
-        .select('id, nome, cognome')
+        .select('id, nome, cognome, avatar_url')
         .in('id', ids)
 
       const merged = accessi.map(a => ({
@@ -200,8 +201,11 @@ export default function PannelloInviti({ scavoId, scavoDenominazione, ruoloEster
             const nomeCompleto = c.account ? `${c.account.nome} ${c.account.cognome}` : c.account_id.slice(0, 8)
             return (
               <div key={c.account_id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 0', borderBottom: `0.5px solid ${p.bgBadgeNeutro}` }}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: sonoIo ? p.accentGreenBg : badge.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600', color: sonoIo ? p.accentGreen : badge.color, flexShrink: 0, border: sonoIo ? `1.5px solid ${p.accentGreen}` : 'none' }}>
-                  {iniziali(c)}
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: c.account?.avatar_url ? 'none' : (sonoIo ? p.accentGreenBg : badge.bg), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600', color: sonoIo ? p.accentGreen : badge.color, flexShrink: 0, border: sonoIo ? `1.5px solid ${p.accentGreen}` : 'none', overflow: 'hidden' }}>
+                  {c.account?.avatar_url
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={c.account.avatar_url} alt={iniziali(c)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : iniziali(c)}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: p.textPrimary, display: 'flex', alignItems: 'center', gap: '6px' }}>

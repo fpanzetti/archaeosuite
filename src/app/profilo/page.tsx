@@ -66,7 +66,7 @@ export default function ProfiloPage() {
       setUploadingAvatar(true)
       const ext = file.name.split('.').pop()
       const filename = `${userId}-avatar.${ext}`
-      const { data, error } = await supabase.storage.from('avatars').upload(filename, file, { upsert: true })
+      const { error } = await supabase.storage.from('avatars').upload(filename, file, { upsert: true })
       if (error) throw error
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filename)
       setAvatarUrl(publicUrl)
@@ -120,15 +120,21 @@ export default function ProfiloPage() {
       </button>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) caricaAvatar(e.target.files[0]) }} style={{ display:'none' }} />
       <div style={{ display:'flex', alignItems:'center', gap:'16px', marginBottom:'24px' }}>
-        <button onClick={() => fileInputRef.current?.click()} disabled={uploadingAvatar}
-          style={{ width:'48px', height:'48px', borderRadius:'50%', background:avatarUrl ? 'none' : p.accentBlueBg, color:p.accentBlue, fontSize:'18px', fontWeight:'600', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, border:'none', cursor:uploadingAvatar ? 'default' : 'pointer', padding:0, overflow:'hidden', position:'relative' }}>
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatarUrl} alt="Avatar" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-          ) : (
-            <span>{uploadingAvatar ? '⟳' : iniziali}</span>
-          )}
-        </button>
+        <div style={{ position:'relative', flexShrink:0 }}>
+          <button onClick={() => fileInputRef.current?.click()} disabled={uploadingAvatar}
+            style={{ width:'56px', height:'56px', borderRadius:'50%', background:avatarUrl ? 'none' : p.accentBlueBg, color:p.accentBlue, fontSize:'20px', fontWeight:'600', display:'flex', alignItems:'center', justifyContent:'center', border:'none', cursor:uploadingAvatar ? 'default' : 'pointer', padding:0, overflow:'hidden' }}>
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarUrl} alt="Avatar" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+            ) : (
+              <span>{uploadingAvatar ? '⟳' : iniziali}</span>
+            )}
+          </button>
+          <button onClick={() => fileInputRef.current?.click()} disabled={uploadingAvatar}
+            style={{ position:'absolute', bottom:0, right:0, width:'20px', height:'20px', borderRadius:'50%', background:p.accentBlue, color:'#fff', fontSize:'10px', display:'flex', alignItems:'center', justifyContent:'center', border:`2px solid ${p.bgCard}`, cursor:'pointer', padding:0, lineHeight:1 }}>
+            ✏️
+          </button>
+        </div>
         <div>
           <h1 style={{ fontSize:'20px', fontWeight:'500', margin:0, color:p.textPrimary }}>{nomeDisplay}</h1>
           {professione && <p style={{ fontSize:'12px', color:p.textMuted, margin:'2px 0 0' }}>{professione}</p>}
@@ -167,7 +173,7 @@ export default function ProfiloPage() {
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div>
             <div style={{ fontSize:'12px', color:p.textPrimary, fontWeight:'500' }}>Password</div>
-            <div style={{ fontSize:'11px', color:p.textMuted, marginTop:'2px' }}>Riceverai un'email con il link per cambiarla</div>
+            <div style={{ fontSize:'11px', color:p.textMuted, marginTop:'2px' }}>Riceverai un&apos;email con il link per cambiarla</div>
           </div>
           <button onClick={resetPassword} disabled={resettingPwd}
             style={{ padding:'7px 16px', background:p.bgInput, color:p.textSecondary, border:`0.5px solid ${p.borderStrong}`, borderRadius:'6px', fontSize:'12px', cursor:'pointer' }}>

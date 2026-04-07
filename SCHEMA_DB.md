@@ -10,6 +10,7 @@
 | cognome | TEXT | |
 | email | TEXT | |
 | professione | TEXT | |
+| avatar_url | TEXT NULLABLE | URL pubblico immagine profilo (storage.avatars) |
 | created_at | TIMESTAMPTZ | |
 
 ## progetto

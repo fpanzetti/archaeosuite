@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useTema } from '@/lib/theme/ThemeContext'
@@ -36,6 +36,9 @@ export default function ProfiloPage() {
   const [cognome, setCognome] = useState('')
   const [professione, setProfessione] = useState('')
   const [accessi, setAccessi] = useState<Accesso[]>([])
+  const [avatarUrl, setAvatarUrl] = useState('')
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     async function load() {
@@ -44,14 +47,36 @@ export default function ProfiloPage() {
       setUserId(user.id)
       setEmail(user.email ?? '')
       setCreatedAt(user.created_at ?? '')
-      const { data: account } = await supabase.from('account').select('nome, cognome, professione').eq('id', user.id).single()
-      if (account) { setNome(account.nome ?? ''); setCognome(account.cognome ?? ''); setProfessione(account.professione ?? '') }
+      const { data: account } = await supabase.from('account').select('nome, cognome, professione, avatar_url').eq('id', user.id).single()
+      if (account) {
+        setNome(account.nome ?? '')
+        setCognome(account.cognome ?? '')
+        setProfessione(account.professione ?? '')
+        setAvatarUrl(account.avatar_url ?? '')
+      }
       const { data: accessiData } = await supabase.from('accesso_scavo').select('scavo_id, ruolo, scavo:scavo(denominazione, comune, provincia, stato)').eq('account_id', user.id)
       if (accessiData) setAccessi((accessiData as unknown[]).map((a) => { const r = a as { scavo_id: string; ruolo: string; scavo: { denominazione: string; comune: string; provincia: string | null; stato: string }[] }; return { ...r, scavo: r.scavo[0] } }))
       setLoading(false)
     }
     load()
   }, [])
+
+  async function caricaAvatar(file: File) {
+    try {
+      setUploadingAvatar(true)
+      const ext = file.name.split('.').pop()
+      const filename = `${userId}-avatar.${ext}`
+      const { data, error } = await supabase.storage.from('avatars').upload(filename, file, { upsert: true })
+      if (error) throw error
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filename)
+      setAvatarUrl(publicUrl)
+      await supabase.from('account').update({ avatar_url: publicUrl }).eq('id', userId)
+      setUploadingAvatar(false)
+    } catch (err) {
+      console.error('Errore caricamento avatar:', err)
+      setUploadingAvatar(false)
+    }
+  }
 
   async function salva() {
     setSaving(true)
@@ -93,8 +118,17 @@ export default function ProfiloPage() {
         style={{ padding:'6px 12px', marginBottom:'20px', background:p.bgInput, color:p.textSecondary, border:`0.5px solid ${p.borderStrong}`, borderRadius:'6px', fontSize:'12px', fontWeight:'500', cursor:'pointer', display:'flex', alignItems:'center', gap:'6px' }}>
         <span style={{ fontSize:'14px' }}>←</span> Indietro
       </button>
+      <input ref={fileInputRef} type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) caricaAvatar(e.target.files[0]) }} style={{ display:'none' }} />
       <div style={{ display:'flex', alignItems:'center', gap:'16px', marginBottom:'24px' }}>
-        <div style={{ width:'48px', height:'48px', borderRadius:'50%', background:p.accentBlueBg, color:p.accentBlue, fontSize:'18px', fontWeight:'600', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{iniziali}</div>
+        <button onClick={() => fileInputRef.current?.click()} disabled={uploadingAvatar}
+          style={{ width:'48px', height:'48px', borderRadius:'50%', background:avatarUrl ? 'none' : p.accentBlueBg, color:p.accentBlue, fontSize:'18px', fontWeight:'600', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, border:'none', cursor:uploadingAvatar ? 'default' : 'pointer', padding:0, overflow:'hidden', position:'relative' }}>
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt="Avatar" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+          ) : (
+            <span>{uploadingAvatar ? '⟳' : iniziali}</span>
+          )}
+        </button>
         <div>
           <h1 style={{ fontSize:'20px', fontWeight:'500', margin:0, color:p.textPrimary }}>{nomeDisplay}</h1>
           {professione && <p style={{ fontSize:'12px', color:p.textMuted, margin:'2px 0 0' }}>{professione}</p>}

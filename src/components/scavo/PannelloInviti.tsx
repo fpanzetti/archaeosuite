@@ -218,11 +218,20 @@ export default function PannelloInviti({ scavoId, scavoDenominazione, ruoloEster
                       value={c.ruolo}
                       onChange={async e => {
                         const nuovoRuolo = e.target.value
-                        await supabase.from('accesso_scavo').update({ ruolo: nuovoRuolo })
-                          .eq('scavo_id', scavoId).eq('account_id', c.account_id)
+                        const vecchioRuolo = c.ruolo
+                        // Aggiorna ottimisticamente
                         setCollaboratori(prev => prev.map(x =>
                           x.account_id === c.account_id ? { ...x, ruolo: nuovoRuolo } : x
                         ))
+                        const { error } = await supabase.from('accesso_scavo').update({ ruolo: nuovoRuolo })
+                          .eq('scavo_id', scavoId).eq('account_id', c.account_id)
+                        if (error) {
+                          // Rollback se RLS o altro errore
+                          setCollaboratori(prev => prev.map(x =>
+                            x.account_id === c.account_id ? { ...x, ruolo: vecchioRuolo } : x
+                          ))
+                          alert('Errore: impossibile aggiornare il ruolo.')
+                        }
                       }}
                       style={{ padding: '2px 6px', border: `0.5px solid ${p.borderStrong}`, borderRadius: '4px', fontSize: '11px', background: p.bgInput, color: p.textSecondary, cursor: 'pointer' }}>
                       <option value="editor">Editor</option>

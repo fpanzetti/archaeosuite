@@ -313,9 +313,10 @@ export default function ProfiloPage() {
       await supabase.from('account').update({ avatar_url: urlFinale }).eq('id', userId)
       // Forza il re-render del layout (Sidebar) per aggiornare il badge
       router.refresh()
-    } catch (err) {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : JSON.stringify(err)
       console.error('Errore caricamento avatar:', err)
-      setErroreAvatar('Errore durante il caricamento della foto. Riprova.')
+      setErroreAvatar(`Errore: ${msg}`)
     } finally {
       setUploadingAvatar(false)
     }

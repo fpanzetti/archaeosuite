@@ -20,6 +20,10 @@ export default function Sidebar() {
   const { tema, setTema, p } = useTema()
   const [utente, setUtente] = useState<{ nome: string; cognome: string; email: string; professione: string; avatarUrl: string } | null>(null)
 
+  // Ricarica i dati utente:
+  // - ad ogni cambio di pathname (es. ritorno da /profilo)
+  // - all'evento custom 'profilo-aggiornato' (emesso dopo upload avatar
+  //   o salvataggio dati, senza dover rimontare la pagina intera)
   useEffect(() => {
     async function loadUtente() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -38,7 +42,10 @@ export default function Sidebar() {
       })
     }
     loadUtente()
-  }, [])
+    window.addEventListener('profilo-aggiornato', loadUtente)
+    return () => window.removeEventListener('profilo-aggiornato', loadUtente)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
 
   async function handleLogout() {
     await supabase.auth.signOut()

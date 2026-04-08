@@ -238,20 +238,29 @@ export default function ProfiloPage() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
+
       setUserId(user.id)
       setEmail(user.email ?? '')
       setCreatedAt(user.created_at ?? '')
-      const { data: account } = await supabase
+
+      const { data: account, error: accountError } = await supabase
         .from('account')
         .select('nome, cognome, professione, avatar_url')
         .eq('id', user.id)
         .single()
-      if (account) {
-        setNome(account.nome ?? '')
-        setCognome(account.cognome ?? '')
-        setProfessione(account.professione ?? '')
-        setAvatarUrl(account.avatar_url ?? '')
+
+      // Imposta sempre i campi, anche se alcuni sono null:
+      // evita che uno stato "vecchio" rimanga visibile se la query
+      // torna senza dati (es. profilo appena creato senza nome/cognome).
+      if (!accountError) {
+        setNome(account?.nome ?? '')
+        setCognome(account?.cognome ?? '')
+        setProfessione(account?.professione ?? '')
+        // L'avatar_url nel DB può contenere un ?t= di cache-busting
+        // aggiunto al momento dell'upload: lo usiamo così com'è.
+        setAvatarUrl(account?.avatar_url ?? '')
       }
+
       const { data: accessiData } = await supabase
         .from('accesso_scavo')
         .select('scavo_id, ruolo, scavo:scavo(denominazione, comune, provincia, stato)')
@@ -311,8 +320,10 @@ export default function ProfiloPage() {
       const urlFinale = `${publicUrl}?t=${Date.now()}`
       setAvatarUrl(urlFinale)
       await supabase.from('account').update({ avatar_url: urlFinale }).eq('id', userId)
-      // Forza il re-render del layout (Sidebar) per aggiornare il badge
-      router.refresh()
+      // Notifica la Sidebar di ricaricare i dati utente senza rimontare
+      // l'intera pagina (router.refresh() causerebbe un remount che azzera
+      // nome/cognome/professione prima che il useEffect li ricarichi).
+      window.dispatchEvent(new Event('profilo-aggiornato'))
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : JSON.stringify(err)
       console.error('Errore caricamento avatar:', err)
@@ -327,6 +338,8 @@ export default function ProfiloPage() {
     setSaving(true)
     await supabase.from('account').update({ nome, cognome, professione }).eq('id', userId)
     setSaving(false); setSaved(true)
+    // Aggiorna la Sidebar immediatamente senza rimontare la pagina
+    window.dispatchEvent(new Event('profilo-aggiornato'))
     setTimeout(() => setSaved(false), 2000)
   }
 

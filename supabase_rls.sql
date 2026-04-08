@@ -54,9 +54,20 @@ DROP POLICY IF EXISTS "account_select_own"  ON account;
 DROP POLICY IF EXISTS "account_insert_own"  ON account;
 DROP POLICY IF EXISTS "account_update_own"  ON account;
 
+-- Ogni utente vede il proprio profilo OPPURE i profili
+-- degli utenti che condividono almeno uno scavo con lui.
+-- Necessario per mostrare nome/avatar nella card Team e ruoli.
 CREATE POLICY "account_select_own" ON account
   FOR SELECT TO authenticated
-  USING (id = auth.uid());
+  USING (
+    id = auth.uid()
+    OR EXISTS (
+      SELECT 1 FROM accesso_scavo a1
+      JOIN accesso_scavo a2 ON a1.scavo_id = a2.scavo_id
+      WHERE a1.account_id = auth.uid()
+        AND a2.account_id = account.id
+    )
+  );
 
 CREATE POLICY "account_insert_own" ON account
   FOR INSERT TO authenticated

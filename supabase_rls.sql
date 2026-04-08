@@ -500,7 +500,116 @@ CREATE INDEX IF NOT EXISTS idx_invito_email
   ON invito(lower(email));
 
 -- ==============================================================
+-- 14. Storage — bucket "avatars"
+--     Ogni utente autenticato può caricare/aggiornare/eliminare
+--     SOLO il proprio file ({user_id}-avatar.jpg).
+--     La lettura è pubblica (l'URL viene salvato su account.avatar_url
+--     ed esposto nella UI senza token).
+-- ==============================================================
+
+-- INSERT (nuovo oggetto)
+DROP POLICY IF EXISTS "avatars_insert_own" ON storage.objects;
+CREATE POLICY "avatars_insert_own" ON storage.objects
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    bucket_id = 'avatars'
+    AND name = (auth.uid()::text || '-avatar.jpg')
+  );
+
+-- UPDATE (upsert — Supabase usa UPDATE per sovrascrivere)
+DROP POLICY IF EXISTS "avatars_update_own" ON storage.objects;
+CREATE POLICY "avatars_update_own" ON storage.objects
+  FOR UPDATE TO authenticated
+  USING (
+    bucket_id = 'avatars'
+    AND name = (auth.uid()::text || '-avatar.jpg')
+  )
+  WITH CHECK (
+    bucket_id = 'avatars'
+    AND name = (auth.uid()::text || '-avatar.jpg')
+  );
+
+-- DELETE
+DROP POLICY IF EXISTS "avatars_delete_own" ON storage.objects;
+CREATE POLICY "avatars_delete_own" ON storage.objects
+  FOR DELETE TO authenticated
+  USING (
+    bucket_id = 'avatars'
+    AND name = (auth.uid()::text || '-avatar.jpg')
+  );
+
+-- SELECT — lettura pubblica (il bucket deve essere impostato come "public"
+-- nel Dashboard; questa policy copre anche i client autenticati)
+DROP POLICY IF EXISTS "avatars_select_public" ON storage.objects;
+CREATE POLICY "avatars_select_public" ON storage.objects
+  FOR SELECT TO public
+  USING (bucket_id = 'avatars');
+
+
+-- ==============================================================
+-- 15. Storage — bucket "foto-scavi"
+--     Struttura path: {scavo_id}/{us_segment}/{file_id}.jpg
+--     La prima componente del path è lo scavo_id.
+--     Lettura:   chi ha accesso allo scavo (qualsiasi ruolo)
+--     Scrittura: editor o collaboratore dello scavo
+--     Elimina:   editor dello scavo
+-- ==============================================================
+
+-- Helper: estrae lo scavo_id dalla prima componente del path Storage.
+-- Usato nelle policy qui sotto per evitare duplicazione.
+CREATE OR REPLACE FUNCTION storage_scavo_id(obj_name TEXT)
+RETURNS UUID
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT (split_part(obj_name, '/', 1))::UUID
+$$;
+
+-- SELECT
+DROP POLICY IF EXISTS "foto_scavi_select" ON storage.objects;
+CREATE POLICY "foto_scavi_select" ON storage.objects
+  FOR SELECT TO authenticated
+  USING (
+    bucket_id = 'foto-scavi'
+    AND ha_accesso_scavo(storage_scavo_id(name))
+  );
+
+-- INSERT
+DROP POLICY IF EXISTS "foto_scavi_insert" ON storage.objects;
+CREATE POLICY "foto_scavi_insert" ON storage.objects
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    bucket_id = 'foto-scavi'
+    AND ha_accesso_scavo(storage_scavo_id(name), ARRAY['editor','collaboratore']::TEXT[])
+  );
+
+-- UPDATE
+DROP POLICY IF EXISTS "foto_scavi_update" ON storage.objects;
+CREATE POLICY "foto_scavi_update" ON storage.objects
+  FOR UPDATE TO authenticated
+  USING (
+    bucket_id = 'foto-scavi'
+    AND ha_accesso_scavo(storage_scavo_id(name), ARRAY['editor','collaboratore']::TEXT[])
+  )
+  WITH CHECK (
+    bucket_id = 'foto-scavi'
+    AND ha_accesso_scavo(storage_scavo_id(name), ARRAY['editor','collaboratore']::TEXT[])
+  );
+
+-- DELETE
+DROP POLICY IF EXISTS "foto_scavi_delete" ON storage.objects;
+CREATE POLICY "foto_scavi_delete" ON storage.objects
+  FOR DELETE TO authenticated
+  USING (
+    bucket_id = 'foto-scavi'
+    AND ha_accesso_scavo(storage_scavo_id(name), ARRAY['editor']::TEXT[])
+  );
+
+
+-- ==============================================================
 -- Fine script RLS
 -- Dopo aver eseguito, verifica in Table Editor → Auth Policies
 -- che ogni tabella mostri "RLS enabled".
+-- Per i bucket Storage: Dashboard → Storage → [bucket] → Policies
+-- Assicurarsi che i bucket "avatars" e "foto-scavi" esistano e
+-- che "avatars" sia impostato come PUBLIC (per gli URL pubblici).
 -- ==============================================================

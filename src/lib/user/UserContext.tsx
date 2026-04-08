@@ -43,25 +43,35 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const fetchUtente = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setUtente(null); setLoading(false); return }
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError) { console.error('UserContext — auth error:', authError); setUtente(null); setLoading(false); return }
+      if (!user)     { setUtente(null); setLoading(false); return }
 
-    const { data: account } = await supabase
-      .from('account')
-      .select('nome, cognome, professione, avatar_url')
-      .eq('id', user.id)
-      .single()
+      const { data: account, error: accountError } = await supabase
+        .from('account')
+        .select('nome, cognome, professione, avatar_url')
+        .eq('id', user.id)
+        .single()
 
-    setUtente({
-      id:          user.id,
-      email:       user.email ?? '',
-      nome:        account?.nome        ?? '',
-      cognome:     account?.cognome     ?? '',
-      professione: account?.professione ?? '',
-      avatarUrl:   account?.avatar_url  ?? '',
-      createdAt:   user.created_at      ?? '',
-    })
-    setLoading(false)
+      if (accountError) console.error('UserContext — account query error:', accountError)
+
+      // Imposta utente anche se account è null (es. colonna mancante, RLS):
+      // la UI mostra almeno email e id, senza bloccarsi su "Caricamento..."
+      setUtente({
+        id:          user.id,
+        email:       user.email      ?? '',
+        nome:        account?.nome        ?? '',
+        cognome:     account?.cognome     ?? '',
+        professione: account?.professione ?? '',
+        avatarUrl:   account?.avatar_url  ?? '',
+        createdAt:   user.created_at ?? '',
+      })
+    } catch (err) {
+      console.error('UserContext — fetchUtente exception:', err)
+    } finally {
+      setLoading(false)
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Carica al mount, una volta sola

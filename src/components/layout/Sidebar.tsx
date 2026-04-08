@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
 import { useTema } from '@/lib/theme/ThemeContext'
+import { useUser } from '@/lib/user/UserContext'
 
 const modules = [
   { href: '/reports', label: 'ArchaeoReports', icon: '📋', active: true },
@@ -14,38 +14,12 @@ const modules = [
 ]
 
 export default function Sidebar() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const supabase = createClient()
+  const pathname  = usePathname()
+  const router    = useRouter()
+  const supabase  = createClient()
   const { tema, setTema, p } = useTema()
-  const [utente, setUtente] = useState<{ nome: string; cognome: string; email: string; professione: string; avatarUrl: string } | null>(null)
-
-  // Ricarica i dati utente:
-  // - ad ogni cambio di pathname (es. ritorno da /profilo)
-  // - all'evento custom 'profilo-aggiornato' (emesso dopo upload avatar
-  //   o salvataggio dati, senza dover rimontare la pagina intera)
-  useEffect(() => {
-    async function loadUtente() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data: account } = await supabase
-        .from('account')
-        .select('nome, cognome, professione, avatar_url')
-        .eq('id', user.id)
-        .single()
-      setUtente({
-        nome: account?.nome ?? '',
-        cognome: account?.cognome ?? '',
-        email: user.email ?? '',
-        professione: account?.professione ?? '',
-        avatarUrl: account?.avatar_url ?? '',
-      })
-    }
-    loadUtente()
-    window.addEventListener('profilo-aggiornato', loadUtente)
-    return () => window.removeEventListener('profilo-aggiornato', loadUtente)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname])
+  // Dati utente dal contesto globale — nessun fetch locale
+  const { utente } = useUser()
 
   async function handleLogout() {
     await supabase.auth.signOut()

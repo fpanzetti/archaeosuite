@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useTema } from '@/lib/theme/ThemeContext'
 import type { Palette } from '@/lib/theme/ThemeContext'
+import { useUser } from '@/lib/user/UserContext'
 
 type Accesso = {
   scavo_id: string
@@ -213,58 +214,51 @@ export default function ProfiloPage() {
   const router   = useRouter()
   const { p }    = useTema()
 
-  const [loading,          setLoading]          = useState(true)
-  const [saving,           setSaving]           = useState(false)
-  const [saved,            setSaved]            = useState(false)
-  const [resettingPwd,     setResettingPwd]     = useState(false)
-  const [pwdMsg,           setPwdMsg]           = useState('')
-  const [userId,           setUserId]           = useState('')
-  const [email,            setEmail]            = useState('')
-  const [createdAt,        setCreatedAt]        = useState('')
-  const [nome,             setNome]             = useState('')
-  const [cognome,          setCognome]          = useState('')
-  const [professione,      setProfessione]      = useState('')
-  const [accessi,          setAccessi]          = useState<Accesso[]>([])
-  const [avatarUrl,        setAvatarUrl]        = useState('')
-  const [uploadingAvatar,  setUploadingAvatar]  = useState(false)
-  const [erroreAvatar,     setErroreAvatar]     = useState('')
-  // src dell'immagine da ritagliare (null = modal chiuso)
-  const [srcRitaglio,      setSrcRitaglio]      = useState<string | null>(null)
+  // Dati utente dal context globale — fonte di verità unica
+  const { utente, loading: utenteLoading, refreshUtente, setUtenteLocal } = useUser()
+
+  // Stato locale del form (editabile dall'utente prima di salvare)
+  const [nome,        setNome]        = useState('')
+  const [cognome,     setCognome]     = useState('')
+  const [professione, setProfessione] = useState('')
+  const [avatarUrl,   setAvatarUrl]   = useState('')
+
+  // Stati UI
+  const [saving,          setSaving]          = useState(false)
+  const [saved,           setSaved]           = useState(false)
+  const [resettingPwd,    setResettingPwd]    = useState(false)
+  const [pwdMsg,          setPwdMsg]          = useState('')
+  const [accessi,         setAccessi]         = useState<Accesso[]>([])
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [erroreAvatar,    setErroreAvatar]    = useState('')
+  const [srcRitaglio,     setSrcRitaglio]     = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // ── caricamento dati utente ──────────────────────────────────
+  // ── Inizializza il form dai dati del context ─────────────────
+  // Si riesegue ogni volta che il context si aggiorna (es. dopo salva),
+  // così i campi riflettono sempre il dato reale nel DB.
   useEffect(() => {
-    async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
+    if (!utente) return
+    setNome(utente.nome)
+    setCognome(utente.cognome)
+    setProfessione(utente.professione)
+    setAvatarUrl(utente.avatarUrl)
+  }, [utente])
 
-      setUserId(user.id)
-      setEmail(user.email ?? '')
-      setCreatedAt(user.created_at ?? '')
+  // ── Redirect se non autenticato ──────────────────────────────
+  useEffect(() => {
+    if (!utenteLoading && !utente) router.push('/login')
+  }, [utente, utenteLoading, router])
 
-      const { data: account, error: accountError } = await supabase
-        .from('account')
-        .select('nome, cognome, professione, avatar_url')
-        .eq('id', user.id)
-        .single()
-
-      // Imposta sempre i campi, anche se alcuni sono null:
-      // evita che uno stato "vecchio" rimanga visibile se la query
-      // torna senza dati (es. profilo appena creato senza nome/cognome).
-      if (!accountError) {
-        setNome(account?.nome ?? '')
-        setCognome(account?.cognome ?? '')
-        setProfessione(account?.professione ?? '')
-        // L'avatar_url nel DB può contenere un ?t= di cache-busting
-        // aggiunto al momento dell'upload: lo usiamo così com'è.
-        setAvatarUrl(account?.avatar_url ?? '')
-      }
-
+  // ── Carica scavi e ruoli (dati non nel context globale) ──────
+  useEffect(() => {
+    if (!utente) return
+    async function loadAccessi() {
       const { data: accessiData } = await supabase
         .from('accesso_scavo')
         .select('scavo_id, ruolo, scavo:scavo(denominazione, comune, provincia, stato)')
-        .eq('account_id', user.id)
+        .eq('account_id', utente!.id)
       if (accessiData) {
         setAccessi(
           (accessiData as unknown[]).map(a => {
@@ -276,11 +270,10 @@ export default function ProfiloPage() {
           })
         )
       }
-      setLoading(false)
     }
-    load()
+    loadAccessi()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [utente?.id])
 
   // ── selezione file → apre il modal di ritaglio ───────────────
   function handleSelezioneFoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -295,39 +288,37 @@ export default function ProfiloPage() {
     reader.readAsDataURL(file)
   }
 
-  // ── upload del blob ritagliato su Supabase Storage ───────────
-  // FIX PRINCIPALE: aggiunta del timestamp ?t=... per forzare
-  // il browser a ricaricare l'immagine anche se il filename
-  // è invariato (problema di cache che impediva l'aggiornamento
-  // visivo del badge dopo l'upload).
+  // ── upload avatar ────────────────────────────────────────────
   async function caricaAvatar(blob: Blob) {
+    if (!utente) return
     try {
       setUploadingAvatar(true)
       setErroreAvatar('')
       setSrcRitaglio(null)
 
-      const filename = `${userId}-avatar.jpg`
+      const filename = `${utente.id}-avatar.jpg`
       const { error } = await supabase.storage
         .from('avatars')
         .upload(filename, blob, { upsert: true, contentType: 'image/jpeg' })
       if (error) throw error
 
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filename)
-
-      // Cache-busting: aggiunge un timestamp all'URL in modo che React
-      // veda un valore di stato *diverso* e il browser scarichi la
-      // nuova immagine invece di servire quella in cache.
+      // Cache-busting: il timestamp forza il browser a scaricare la
+      // nuova immagine anche se il filename è invariato.
       const urlFinale = `${publicUrl}?t=${Date.now()}`
+
+      await supabase.from('account').update({ avatar_url: urlFinale }).eq('id', utente.id)
+
+      // Aggiornamento ottimistico immediato: Sidebar e pagina vedono
+      // il nuovo avatar senza aspettare il round-trip refreshUtente.
+      setUtenteLocal({ avatarUrl: urlFinale })
       setAvatarUrl(urlFinale)
-      await supabase.from('account').update({ avatar_url: urlFinale }).eq('id', userId)
-      // Notifica la Sidebar di ricaricare i dati utente senza rimontare
-      // l'intera pagina (router.refresh() causerebbe un remount che azzera
-      // nome/cognome/professione prima che il useEffect li ricarichi).
-      window.dispatchEvent(new Event('profilo-aggiornato'))
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : JSON.stringify(err)
       console.error('Errore caricamento avatar:', err)
       setErroreAvatar(`Errore: ${msg}`)
+      // In caso di errore, ricarica dal DB per essere sicuri
+      await refreshUtente()
     } finally {
       setUploadingAvatar(false)
     }
@@ -335,18 +326,20 @@ export default function ProfiloPage() {
 
   // ── salvataggio dati personali ───────────────────────────────
   async function salva() {
+    if (!utente) return
     setSaving(true)
-    await supabase.from('account').update({ nome, cognome, professione }).eq('id', userId)
+    await supabase.from('account').update({ nome, cognome, professione }).eq('id', utente.id)
+    // Aggiornamento ottimistico: Sidebar aggiornata immediatamente
+    setUtenteLocal({ nome, cognome, professione })
     setSaving(false); setSaved(true)
-    // Aggiorna la Sidebar immediatamente senza rimontare la pagina
-    window.dispatchEvent(new Event('profilo-aggiornato'))
     setTimeout(() => setSaved(false), 2000)
   }
 
   // ── reset password ───────────────────────────────────────────
   async function resetPassword() {
+    if (!utente) return
     setResettingPwd(true)
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(utente.email, {
       redirectTo: `${window.location.origin}/login`,
     })
     setResettingPwd(false)
@@ -372,10 +365,11 @@ export default function ProfiloPage() {
     stato === 'in_corso'        ? 'In corso' :
     stato === 'in_elaborazione' ? 'In elaborazione' : 'Archiviato'
 
-  const iniziali    = [nome?.[0], cognome?.[0]].filter(Boolean).join('').toUpperCase() || email?.[0]?.toUpperCase()
-  const nomeDisplay = [nome, cognome].filter(Boolean).join(' ') || email
+  const iniziali    = [nome?.[0], cognome?.[0]].filter(Boolean).join('').toUpperCase() || utente?.email?.[0]?.toUpperCase()
+  const nomeDisplay = [nome, cognome].filter(Boolean).join(' ') || utente?.email || ''
 
-  if (loading) return <div style={{ padding:'24px', color:p.textMuted, fontSize:'12px' }}>Caricamento...</div>
+  if (utenteLoading) return <div style={{ padding:'24px', color:p.textMuted, fontSize:'12px' }}>Caricamento...</div>
+  if (!utente) return null
 
   return (
     <div style={{ padding:'24px', maxWidth:'680px' }}>
@@ -462,7 +456,7 @@ export default function ProfiloPage() {
         </div>
         <div style={{ marginBottom:'12px' }}>
           <label style={lbl}>Email</label>
-          <div style={{ ...infoRow, color:p.textMuted }}>{email}</div>
+          <div style={{ ...infoRow, color:p.textMuted }}>{utente.email}</div>
         </div>
         <div style={{ marginBottom:'16px' }}>
           <label style={lbl}>Professione</label>
@@ -530,8 +524,8 @@ export default function ProfiloPage() {
       <div style={card}>
         <div style={sectionTitle}>Account</div>
         <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
-          <div style={infoRow}><span style={infoLabel}>ID utente</span><span style={{ fontFamily:'monospace', fontSize:'11px' }}>{userId}</span></div>
-          <div style={infoRow}><span style={infoLabel}>Registrato il</span>{createdAt ? new Date(createdAt).toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' }) : '—'}</div>
+          <div style={infoRow}><span style={infoLabel}>ID utente</span><span style={{ fontFamily:'monospace', fontSize:'11px' }}>{utente.id}</span></div>
+          <div style={infoRow}><span style={infoLabel}>Registrato il</span>{utente.createdAt ? new Date(utente.createdAt).toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' }) : '—'}</div>
         </div>
       </div>
 

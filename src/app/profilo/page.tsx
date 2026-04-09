@@ -328,10 +328,16 @@ export default function ProfiloPage() {
   async function salva() {
     if (!utente) return
     setSaving(true)
-    await supabase.from('account').update({ nome, cognome, professione }).eq('id', utente.id)
+    const { error } = await supabase.from('account').update({ nome, cognome, professione }).eq('id', utente.id)
+    setSaving(false)
+    if (error) {
+      console.error('Errore salvataggio profilo:', error)
+      setErroreAvatar(`Errore salvataggio: ${error.message}`)
+      return
+    }
     // Aggiornamento ottimistico: Sidebar aggiornata immediatamente
     setUtenteLocal({ nome, cognome, professione })
-    setSaving(false); setSaved(true)
+    setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
 

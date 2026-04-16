@@ -38,7 +38,10 @@ export default function LoginPage() {
           {loading ? 'Accesso in corso...' : 'Accedi'}
         </button>
       </form>
-      <p style={{ fontSize:'12px', color:'#8a8a84', textAlign:'center', marginTop:'16px' }}>
+      <p style={{ fontSize:'12px', color:'#8a8a84', textAlign:'center', marginTop:'12px' }}>
+        <Link href="/recupera-password" style={{ color:'#1a6b4a' }}>Hai dimenticato la password?</Link>
+      </p>
+      <p style={{ fontSize:'12px', color:'#8a8a84', textAlign:'center', marginTop:'8px' }}>
         Non hai un account? <Link href="/register" style={{ color:'#1a6b4a' }}>Registrati</Link>
       </p>
     </div>

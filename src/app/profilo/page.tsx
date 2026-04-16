@@ -346,7 +346,7 @@ export default function ProfiloPage() {
     if (!utente) return
     setResettingPwd(true)
     const { error } = await supabase.auth.resetPasswordForEmail(utente.email, {
-      redirectTo: `${window.location.origin}/login`,
+      redirectTo: `${window.location.origin}/confirm?next=/aggiorna-password`,
     })
     setResettingPwd(false)
     setPwdMsg(error ? "Errore nell'invio. Riprova." : 'Email inviata — controlla la tua casella.')

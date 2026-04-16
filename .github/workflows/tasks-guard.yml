@@ -1,0 +1,28 @@
+name: tasks-guard
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check-task-updates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Determine diff base
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "TASKS_GUARD_BASE=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_ENV"
+            if [ "${{ github.event.pull_request.base.sha }}" != "0000000000000000000000000000000000000000" ]; then
+              git fetch origin "${{ github.event.pull_request.base.sha }}" || true
+            fi
+          else
+            echo "TASKS_GUARD_BASE=${{ github.event.before }}" >> "$GITHUB_ENV"
+            if [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+              git fetch origin "${{ github.event.before }}" || true
+            fi
+          fi
+      - name: Enforce backlog/handoff updates
+        run: scripts/check_task_sync.py

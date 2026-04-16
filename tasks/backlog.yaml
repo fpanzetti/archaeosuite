@@ -1,0 +1,26 @@
+# tasks/backlog.yaml — Task list (YAML)
+
+# Example structure:
+# - id: T-001
+#   title: "Set up basic specs and first feature"
+#   status: todo | in-progress | done
+#   feature: F-001
+#   assignee: agent-name-or-model
+#   description: >
+#     Short description of what this task is about.
+#   links:
+#     - specs/features/F-001-xxx.md
+#     - PR-1
+#   notes: |
+#     Any extra notes.
+
+- id: T-000
+  title: "Example task: replace or remove me"
+  status: todo
+  feature: F-000
+  assignee: unassigned
+  description: >
+    Demo task created by the bootstrap script. Replace with real tasks.
+  links: []
+  notes: |
+    You can turn T-000 into a real task or delete it once you have real work.
